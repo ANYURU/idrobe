@@ -1,0 +1,211 @@
+-- ============================================================================
+-- FIX CATEGORY CREATION ISSUE
+-- Make AI-suggested categories active by default during onboarding
+-- ============================================================================
+
+-- Update find_or_create_category to create active categories for common clothing types
+CREATE OR REPLACE FUNCTION find_or_create_category(category_name TEXT)
+RETURNS UUID AS $$
+DECLARE
+    category_id UUID;
+    clean_name TEXT;
+    is_common_category BOOLEAN := FALSE;
+    common_categories TEXT[] := ARRAY[
+        'tops', 'bottoms', 'dresses', 'outerwear', 'shoes', 
+        'accessories', 'activewear', 'formalwear', 'underwear', 
+        'sleepwear', 'bags', 'jewelry', 'hats', 'scarves', 
+        'belts', 'eyewear', 'watches', 'swimwear', 'casualwear'
+    ];
+BEGIN
+    -- Input validation
+    IF category_name IS NULL OR trim(category_name) = '' THEN
+        RAISE EXCEPTION 'Category name cannot be null or empty';
+    END IF;
+    
+    IF length(trim(category_name)) > 100 THEN
+        RAISE EXCEPTION 'Category name too long (max 100 characters)';
+    END IF;
+    
+    -- Sanitize input
+    clean_name := lower(trim(regexp_replace(category_name, '[^a-zA-Z0-9\s\-]', '', 'g')));
+    
+    -- Check if it's a common category
+    is_common_category := clean_name = ANY(common_categories);
+    
+    -- Try to find existing category (active or inactive)
+    SELECT id INTO category_id 
+    FROM public.clothing_categories 
+    WHERE lower(name) = clean_name;
+    
+    -- If found but inactive and it's a common category, activate it
+    IF category_id IS NOT NULL AND is_common_category THEN
+        UPDATE public.clothing_categories 
+        SET is_active = TRUE 
+        WHERE id = category_id AND NOT is_active;
+    END IF;
+    
+    -- If not found, create new category
+    IF category_id IS NULL THEN
+        INSERT INTO public.clothing_categories (name, is_active, source)
+        VALUES (clean_name, is_common_category, CASE WHEN is_common_category THEN 'system' ELSE 'ai_suggested' END)
+        RETURNING id INTO category_id;
+    END IF;
+    
+    RETURN category_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Update find_or_create_subcategory to create active subcategories for common types
+CREATE OR REPLACE FUNCTION find_or_create_subcategory(subcategory_name TEXT, parent_category_id UUID)
+RETURNS UUID AS $$
+DECLARE
+    subcategory_id UUID;
+    clean_name TEXT;
+    is_common_subcategory BOOLEAN := FALSE;
+    common_subcategories TEXT[] := ARRAY[
+        't-shirt', 'shirt', 'blouse', 'tank-top', 'sweater', 'hoodie', 'cardigan', 'polo',
+        'jeans', 'trousers', 'shorts', 'skirt', 'leggings', 'joggers', 'chinos',
+        'sneakers', 'boots', 'sandals', 'heels', 'flats', 'loafers', 'oxfords', 'slippers',
+        'jacket', 'coat', 'blazer', 'vest', 'windbreaker', 'parka',
+        'dress', 'gown', 'sundress', 'maxi-dress', 'mini-dress',
+        'bra', 'underwear', 'socks', 'tights', 'pantyhose',
+        'pajamas', 'nightgown', 'robe', 'sleepwear',
+        'backpack', 'handbag', 'purse', 'tote', 'clutch', 'wallet',
+        'necklace', 'earrings', 'bracelet', 'ring', 'watch',
+        'cap', 'hat', 'beanie', 'scarf', 'belt', 'sunglasses'
+    ];
+BEGIN
+    -- Input validation
+    IF subcategory_name IS NULL OR trim(subcategory_name) = '' THEN
+        RETURN NULL; -- Allow null subcategories
+    END IF;
+    
+    -- Sanitize input
+    clean_name := lower(trim(regexp_replace(subcategory_name, '[^a-zA-Z0-9\s\-]', '', 'g')));
+    
+    -- Check if it's a common subcategory
+    is_common_subcategory := clean_name = ANY(common_subcategories);
+    
+    -- Try to find existing subcategory
+    SELECT id INTO subcategory_id 
+    FROM public.clothing_subcategories 
+    WHERE lower(name) = clean_name 
+    AND category_id = parent_category_id;
+    
+    -- If found but inactive and it's common, activate it
+    IF subcategory_id IS NOT NULL AND is_common_subcategory THEN
+        UPDATE public.clothing_subcategories 
+        SET is_active = TRUE 
+        WHERE id = subcategory_id AND NOT is_active;
+    END IF;
+    
+    -- If not found, create new subcategory
+    IF subcategory_id IS NULL THEN
+        INSERT INTO public.clothing_subcategories (name, category_id, is_active, source)
+        VALUES (clean_name, parent_category_id, is_common_subcategory, CASE WHEN is_common_subcategory THEN 'system' ELSE 'ai_suggested' END)
+        RETURNING id INTO subcategory_id;
+    END IF;
+    
+    RETURN subcategory_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+-- Ensure levenshtein function exists
+CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA extensions;
+
+-- Ensure some basic categories exist and are active
+INSERT INTO public.clothing_categories (name, is_active, source, display_order) VALUES
+    ('tops', TRUE, 'system', 1),
+    ('bottoms', TRUE, 'system', 2),
+    ('dresses', TRUE, 'system', 3),
+    ('outerwear', TRUE, 'system', 4),
+    ('shoes', TRUE, 'system', 5),
+    ('accessories', TRUE, 'system', 6),
+    ('activewear', TRUE, 'system', 7),
+    ('formalwear', TRUE, 'system', 8),
+    ('underwear', TRUE, 'system', 9),
+    ('sleepwear', TRUE, 'system', 10)
+ON CONFLICT (name) DO UPDATE SET 
+    is_active = TRUE,
+    display_order = EXCLUDED.display_order;
+
+-- Add some basic subcategories
+DO $$
+DECLARE
+    tops_id UUID;
+    bottoms_id UUID;
+    shoes_id UUID;
+    outerwear_id UUID;
+    dresses_id UUID;
+BEGIN
+    -- Get category IDs
+    SELECT id INTO tops_id FROM public.clothing_categories WHERE name = 'tops';
+    SELECT id INTO bottoms_id FROM public.clothing_categories WHERE name = 'bottoms';
+    SELECT id INTO shoes_id FROM public.clothing_categories WHERE name = 'shoes';
+    SELECT id INTO outerwear_id FROM public.clothing_categories WHERE name = 'outerwear';
+    SELECT id INTO dresses_id FROM public.clothing_categories WHERE name = 'dresses';
+    
+    -- Insert subcategories
+    INSERT INTO public.clothing_subcategories (name, category_id, is_active, source) VALUES
+        ('t-shirt', tops_id, TRUE, 'system'),
+        ('shirt', tops_id, TRUE, 'system'),
+        ('blouse', tops_id, TRUE, 'system'),
+        ('sweater', tops_id, TRUE, 'system'),
+        ('hoodie', tops_id, TRUE, 'system'),
+        ('tank-top', tops_id, TRUE, 'system'),
+        
+        ('jeans', bottoms_id, TRUE, 'system'),
+        ('trousers', bottoms_id, TRUE, 'system'),
+        ('shorts', bottoms_id, TRUE, 'system'),
+        ('skirt', bottoms_id, TRUE, 'system'),
+        ('leggings', bottoms_id, TRUE, 'system'),
+        
+        ('sneakers', shoes_id, TRUE, 'system'),
+        ('boots', shoes_id, TRUE, 'system'),
+        ('sandals', shoes_id, TRUE, 'system'),
+        ('heels', shoes_id, TRUE, 'system'),
+        ('flats', shoes_id, TRUE, 'system'),
+        
+        ('jacket', outerwear_id, TRUE, 'system'),
+        ('coat', outerwear_id, TRUE, 'system'),
+        ('blazer', outerwear_id, TRUE, 'system'),
+        
+        ('dress', dresses_id, TRUE, 'system'),
+        ('gown', dresses_id, TRUE, 'system'),
+        ('sundress', dresses_id, TRUE, 'system')
+    ON CONFLICT (category_id, name) DO UPDATE SET 
+        is_active = TRUE;
+END $$;
+
+-- Update get_active_categories_for_prompt to return more useful data
+CREATE OR REPLACE FUNCTION get_active_categories_for_prompt()
+RETURNS JSON AS $$
+BEGIN
+    RETURN json_build_object(
+        'categories', (
+            SELECT json_agg(name ORDER BY display_order)
+            FROM public.clothing_categories 
+            WHERE is_active = TRUE
+        ),
+        'subcategories', (
+            SELECT json_object_agg(
+                cc.name,
+                json_agg(cs.name ORDER BY cs.name)
+            )
+            FROM public.clothing_categories cc
+            JOIN public.clothing_subcategories cs ON cc.id = cs.category_id
+            WHERE cc.is_active = TRUE AND cs.is_active = TRUE
+            GROUP BY cc.name
+        ),
+        'style_tags', (
+            SELECT json_agg(name ORDER BY popularity_score DESC)
+            FROM public.style_tags 
+            WHERE is_active = TRUE
+            LIMIT 50
+        )
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+
+COMMENT ON FUNCTION find_or_create_category IS 'Creates categories with common types active by default';
+COMMENT ON FUNCTION find_or_create_subcategory IS 'Creates subcategories with common types active by default';

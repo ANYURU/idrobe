@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Your Email - IDrobe</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #2D2A26;
+            background-color: #F1EBE4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #F1EBE4;
+            padding: 30px;
+            text-align: center;
+        }
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            border: 2px solid #8B4513;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8B4513;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2D2A26;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .message {
+            font-size: 16px;
+            color: #6B5B4F;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .button {
+            display: inline-block;
+            background: #8B4513;
+            color: white;
+            padding: 16px 32px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            text-align: center;
+            margin: 20px auto;
+            display: block;
+            max-width: 300px;
+        }
+        .button:hover {
+            background: #6B3410;
+        }
+        .code-section {
+            background: #F8F6F3;
+            border: 1px solid #D4C4B0;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .code {
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            font-weight: bold;
+            color: #8B4513;
+            letter-spacing: 4px;
+        }
+        .footer {
+            background: #F8F6F3;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #6B5B4F;
+        }
+        .features {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            text-align: center;
+        }
+        .feature {
+            flex: 1;
+            padding: 0 10px;
+        }
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        .feature-text {
+            font-size: 12px;
+            color: #6B5B4F;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="24" height="24" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="48" stroke="#8B4513" stroke-width="4" fill="transparent"/>
+                        <path d="M50 20C54 20 57 23 57 27C57 31 54 34 50 34" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M25 45L50 34L75 45" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M30 45V80" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M40 45V80" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M50 45V80" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M60 45V80" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+                        <path d="M70 45V80" stroke="#8B4513" stroke-width="4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <span class="logo-text">IDrobe</span>
+            </div>
+            <h1 class="title">Welcome to Your Smart Wardrobe!</h1>
+        </div>
+        
+        <div class="content">
+            <p class="message">
+                You're just one step away from organizing your wardrobe with AI-powered outfit recommendations. 
+                Please confirm your email address to get started.
+            </p>
+            
+            <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email" class="button">
+                Confirm Your Email Address
+            </a>
+            
+            <div class="code-section">
+                <p style="margin: 0 0 10px 0; font-size: 14px; color: #6B5B4F;">Or enter this confirmation code:</p>
+                <div class="code">{{ .Token }}</div>
+            </div>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon">👔</div>
+                    <div class="feature-text">Smart Wardrobe<br>Organization</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">🤖</div>
+                    <div class="feature-text">AI-Powered<br>Recommendations</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-text">Easy Outfit<br>Planning</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This confirmation link will expire in 24 hours.</p>
+            <p>If you didn't create an account with IDrobe, you can safely ignore this email.</p>
+            <p style="margin-top: 20px; font-size: 12px;">© <span id="year"></span> IDrobe. Your Smart Wardrobe Assistant.</p>
+            <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+        </div>
+    </div>
+</body>
+</html>

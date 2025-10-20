@@ -1,0 +1,2 @@
+-- This table is already created in migration 20251028094000_add_currency_support.sql
+-- Skipping duplicate creation to avoid conflicts
