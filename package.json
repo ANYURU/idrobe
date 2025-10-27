@@ -1,0 +1,23 @@
+{
+  "name": "idrobe",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "web",
+    "shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web",
+    "db:start": "npx supabase start",
+    "db:stop": "npx supabase stop",
+    "db:reset": "npx supabase db reset"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1",
+    "supabase": "^2.51.0"
+  }
+}

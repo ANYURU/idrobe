@@ -1,0 +1,14 @@
+.DS_Store
+.env*
+/node_modules/
+.vscode/
+*.log
+
+# Ignore schema files
+prev-schema.sql
+combined_migrations.sql
+migration_issues.txt
+models.json
+test-analyze-errors.md
+REACT_ROUTER_V7_GUIDE.md
+current_active_db/
