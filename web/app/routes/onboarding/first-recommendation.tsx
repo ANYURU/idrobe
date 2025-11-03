@@ -1,0 +1,479 @@
+import { useState } from "react";
+import { useNavigate, Form } from "react-router";
+import type { Route } from "./+types/first-recommendation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Heart, X, Sparkles, AlertCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase.server";
+import { generateOnboardingRecommendations } from "@/lib/outfit-recommendations";
+import { ClothingImage } from "@/components/ClothingImage";
+
+export async function loader({ request }: Route.LoaderArgs) {
+  const { requireAuth } = await import("@/lib/protected-route");
+  const { user } = await requireAuth(request);
+
+  const { supabase } = createClient(request);
+
+  // Get user's uploaded items
+  const { data: items } = await supabase
+    .from("clothing_items")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("is_archived", false)
+    .is("deleted_at", null)
+    .limit(10);
+
+  let recommendations: any[] = [];
+  let error = null;
+
+  // First check for existing recommendations
+  const { data: existingRecs } = await supabase
+    .from("outfit_recommendations")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  console.log("🔍 Found existing recommendations:", existingRecs?.length || 0);
+
+  if (existingRecs && existingRecs.length > 0) {
+    console.log("✅ Using existing recommendations:", existingRecs.length);
+
+    // Get interactions separately (more reliable than joins)
+    const { data: interactions } = await supabase
+      .from("user_interactions")
+      .select("recommendation_id, interaction_type_name, interacted_at")
+      .eq("user_id", user.id)
+      .in(
+        "recommendation_id",
+        existingRecs.map((r) => r.id)
+      );
+
+    // Use existing recommendations with items
+    recommendations = await Promise.all(
+      existingRecs.map(async (rec) => {
+        const { data: items } = await supabase
+          .from("clothing_items")
+          .select("*")
+          .in("id", rec.clothing_item_ids || [])
+          .eq("user_id", user.id);
+
+        const userInteraction = interactions?.find(
+          (i) => i.recommendation_id === rec.id
+        );
+
+        return {
+          ...rec,
+          name: rec.recommendation_reason || "AI Outfit",
+          description: rec.recommendation_reason || "AI-curated combination",
+          styling_reason: rec.recommendation_reason,
+          items: items || [],
+          userInteraction: userInteraction || null,
+        };
+      })
+    );
+  } else if (items && items.length >= 2) {
+    console.log(
+      "🤖 Generating new recommendations (found:",
+      existingRecs?.length || 0,
+      "existing)"
+    );
+    try {
+      const result = await generateOnboardingRecommendations(user.id, request);
+      if (result.error) {
+        error = result.error;
+      } else {
+        recommendations = result.recommendations || [];
+      }
+    } catch (err) {
+      console.error("❌ Recommendation generation failed:", err);
+      error = "Failed to generate recommendations";
+    }
+  }
+
+  const hasInteractions = recommendations?.some((r) => r.userInteraction);
+  console.log(
+    `📊 Loader: ${recommendations?.length || 0} recs, ${hasInteractions ? "with" : "no"} interactions`
+  );
+
+  return {
+    items: items || [],
+    recommendations: recommendations || [],
+    error,
+  };
+}
+
+export async function action({ request }: Route.ActionArgs) {
+  const { requireAuth } = await import("@/lib/protected-route");
+  const { user } = await requireAuth(request);
+
+  const { supabase } = createClient(request);
+  const formData = await request.formData();
+
+  const liked = formData.get("liked") === "true";
+  const recommendationId = formData.get("recommendation_id") as string;
+
+  console.log(`💾 Saving interaction: ${liked ? "LIKED" : "DISLIKED"}`);
+
+  if (!recommendationId) {
+    throw new Error("Missing recommendation ID");
+  }
+
+  // Save interaction
+  const { error } = await supabase.from("user_interactions").insert({
+    user_id: user.id,
+    recommendation_id: recommendationId,
+    interaction_type_name: liked ? "liked" : "disliked",
+  });
+
+  if (error) {
+    console.error("❌ Failed to save interaction:", error);
+    throw new Error("Failed to save interaction");
+  }
+
+  console.log("✅ Interaction saved successfully");
+
+  return { success: true };
+}
+
+export default function OnboardingFirstRecommendation({
+  loaderData,
+}: Route.ComponentProps) {
+  const navigate = useNavigate();
+  const { recommendations, error } = loaderData;
+
+  const [currentRecommendation, setCurrentRecommendation] = useState(0);
+
+  const recommendation = recommendations?.[currentRecommendation];
+  const currentInteraction =
+    recommendation?.userInteraction?.interaction_type_name;
+
+  const handleContinue = () => {
+    navigate("/onboarding/complete");
+  };
+
+  if (!recommendations || recommendations.length === 0) {
+    return (
+      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-1 bg-blue-600 rounded"></div>
+              <div className="w-8 h-1 bg-blue-600 rounded"></div>
+              <div className="w-8 h-1 bg-blue-600 rounded"></div>
+              <div className="w-8 h-1 bg-slate-200 rounded"></div>
+            </div>
+            <h1 className="text-3xl font-bold">Almost there!</h1>
+            <p className="text-slate-600">
+              Upload a few more items to see your first AI recommendation
+            </p>
+          </div>
+
+          <Card>
+            <CardContent className="pt-6 text-center space-y-4">
+              <Sparkles className="h-12 w-12 text-slate-400 mx-auto" />
+              <p className="text-slate-600">
+                We need at least 2 clothing items to create your first outfit
+                recommendation.
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => navigate("/onboarding/upload")}
+                  className="flex-1"
+                >
+                  Upload more items
+                </Button>
+                <Button variant="outline" onClick={handleContinue}>
+                  Skip to dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-1 bg-blue-600 rounded"></div>
+            <div className="w-8 h-1 bg-blue-600 rounded"></div>
+            <div className="w-8 h-1 bg-blue-600 rounded"></div>
+            <div className="w-8 h-1 bg-slate-200 rounded"></div>
+          </div>
+          <h1 className="text-3xl font-bold">Your first AI recommendation!</h1>
+          <p className="text-slate-600">
+            Here's what you could wear using your uploaded pieces
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader className="text-center">
+            <CardTitle className="flex items-center justify-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-600" />
+              Your AI Outfit Recommendations
+            </CardTitle>
+            <CardDescription>
+              {recommendations.length > 1 ? (
+                <span>
+                  Recommendation {currentRecommendation + 1} of{" "}
+                  {recommendations.length}
+                </span>
+              ) : (
+                "Your personalized outfit suggestion"
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Current Recommendation */}
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold">
+                  {recommendation?.name}
+                </h3>
+                <p className="text-slate-600 mt-1">
+                  {recommendation?.description}
+                </p>
+              </div>
+
+              {/* Clothing Items Grid */}
+              <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+                {recommendation?.items?.map((item: any) => (
+                  <Card
+                    key={item.id}
+                    className="overflow-hidden hover:shadow-md transition-shadow"
+                  >
+                    <div className="aspect-square relative">
+                      <ClothingImage
+                        filePath={item.image_url}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-3">
+                      <p className="font-medium text-sm truncate">
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-slate-600 capitalize">
+                        {item.primary_color}
+                      </p>
+                    </div>
+                  </Card>
+                )) || []}
+              </div>
+
+              {/* Styling Reason */}
+              {recommendation?.styling_reason && (
+                <div className="p-4 bg-linear-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
+                  <p className="text-sm text-slate-700">
+                    <span className="font-medium text-blue-800">
+                      Why this works:
+                    </span>{" "}
+                    {recommendation.styling_reason}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentRecommendation((prev) => Math.max(0, prev - 1))
+                }
+                disabled={currentRecommendation === 0}
+                className="flex items-center gap-2"
+              >
+                ← Previous
+              </Button>
+
+              <div className="flex gap-2">
+                {recommendations.map((_: any, index: number) => {
+                  const rec = recommendations[index];
+                  const hasInteraction =
+                    rec?.userInteraction?.interaction_type_name;
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentRecommendation(index)}
+                      className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                        index === currentRecommendation
+                          ? "bg-blue-600 scale-110"
+                          : hasInteraction
+                            ? hasInteraction === "liked"
+                              ? "bg-green-500"
+                              : "bg-slate-400"
+                            : "bg-slate-300 hover:bg-slate-400"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentRecommendation((prev) =>
+                    Math.min(recommendations.length - 1, prev + 1)
+                  )
+                }
+                disabled={currentRecommendation === recommendations.length - 1}
+                className="flex items-center gap-2"
+              >
+                Next →
+              </Button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-4 pt-4 border-t">
+              <p className="text-center font-medium">
+                What do you think of this outfit?
+              </p>
+              <p className="text-center text-sm text-slate-500">
+                Your feedback helps us learn your style (optional)
+              </p>
+
+              <div className="flex gap-4 justify-center">
+                <Form method="post" className="contents">
+                  <input
+                    type="hidden"
+                    name="recommendation_id"
+                    value={recommendation.id}
+                  />
+                  <input type="hidden" name="liked" value="true" />
+                  <Button
+                    type="submit"
+                    disabled={!!currentInteraction}
+                    variant={
+                      currentInteraction === "liked" ? "default" : "outline"
+                    }
+                    size="lg"
+                    data-testid="love-button"
+                    className={`flex items-center gap-2 transition-all ${
+                      currentInteraction === "liked"
+                        ? "bg-green-500 hover:bg-green-600 text-white border-green-500"
+                        : currentInteraction === "disliked"
+                          ? "opacity-50"
+                          : "hover:border-green-300 hover:text-green-600"
+                    }`}
+                  >
+                    <Heart
+                      className={`h-5 w-5 ${
+                        currentInteraction === "liked" ? "fill-white" : ""
+                      }`}
+                    />
+                    {currentInteraction === "liked" ? "Loved!" : "Love it"}
+                  </Button>
+                </Form>
+
+                <Form method="post" className="contents">
+                  <input
+                    type="hidden"
+                    name="recommendation_id"
+                    value={recommendation.id}
+                  />
+                  <input type="hidden" name="liked" value="false" />
+                  <Button
+                    type="submit"
+                    disabled={!!currentInteraction}
+                    variant={
+                      currentInteraction === "disliked" ? "default" : "outline"
+                    }
+                    size="lg"
+                    className={`flex items-center gap-2 transition-all ${
+                      currentInteraction === "disliked"
+                        ? "bg-slate-600 hover:bg-slate-700 text-white"
+                        : currentInteraction === "liked"
+                          ? "opacity-50"
+                          : "hover:border-slate-400 hover:text-slate-700"
+                    }`}
+                  >
+                    <X className="h-5 w-5" />
+                    {currentInteraction === "disliked" ? "Not for me" : "Pass"}
+                  </Button>
+                </Form>
+              </div>
+
+              {/* Feedback Message */}
+              {currentInteraction && (
+                <div
+                  className={`text-center p-3 rounded-lg transition-all duration-300 ${
+                    currentInteraction === "liked"
+                      ? "bg-green-50 text-green-700"
+                      : "bg-slate-50 text-slate-700"
+                  }`}
+                >
+                  <p className="text-sm font-medium">
+                    {currentInteraction === "liked"
+                      ? "💚 We'll remember you love this style combination!"
+                      : "👍 Thanks for the feedback - we'll learn from this!"}
+                  </p>
+                </div>
+              )}
+
+              {/* Feedback Encouragement */}
+              {(() => {
+                const ratedCount = recommendations.filter(
+                  (r) => r.userInteraction
+                ).length;
+                if (ratedCount >= 1) {
+                  return (
+                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-blue-700 text-sm">
+                        💡 Thanks for the feedback! This helps us learn your
+                        style preferences.
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Always visible Continue button */}
+              <Button
+                onClick={handleContinue}
+                className="w-full"
+                variant={
+                  recommendations.filter((r) => r.userInteraction).length >= 1
+                    ? "default"
+                    : "outline"
+                }
+              >
+                {recommendations.filter((r) => r.userInteraction).length >= 1
+                  ? "Continue to Dashboard"
+                  : "Skip for now"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        <div className="text-center text-sm text-slate-600">
+          <p>
+            This is just the beginning - your recommendations will get better as
+            we learn your style!
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
