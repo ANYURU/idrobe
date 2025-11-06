@@ -10,7 +10,8 @@
     "shared"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=web",
+    "preinstall": "node scripts/use-node-version.js",
+    "dev": "node scripts/use-node-version.js npm run dev --workspace=web",
     "build": "npm run build --workspace=web",
     "db:start": "npx supabase start",
     "db:stop": "npx supabase stop",
