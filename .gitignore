@@ -4,7 +4,11 @@
 .vscode/
 *.log
 
+
 # Ignore schema files
+complete-git-history.sh
+RLS_PERFORMANCE_FIXES.md
+MIGRATION_IMPROVEMENTS.md
 prev-schema.sql
 combined_migrations.sql
 migration_issues.txt
