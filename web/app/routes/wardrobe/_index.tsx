@@ -218,12 +218,19 @@ export default function WardrobePage() {
             <ItemCountWrapper itemsPromise={itemsPromise} />
           </Suspense>
         </div>
-        <Button className="whitespace-nowrap">
-          <Link to="/wardrobe/add" className="flex items-center">
-            <Plus className="mr-2 h-4 w-4 shrink-0" />
-            Add Item
+        <div className="flex gap-2">
+          <Link to="/wardrobe/analytics">
+            <Button variant="outline" className="whitespace-nowrap">
+              Analytics
+            </Button>
           </Link>
-        </Button>
+          <Link to="/wardrobe/add">
+            <Button className="whitespace-nowrap">
+              <Plus className="mr-2 h-4 w-4 shrink-0" />
+              Add Item
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Card className="border ">
