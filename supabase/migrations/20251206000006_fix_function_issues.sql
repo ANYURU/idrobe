@@ -1,17 +1,8 @@
 -- Fix problematic functions and improve error handling
 BEGIN;
 
--- Fix levenshtein function with proper fallback
-DROP FUNCTION IF EXISTS public.levenshtein(text, text);
-CREATE OR REPLACE FUNCTION public.levenshtein(text, text)
-RETURNS integer AS $$
-BEGIN
-    RETURN extensions.levenshtein($1, $2);
-EXCEPTION
-    WHEN OTHERS THEN
-        RETURN CASE WHEN $1 = $2 THEN 0 ELSE 1 END;
-END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT SECURITY DEFINER SET search_path = 'public, extensions';
+-- The levenshtein function is provided by the fuzzystrmatch extension
+-- No need to create a wrapper function
 
 -- Improve find_or_create_category with better validation
 CREATE OR REPLACE FUNCTION public.find_or_create_category(category_name TEXT)

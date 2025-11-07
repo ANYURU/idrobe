@@ -72,27 +72,11 @@ END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
 -- ============================================================================
--- 4. FIX LEVENSHTEIN FUNCTION WRAPPER
+-- 4. LEVENSHTEIN FUNCTION IS PROVIDED BY FUZZYSTRMATCH EXTENSION
 -- ============================================================================
 
--- Drop and recreate levenshtein wrapper with proper permissions
-DROP FUNCTION IF EXISTS public.levenshtein(text, text);
-
-CREATE OR REPLACE FUNCTION public.levenshtein(text, text)
-RETURNS integer 
-SET search_path = ''
-AS $$
-BEGIN
-    -- Try to use the extension function, fallback to simple comparison
-    BEGIN
-        RETURN extensions.levenshtein($1, $2);
-    EXCEPTION
-        WHEN OTHERS THEN
-            -- Simple fallback: return 0 if equal, 1 if different
-            RETURN CASE WHEN $1 = $2 THEN 0 ELSE 1 END;
-    END;
-END;
-$$ LANGUAGE plpgsql IMMUTABLE STRICT SECURITY DEFINER;
+-- The levenshtein function is provided by the fuzzystrmatch extension
+-- No need to create a wrapper function
 
 -- ============================================================================
 -- 5. CLEAN UP ORPHANED RECORDS FUNCTION
@@ -175,8 +159,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================================
 
 -- Grant execute permissions on essential functions
-GRANT EXECUTE ON FUNCTION public.levenshtein(text, text) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.levenshtein(text, text) TO anon;
 GRANT EXECUTE ON FUNCTION public.normalize_enum_value(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.normalize_enum_value(TEXT) TO anon;
 
@@ -241,6 +223,5 @@ COMMIT;
 -- COMMENTS
 -- ============================================================================
 
-COMMENT ON FUNCTION public.levenshtein(text, text) IS 'Safe wrapper for levenshtein distance with fallback';
 COMMENT ON FUNCTION cleanup_orphaned_records() IS 'Safely removes orphaned records with proper error handling';
 COMMENT ON FUNCTION refresh_wardrobe_analytics() IS 'Safely refreshes analytics view with permission error handling';

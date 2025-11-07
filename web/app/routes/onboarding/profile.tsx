@@ -135,19 +135,23 @@ export default function OnboardingProfile({
   });
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-blue-600 rounded"></div>
-            <div className="w-8 h-1 bg-slate-200 rounded"></div>
-            <div className="w-8 h-1 bg-slate-200 rounded"></div>
-            <div className="w-8 h-1 bg-slate-200 rounded"></div>
+    <div className="p-4">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+            <div className="flex-1 h-1 bg-primary rounded"></div>
+            <div className="flex-1 h-1 bg-muted rounded"></div>
+            <div className="flex-1 h-1 bg-muted rounded"></div>
+            <div className="flex-1 h-1 bg-muted rounded"></div>
           </div>
-          <h1 className="text-3xl font-bold">Let's get to know you</h1>
-          <p className="text-slate-600">
-            Just a few quick questions to personalize your experience
-          </p>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-foreground">
+              Let's get to know you
+            </h1>
+            <p className="text-muted-foreground">
+              Just a few quick questions to personalize your experience
+            </p>
+          </div>
         </div>
 
         {actionData?.error && (
@@ -158,9 +162,9 @@ export default function OnboardingProfile({
         )}
 
         <form onSubmit={formik.handleSubmit} className="space-y-6">
-          <Card>
+          <Card className="bg-card border-border shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <User className="h-5 w-5" />
                 What should we call you?
               </CardTitle>
@@ -178,9 +182,9 @@ export default function OnboardingProfile({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card border-border shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <MapPin className="h-5 w-5" />
                 Where are you located?
               </CardTitle>
@@ -220,9 +224,9 @@ export default function OnboardingProfile({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card border-border shadow-sm">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-card-foreground">
                 <Sparkles className="h-5 w-5" />
                 What's your style vibe?
               </CardTitle>
@@ -239,14 +243,14 @@ export default function OnboardingProfile({
                     onClick={() =>
                       formik.setFieldValue("style_vibe", vibe.value)
                     }
-                    className={`p-4 text-left border rounded-lg transition ${
+                    className={`p-4 text-left border rounded-lg transition text-foreground cursor-pointer ${
                       formik.values.style_vibe === vibe.value
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 hover:border-slate-300"
+                        ? "border-ring bg-accent"
+                        : "border-border hover:border-ring"
                     }`}
                   >
                     <div className="font-medium">{vibe.label}</div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-muted-foreground">
                       {vibe.description}
                     </div>
                   </button>
@@ -260,9 +264,9 @@ export default function OnboardingProfile({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-card border-border shadow-sm">
             <CardHeader>
-              <CardTitle>How do you like your clothes to fit?</CardTitle>
+              <CardTitle className="text-card-foreground">How do you like your clothes to fit?</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-2">
@@ -273,14 +277,14 @@ export default function OnboardingProfile({
                     onClick={() =>
                       formik.setFieldValue("preferred_fit", fit.value)
                     }
-                    className={`p-3 text-left border rounded-lg transition ${
+                    className={`p-3 text-left border rounded-lg transition cursor-pointer ${
                       formik.values.preferred_fit === fit.value
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-slate-200 hover:border-slate-300"
+                        ? "border-ring bg-accent"
+                        : "border-border hover:border-ring"
                     }`}
                   >
-                    <span className="font-medium">{fit.label}</span>
-                    <span className="text-slate-600 ml-2">
+                    <span className="font-medium text-foreground">{fit.label}</span>
+                    <span className="text-muted-foreground ml-2">
                       - {fit.description}
                     </span>
                   </button>
@@ -300,7 +304,14 @@ export default function OnboardingProfile({
             className="w-full"
             disabled={formik.isSubmitting}
           >
-            {formik.isSubmitting ? "Saving..." : "Next: Upload some clothes"}
+            {formik.isSubmitting ? "Saving..." : (
+              <>
+                Upload some clothes
+                <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </>
+            )}
           </Button>
         </form>
       </div>

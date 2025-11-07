@@ -27,6 +27,7 @@ const navigation = [
   { name: "Outfits", href: "/outfits", icon: Palette },
   { name: "Trends", href: "/trends", icon: TrendingUp },
   { name: "Profile", href: "/profile", icon: User },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export function Sidebar({ user }: SidebarProps) {
@@ -108,16 +109,6 @@ export function Sidebar({ user }: SidebarProps) {
 
           <div className="space-y-2">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" className="w-full justify-start h-10">
-              <Link 
-                to="/settings" 
-                className="flex items-center w-full"
-                onClick={() => setIsOpen(false)}
-              >
-                <Settings className="w-4 h-4 mr-3 shrink-0" />
-                Settings
-              </Link>
-            </Button>
             <Form method="post" action="/auth/signout">
               <Button
                 type="submit"

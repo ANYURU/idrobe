@@ -414,20 +414,24 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
 
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-blue-600 rounded"></div>
-            <div className="w-8 h-1 bg-blue-600 rounded"></div>
-            <div className="w-8 h-1 bg-slate-200 rounded"></div>
-            <div className="w-8 h-1 bg-slate-200 rounded"></div>
+    <div className="p-4">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+            <div className="flex-1 h-1 bg-primary rounded"></div>
+            <div className="flex-1 h-1 bg-primary rounded"></div>
+            <div className="flex-1 h-1 bg-muted rounded"></div>
+            <div className="flex-1 h-1 bg-muted rounded"></div>
           </div>
-          <h1 className="text-3xl font-bold">Show us your style</h1>
-          <p className="text-slate-600">
-            Upload 3-5 of your favorite pieces. Our AI will analyze them
-            instantly!
-          </p>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-foreground">
+              Show us your style
+            </h1>
+            <p className="text-muted-foreground">
+              Upload 3-5 of your favorite pieces. Our AI will analyze them
+              instantly!
+            </p>
+          </div>
         </div>
 
         {error && (
@@ -437,9 +441,9 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
           </Alert>
         )}
 
-        <Card>
+        <Card className="bg-card border-border shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-card-foreground">
               <Camera className="h-5 w-5" />
               Take or upload photos
             </CardTitle>
@@ -448,7 +452,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-slate-400 transition">
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-slate-400 transition cursor-pointer">
               <input
                 type="file"
                 multiple
@@ -520,9 +524,9 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
         </Card>
 
         {hasExistingItems && (
-          <Card>
+          <Card className="bg-card border-border shadow-sm">
             <CardHeader>
-              <CardTitle>Your Existing Items</CardTitle>
+              <CardTitle className="text-card-foreground">Your Existing Items</CardTitle>
               <CardDescription>
                 You already have {existingItems.length} item(s) in your wardrobe
               </CardDescription>

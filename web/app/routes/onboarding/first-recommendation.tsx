@@ -161,25 +161,27 @@ export default function OnboardingFirstRecommendation({
 
   if (!recommendations || recommendations.length === 0) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-1 bg-blue-600 rounded"></div>
-              <div className="w-8 h-1 bg-blue-600 rounded"></div>
-              <div className="w-8 h-1 bg-blue-600 rounded"></div>
-              <div className="w-8 h-1 bg-slate-200 rounded"></div>
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div className="text-center space-y-6">
+            <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+              <div className="flex-1 h-1 bg-primary rounded"></div>
+              <div className="flex-1 h-1 bg-primary rounded"></div>
+              <div className="flex-1 h-1 bg-primary rounded"></div>
+              <div className="flex-1 h-1 bg-muted rounded"></div>
             </div>
-            <h1 className="text-3xl font-bold">Almost there!</h1>
-            <p className="text-slate-600">
-              Upload a few more items to see your first AI recommendation
-            </p>
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-foreground">Almost there!</h1>
+              <p className="text-muted-foreground">
+                Upload a few more items to see your first AI recommendation
+              </p>
+            </div>
           </div>
 
-          <Card>
+          <Card className="bg-card border-border shadow-sm">
             <CardContent className="pt-6 text-center space-y-4">
-              <Sparkles className="h-12 w-12 text-slate-400 mx-auto" />
-              <p className="text-slate-600">
+              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto" />
+              <p className="text-muted-foreground">
                 We need at least 2 clothing items to create your first outfit
                 recommendation.
               </p>
@@ -202,25 +204,27 @@ export default function OnboardingFirstRecommendation({
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-1 bg-blue-600 rounded"></div>
-            <div className="w-8 h-1 bg-blue-600 rounded"></div>
-            <div className="w-8 h-1 bg-blue-600 rounded"></div>
-            <div className="w-8 h-1 bg-slate-200 rounded"></div>
+    <div className="min-h-screen bg-background p-4">
+      <div className="max-w-2xl mx-auto space-y-8">
+        <div className="text-center space-y-6">
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+            <div className="flex-1 h-1 bg-primary rounded"></div>
+            <div className="flex-1 h-1 bg-primary rounded"></div>
+            <div className="flex-1 h-1 bg-primary rounded"></div>
+            <div className="flex-1 h-1 bg-muted rounded"></div>
           </div>
-          <h1 className="text-3xl font-bold">Your first AI recommendation!</h1>
-          <p className="text-slate-600">
-            Here's what you could wear using your uploaded pieces
-          </p>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-foreground">Your first AI recommendation!</h1>
+            <p className="text-muted-foreground">
+              Here's what you could wear using your uploaded pieces
+            </p>
+          </div>
         </div>
 
-        <Card>
+        <Card className="bg-card border-border shadow-sm">
           <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-600" />
+            <CardTitle className="flex items-center justify-center gap-2 text-card-foreground">
+              <Sparkles className="h-5 w-5 text-primary" />
               Your AI Outfit Recommendations
             </CardTitle>
             <CardDescription>
@@ -241,7 +245,7 @@ export default function OnboardingFirstRecommendation({
                 <h3 className="text-xl font-semibold">
                   {recommendation?.name}
                 </h3>
-                <p className="text-slate-600 mt-1">
+                <p className="text-muted-foreground mt-1">
                   {recommendation?.description}
                 </p>
               </div>
@@ -264,7 +268,7 @@ export default function OnboardingFirstRecommendation({
                       <p className="font-medium text-sm truncate">
                         {item.name}
                       </p>
-                      <p className="text-xs text-slate-600 capitalize">
+                      <p className="text-xs text-muted-foreground capitalize">
                         {item.primary_color}
                       </p>
                     </div>
@@ -274,9 +278,9 @@ export default function OnboardingFirstRecommendation({
 
               {/* Styling Reason */}
               {recommendation?.styling_reason && (
-                <div className="p-4 bg-linear-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
-                  <p className="text-sm text-slate-700">
-                    <span className="font-medium text-blue-800">
+                <div className="p-4 bg-accent rounded-lg border border-border">
+                  <p className="text-sm text-accent-foreground">
+                    <span className="font-medium text-primary">
                       Why this works:
                     </span>{" "}
                     {recommendation.styling_reason}
@@ -310,12 +314,12 @@ export default function OnboardingFirstRecommendation({
                       onClick={() => setCurrentRecommendation(index)}
                       className={`w-3 h-3 rounded-full transition-all duration-200 ${
                         index === currentRecommendation
-                          ? "bg-blue-600 scale-110"
+                          ? "bg-primary scale-110"
                           : hasInteraction
                             ? hasInteraction === "liked"
                               ? "bg-green-500"
-                              : "bg-slate-400"
-                            : "bg-slate-300 hover:bg-slate-400"
+                              : "bg-muted"
+                            : "bg-muted-foreground hover:bg-muted"
                       }`}
                     />
                   );
@@ -342,7 +346,7 @@ export default function OnboardingFirstRecommendation({
               <p className="text-center font-medium">
                 What do you think of this outfit?
               </p>
-              <p className="text-center text-sm text-slate-500">
+              <p className="text-center text-sm text-muted-foreground">
                 Your feedback helps us learn your style (optional)
               </p>
 
@@ -364,10 +368,10 @@ export default function OnboardingFirstRecommendation({
                     data-testid="love-button"
                     className={`flex items-center gap-2 transition-all ${
                       currentInteraction === "liked"
-                        ? "bg-green-500 hover:bg-green-600 text-white border-green-500"
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
                         : currentInteraction === "disliked"
                           ? "opacity-50"
-                          : "hover:border-green-300 hover:text-green-600"
+                          : "hover:border-primary hover:text-primary"
                     }`}
                   >
                     <Heart
@@ -395,10 +399,10 @@ export default function OnboardingFirstRecommendation({
                     size="lg"
                     className={`flex items-center gap-2 transition-all ${
                       currentInteraction === "disliked"
-                        ? "bg-slate-600 hover:bg-slate-700 text-white"
+                        ? "bg-muted text-muted-foreground hover:bg-muted/80"
                         : currentInteraction === "liked"
                           ? "opacity-50"
-                          : "hover:border-slate-400 hover:text-slate-700"
+                          : "hover:border-muted-foreground hover:text-muted-foreground"
                     }`}
                   >
                     <X className="h-5 w-5" />
@@ -412,8 +416,8 @@ export default function OnboardingFirstRecommendation({
                 <div
                   className={`text-center p-3 rounded-lg transition-all duration-300 ${
                     currentInteraction === "liked"
-                      ? "bg-green-50 text-green-700"
-                      : "bg-slate-50 text-slate-700"
+                      ? "bg-accent text-accent-foreground"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   <p className="text-sm font-medium">
@@ -431,8 +435,8 @@ export default function OnboardingFirstRecommendation({
                 ).length;
                 if (ratedCount >= 1) {
                   return (
-                    <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <p className="text-blue-700 text-sm">
+                    <div className="text-center p-3 bg-accent rounded-lg border border-border">
+                      <p className="text-accent-foreground text-sm">
                         💡 Thanks for the feedback! This helps us learn your
                         style preferences.
                       </p>
@@ -467,7 +471,7 @@ export default function OnboardingFirstRecommendation({
           </Alert>
         )}
 
-        <div className="text-center text-sm text-slate-600">
+        <div className="text-center text-sm text-muted-foreground">
           <p>
             This is just the beginning - your recommendations will get better as
             we learn your style!

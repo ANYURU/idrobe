@@ -164,16 +164,30 @@ Return ONLY this JSON:
 ]`;
 
   try {
+    // Skip AI generation in development if no API key
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.log('❌ Missing GEMINI_API_KEY, skipping AI generation');
+      return null;
+    }
+    
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }]
         })
       }
     );
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error('❌ Gemini API error:', response.status);

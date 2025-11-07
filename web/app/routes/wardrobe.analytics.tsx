@@ -1,12 +1,28 @@
-import { useAuth } from '@/lib/hooks'
-import { useClothingItems } from '@/lib/hooks'
+import { useLoaderData } from 'react-router'
+import type { Route } from './+types/analytics'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, TrendingUp, Shirt, Calendar } from 'lucide-react'
 
+export async function loader({ request }: Route.LoaderArgs) {
+  const { requireAuth } = await import('@/lib/protected-route')
+  const { user } = await requireAuth(request)
+  const { createClient } = await import('@/lib/supabase.server')
+  const { supabase } = createClient(request)
+
+  // Fetch clothing items with analytics data
+  const { data: items } = await supabase
+    .from('clothing_items')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('is_archived', false)
+    .is('deleted_at', null)
+
+  return { items: items || [] }
+}
+
 export default function AnalyticsPage() {
-  const { user } = useAuth()
-  const { items } = useClothingItems(user?.id)
+  const { items } = useLoaderData<typeof loader>()
 
   // Calculate analytics
   const totalItems = items.length

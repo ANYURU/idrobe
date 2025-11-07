@@ -1,14 +1,14 @@
 export function Logo() {
   return (
     <div className="flex items-center space-x-2">
-      <div className="w-10 h-10 rounded-full border-2 border-primary flex items-center justify-center bg-transparent">
+      <div className="w-10 h-10 rounded-full border-2 border-[#8B4513] flex items-center justify-center bg-transparent">
         <svg
           width="30"
           height="30"
           viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="text-primary"
+          className="text-[#8B4513]"
         >
           <circle
             cx="50"
@@ -62,7 +62,7 @@ export function Logo() {
           />
         </svg>
       </div>
-      <span className="font-bold text-xl text-primary uppercase tracking-wider">
+      <span className="font-bold text-xl text-foreground uppercase tracking-wider">
         IDrobe
       </span>
     </div>

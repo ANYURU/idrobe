@@ -10,7 +10,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SET search_path = '';
+$$ LANGUAGE plpgsql SET search_path = 'public';
 
 -- Fix normalize_enum_value function from 20251202000003
 CREATE OR REPLACE FUNCTION normalize_enum_value(input_value TEXT)
@@ -18,7 +18,7 @@ RETURNS TEXT AS $$
 BEGIN
     RETURN lower(trim(replace(replace(input_value, '-', '_'), ' ', '_')));
 END;
-$$ LANGUAGE plpgsql IMMUTABLE SET search_path = '';
+$$ LANGUAGE plpgsql IMMUTABLE SET search_path = 'public';
 
 -- Fix create_user_profile function from 20251201000000
 CREATE OR REPLACE FUNCTION create_user_profile()
@@ -28,7 +28,7 @@ BEGIN
     VALUES (NEW.id, NOW(), NOW());
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
 
 -- Fix refresh_wardrobe_analytics function from initial schema
 CREATE OR REPLACE FUNCTION refresh_wardrobe_analytics() 
@@ -36,11 +36,12 @@ RETURNS void AS $$
 BEGIN 
     REFRESH MATERIALIZED VIEW CONCURRENTLY public.user_wardrobe_analytics;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
 
 -- Fix find_similar_items function from initial schema
+-- NOTE: Needs extensions schema for vector type
 CREATE OR REPLACE FUNCTION find_similar_items(
-    target_embedding VECTOR(768),
+    target_embedding extensions.vector(768),
     target_user_id UUID,
     similarity_threshold DECIMAL DEFAULT 0.7,
     limit_count INTEGER DEFAULT 10
@@ -70,7 +71,7 @@ ORDER BY
 LIMIT
     limit_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public, extensions';
 
 -- Fix calculate_wardrobe_diversity function from initial schema
 CREATE OR REPLACE FUNCTION calculate_wardrobe_diversity(target_user_id UUID) 
@@ -98,6 +99,6 @@ WHERE
 
     RETURN LEAST(diversity_score, 1.0);
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = 'public';
 
 -- Migration complete: Fixes remaining search_path security issues in existing functions

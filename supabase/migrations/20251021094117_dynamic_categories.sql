@@ -5,7 +5,7 @@
 
 -- Core category reference table
 CREATE TABLE public.clothing_categories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT UNIQUE NOT NULL,
     parent_category_id UUID REFERENCES public.clothing_categories(id),
     display_order INTEGER DEFAULT 0,
@@ -17,7 +17,7 @@ CREATE TABLE public.clothing_categories (
 
 -- Subcategory reference table
 CREATE TABLE public.clothing_subcategories (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
     category_id UUID NOT NULL REFERENCES public.clothing_categories(id),
     is_active BOOLEAN DEFAULT TRUE,
@@ -28,7 +28,7 @@ CREATE TABLE public.clothing_subcategories (
 
 -- Style tags reference table (completely dynamic)
 CREATE TABLE public.style_tags (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT UNIQUE NOT NULL,
     popularity_score INTEGER DEFAULT 0,
     is_trending BOOLEAN DEFAULT FALSE,

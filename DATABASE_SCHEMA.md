@@ -7,12 +7,14 @@ The iDrobe database uses Supabase (PostgreSQL) with a sophisticated schema suppo
 ## Migration History
 
 ### Phase 1: Initial Schema (20251020142338)
+
 - Enum-based categories and subcategories
 - Array-based style tags
 - Partitioned tables for scalability
 - Vector embeddings for AI similarity
 
 ### Phase 2: Dynamic Categories (20251021093944-20251021094305)
+
 - Created `clothing_categories` table
 - Created `clothing_subcategories` table
 - Created `style_tags` table
@@ -20,28 +22,33 @@ The iDrobe database uses Supabase (PostgreSQL) with a sophisticated schema suppo
 - Added helper functions for data retrieval
 
 ### Phase 3: Data Migration (20251021103105)
+
 - Migrated enum data to reference tables
 - Populated junction tables
 - Updated foreign key columns
 
 ### Phase 4: Cleanup (20251021103229)
+
 - Dropped old enum columns
 - Recreated materialized views
 - Updated helper functions
 
 ### Phase 5: Security & Performance (20251021114044)
+
 - Added input validation
 - Added rate limiting
 - Added error logging
 - Added duplicate prevention
 
 ### Phase 6: Vector Extension (20251021122526-20251021123027)
+
 - Properly configured pgvector extension
 - Set up vector similarity indexes
 
 ## Core Tables
 
 ### user_profiles
+
 Stores user account information, preferences, and subscription status.
 
 ```sql
@@ -77,15 +84,17 @@ CREATE TABLE public.user_profiles (
 ```
 
 **Indexes:**
+
 - `idx_user_profiles_location` - For location-based queries
 - `idx_user_profiles_body_type` - For body type filtering
 
 ### clothing_categories
+
 Dynamic categories for clothing items.
 
 ```sql
 CREATE TABLE public.clothing_categories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   name TEXT NOT NULL UNIQUE,
   display_order INTEGER,
   is_active BOOLEAN DEFAULT TRUE,
@@ -95,17 +104,19 @@ CREATE TABLE public.clothing_categories (
 ```
 
 **Common Categories:**
+
 - tops, bottoms, dresses, outerwear, shoes
 - accessories, bags, jewelry, hats, scarves
 - belts, eyewear, watches, activewear, swimwear
 - underwear, sleepwear, formalwear, casualwear
 
 ### clothing_subcategories
+
 Subcategories within each category.
 
 ```sql
 CREATE TABLE public.clothing_subcategories (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   category_id UUID NOT NULL REFERENCES public.clothing_categories(id),
   name TEXT NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
@@ -116,16 +127,18 @@ CREATE TABLE public.clothing_subcategories (
 ```
 
 **Example Mappings:**
+
 - tops → t-shirt, blouse, shirt, tank-top, sweater, hoodie, cardigan, polo
 - bottoms → jeans, trousers, shorts, skirt, leggings, joggers, chinos
 - shoes → sneakers, boots, sandals, heels, flats, loafers, oxfords, slippers
 
 ### style_tags
+
 Reusable style tags for clothing items.
 
 ```sql
 CREATE TABLE public.style_tags (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   name TEXT NOT NULL UNIQUE,
   popularity_score INTEGER DEFAULT 0,
   is_active BOOLEAN DEFAULT TRUE,
@@ -135,16 +148,18 @@ CREATE TABLE public.style_tags (
 ```
 
 **Common Tags:**
+
 - casual, formal, vintage, minimalist, bohemian
 - sporty, elegant, edgy, romantic, playful
 - professional, trendy, classic, creative, adventurous
 
 ### clothing_items
+
 Main wardrobe inventory with AI analysis and international currency support.
 
 ```sql
 CREATE TABLE public.clothing_items (
-  id UUID DEFAULT uuid_generate_v4(),
+  id UUID DEFAULT   gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   category_id UUID REFERENCES public.clothing_categories(id),
@@ -182,15 +197,18 @@ CREATE TABLE public.clothing_items (
 ```
 
 **Partitions:**
+
 - `clothing_items_p0` - Users with even hash
 - `clothing_items_p1` - Users with odd hash
 
 **Indexes:**
+
 - `idx_clothing_items_user_category` - For user + category queries
 - `idx_clothing_items_user_active` - For active items
 - `idx_clothing_embedding` - Vector similarity search
 
 ### clothing_item_style_tags
+
 Junction table for many-to-many relationship between items and tags.
 
 ```sql
@@ -202,11 +220,12 @@ CREATE TABLE public.clothing_item_style_tags (
 ```
 
 ### outfit_recommendations
+
 AI-generated outfit suggestions.
 
 ```sql
 CREATE TABLE public.outfit_recommendations (
-  id UUID DEFAULT uuid_generate_v4(),
+  id UUID DEFAULT   gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   occasion TEXT NOT NULL,
   mood TEXT,
@@ -238,11 +257,12 @@ CREATE TABLE public.outfit_recommendations (
 ```
 
 ### outfit_collections
+
 User-curated outfit combinations.
 
 ```sql
 CREATE TABLE public.outfit_collections (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
@@ -258,11 +278,12 @@ CREATE TABLE public.outfit_collections (
 ```
 
 ### user_interactions
+
 Feedback loop for ML training.
 
 ```sql
 CREATE TABLE public.user_interactions (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   recommendation_id UUID,
   clothing_item_id UUID,
@@ -278,11 +299,12 @@ CREATE TABLE public.user_interactions (
 ```
 
 ### wardrobe_gaps
+
 Identified missing items in wardrobe.
 
 ```sql
 CREATE TABLE public.wardrobe_gaps (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   gap_type TEXT NOT NULL, -- 'missing-category', 'color-variety', 'seasonal'
   category_id UUID REFERENCES public.clothing_categories(id),
@@ -299,11 +321,12 @@ CREATE TABLE public.wardrobe_gaps (
 ```
 
 ### seasonal_trends
+
 Global fashion trends.
 
 ```sql
 CREATE TABLE public.seasonal_trends (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   season TEXT NOT NULL, -- 'spring', 'summer', 'fall', 'winter', 'all-season'
   year INTEGER NOT NULL,
   trending_colors TEXT[],
@@ -322,11 +345,12 @@ CREATE TABLE public.seasonal_trends (
 ```
 
 ### clothing_duplicates
+
 Duplicate detection for uploaded items.
 
 ```sql
 CREATE TABLE public.clothing_duplicates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   original_item_id UUID NOT NULL,
   duplicate_item_id UUID NOT NULL,
@@ -340,11 +364,12 @@ CREATE TABLE public.clothing_duplicates (
 ```
 
 ### recommendation_logs
+
 Logs for ML training and debugging.
 
 ```sql
 CREATE TABLE public.recommendation_logs (
-  log_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  log_id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   recommendation_id UUID,
   input_context JSONB NOT NULL,
@@ -357,6 +382,7 @@ CREATE TABLE public.recommendation_logs (
 ## Subscription and Payment System
 
 ### subscription_plans
+
 Available subscription tiers with pricing.
 
 ```sql
@@ -376,6 +402,7 @@ CREATE TABLE subscription_plans (
 ```
 
 ### plan_limits
+
 Feature limits for each subscription plan.
 
 ```sql
@@ -390,6 +417,7 @@ CREATE TABLE plan_limits (
 ```
 
 ### subscriptions
+
 User subscription records.
 
 ```sql
@@ -411,6 +439,7 @@ CREATE TABLE subscriptions (
 ```
 
 ### payments
+
 Payment transaction records with mobile money support.
 
 ```sql
@@ -435,6 +464,7 @@ CREATE TABLE payments (
 ```
 
 ### referrals
+
 Referral system for user acquisition.
 
 ```sql
@@ -456,6 +486,7 @@ CREATE TABLE referrals (
 ```
 
 ### user_credits
+
 User credit balances and transactions.
 
 ```sql
@@ -477,6 +508,7 @@ CREATE TABLE user_credits (
 ## Currency and Internationalization
 
 ### supported_currencies
+
 List of supported currencies with display information.
 
 ```sql
@@ -491,6 +523,7 @@ CREATE TABLE public.supported_currencies (
 ```
 
 ### exchange_rates
+
 Cached currency exchange rates.
 
 ```sql
@@ -511,6 +544,7 @@ CREATE TABLE exchange_rates (
 ## Production Features
 
 ### event_templates
+
 Reusable event patterns for outfit planning.
 
 ```sql
@@ -527,6 +561,7 @@ CREATE TABLE event_templates (
 ```
 
 ### events
+
 Specific event occurrences with outfit planning context.
 
 ```sql
@@ -546,6 +581,7 @@ CREATE TABLE events (
 ```
 
 ### sustainability_tracking
+
 Tracks user sustainability metrics over time.
 
 ```sql
@@ -562,11 +598,12 @@ CREATE TABLE sustainability_tracking (
 ```
 
 ### error_logs
+
 System error logging.
 
 ```sql
 CREATE TABLE public.error_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT   gen_random_uuid(),
   user_id UUID,
   error_type TEXT NOT NULL,
   error_message TEXT NOT NULL,
@@ -578,6 +615,7 @@ CREATE TABLE public.error_logs (
 ## Materialized Views
 
 ### user_wardrobe_analytics
+
 Aggregated analytics for user wardrobe metrics.
 
 ```sql
@@ -592,7 +630,7 @@ SELECT
   COUNT(DISTINCT CASE WHEN ui.interaction_type = 'liked' THEN ui.id END) as liked_recommendations,
   COUNT(DISTINCT CASE WHEN ui.interaction_type = 'worn' THEN ui.id END) as worn_recommendations,
   ROUND(
-    COUNT(DISTINCT CASE WHEN ui.interaction_type = 'liked' THEN ui.id END)::DECIMAL / 
+    COUNT(DISTINCT CASE WHEN ui.interaction_type = 'liked' THEN ui.id END)::DECIMAL /
     NULLIF(COUNT(DISTINCT or_rec.id), 0) * 100, 2
   ) as recommendation_acceptance_rate,
   MAX(ci.created_at) as last_item_added,
@@ -608,6 +646,7 @@ GROUP BY u.user_id;
 ## Helper Functions
 
 ### get_clothing_item_with_categories
+
 Returns clothing item with all related data as JSON.
 
 ```sql
@@ -615,6 +654,7 @@ SELECT * FROM get_clothing_item_with_categories(item_id)
 ```
 
 ### add_style_tags_to_item
+
 Adds multiple style tags to a clothing item.
 
 ```sql
@@ -622,6 +662,7 @@ SELECT add_style_tags_to_item(item_id, ARRAY['casual', 'vintage'])
 ```
 
 ### get_active_categories_for_prompt
+
 Returns all active categories/subcategories/tags for AI prompts.
 
 ```sql
@@ -629,18 +670,20 @@ SELECT * FROM get_active_categories_for_prompt()
 ```
 
 ### find_similar_items
+
 Finds similar clothing items using vector embeddings (768 dimensions).
 
 ```sql
 SELECT * FROM find_similar_items(
-  embedding, 
-  user_id, 
+  embedding,
+  user_id,
   similarity_threshold := 0.7,
   limit_count := 10
 )
 ```
 
 ### calculate_wardrobe_diversity
+
 Calculates wardrobe diversity score.
 
 ```sql
@@ -650,6 +693,7 @@ SELECT calculate_wardrobe_diversity(user_id)
 ### Currency and Subscription Functions
 
 ### convert_currency
+
 Converts amounts between currencies using cached exchange rates.
 
 ```sql
@@ -657,6 +701,7 @@ SELECT convert_currency(100.00, 'USD', 'ZAR')
 ```
 
 ### get_user_plan_limits
+
 Get usage limits for a user based on their current subscription plan.
 
 ```sql
@@ -664,6 +709,7 @@ SELECT get_user_plan_limits(user_id, 'uploads')
 ```
 
 ### check_usage_limit
+
 Check if user has exceeded their usage limit for a specific feature.
 
 ```sql
@@ -671,6 +717,7 @@ SELECT check_usage_limit(user_id, 'recs_per_week')
 ```
 
 ### get_converted_amount
+
 Convert currency amounts for display with user preferences.
 
 ```sql
@@ -727,6 +774,7 @@ CREATE INDEX idx_gaps_priority ON public.wardrobe_gaps(priority DESC);
 ## Data Types
 
 ### Text-Based Values (Replaced Enums for Flexibility)
+
 - **Seasons**: 'spring', 'summer', 'fall', 'winter', 'all_season'
 - **Occasions**: 'casual', 'work', 'formal', 'business_casual', 'party', 'wedding', 'date', 'sports', 'outdoor', 'beach', 'gym', 'travel', 'religious', 'interview', 'networking', 'brunch', 'dinner', 'concert', 'festival', 'graduation', 'everyday'
 - **Moods**: 'confident', 'relaxed', 'professional', 'playful', 'romantic', 'edgy', 'elegant', 'sporty', 'bohemian', 'minimalist', 'bold', 'comfortable', 'trendy', 'classic', 'creative', 'adventurous'
@@ -742,8 +790,9 @@ CREATE INDEX idx_gaps_priority ON public.wardrobe_gaps(priority DESC);
 ## Query Examples
 
 ### Get user's wardrobe with categories
+
 ```sql
-SELECT 
+SELECT
   ci.*,
   cc.name as category_name,
   cs.name as subcategory_name
@@ -755,8 +804,9 @@ ORDER BY ci.created_at DESC;
 ```
 
 ### Get outfit recommendations with items
+
 ```sql
-SELECT 
+SELECT
   or_rec.*,
   array_agg(ci.name) as item_names
 FROM outfit_recommendations or_rec
@@ -767,6 +817,7 @@ ORDER BY or_rec.generated_at DESC;
 ```
 
 ### Find similar items
+
 ```sql
 SELECT * FROM find_similar_items(
   (SELECT embedding FROM clothing_items WHERE id = $1),
@@ -781,6 +832,7 @@ SELECT * FROM find_similar_items(
 ### Supabase Storage Bucket: `clothing`
 
 Structure:
+
 ```
 clothing/
 ├── {user_id}/
@@ -790,6 +842,7 @@ clothing/
 ```
 
 **Policies:**
+
 - Users can upload to their own folder
 - Users can read their own images
 - Users can update their own images

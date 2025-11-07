@@ -254,9 +254,37 @@ export async function loadWardrobeAnalytics(userId: string, request: Request) {
 }
 
 /**
- * Parallel loader for dashboard
+ * Parallel loader for dashboard with timeout protection
  */
 export async function loadDashboardData(userId: string, request: Request) {
+  try {
+    // Add timeout wrapper to prevent hanging
+    return await Promise.race([
+      loadDashboardDataInternal(userId, request),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Dashboard data timeout')), 20000) // 20 second timeout
+      )
+    ]);
+  } catch (error) {
+    console.error('❌ Dashboard data error:', error);
+    // Return minimal fallback data on timeout/error
+    return {
+      profile: null,
+      items: [],
+      recommendations: [],
+      collections: [],
+      gaps: [],
+      analytics: null,
+      dailyOutfit: {
+        weather: null,
+        recommendations: [],
+        hasWeatherMatch: false
+      },
+    };
+  }
+}
+
+async function loadDashboardDataInternal(userId: string, request: Request) {
   const [profile, items, recommendations, collections, gaps, analytics] = await Promise.all([
     loadUserProfile(userId, request),
     loadClothingItems(userId, request),

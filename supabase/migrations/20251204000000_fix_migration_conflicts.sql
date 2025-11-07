@@ -3,9 +3,18 @@
 -- Consolidate and fix all migration conflicts identified
 -- ============================================================================
 
+-- Set the search path to include 'extensions' schema explicitly
+-- This ensures that operator classes like "vector_cosine_ops" are found
+-- when creating indexes later in the script.
+SET search_path TO public, extensions, pg_catalog;
+
+
 -- 1. EXTENSIONS (only create if not exists)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "vector";
+
+-- Ensure the vector extension is created within the 'extensions' schema as intended
+CREATE EXTENSION IF NOT EXISTS "vector" WITH SCHEMA extensions;
+
 CREATE EXTENSION IF NOT EXISTS fuzzystrmatch WITH SCHEMA extensions;
 
 -- 2. DROP ENUM TYPES (if they exist from previous runs)
@@ -75,6 +84,7 @@ CREATE TABLE IF NOT EXISTS public.error_logs (
 );
 
 -- 7. ENSURE PROPER INDEXES EXIST
+-- These indexes now execute successfully because 'extensions' is in the search_path
 CREATE INDEX IF NOT EXISTS idx_clothing_items_user_category ON public.clothing_items(user_id, category_id);
 CREATE INDEX IF NOT EXISTS idx_clothing_items_user_active ON public.clothing_items(user_id, is_archived, deleted_at);
 CREATE INDEX IF NOT EXISTS idx_clothing_embedding ON public.clothing_items USING ivfflat(embedding vector_cosine_ops) WITH (lists = 100);

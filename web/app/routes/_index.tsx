@@ -112,17 +112,21 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
-        <p className="text-muted-foreground mt-2">
-          Here's what's happening with your wardrobe
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <div className="p-6 space-y-6">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-sm">
+          <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+            Welcome back!
+          </h1>
+          <p className="text-slate-600 mt-2">
+            Here's what's happening with your wardrobe
+          </p>
+        </div>
 
-      <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardContent dashboardPromise={loaderData.dashboardPromise} />
-      </Suspense>
+        <Suspense fallback={<DashboardSkeleton />}>
+          <DashboardContent dashboardPromise={loaderData.dashboardPromise} />
+        </Suspense>
+      </div>
     </div>
   );
 }

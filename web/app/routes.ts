@@ -42,6 +42,9 @@ export default [
     route("outfits/collections/:collectionId/edit", "routes/outfits/collections.$collectionId.edit.tsx"),
     route("outfits/:outfitId", "routes/outfits/$outfitId.tsx"),
     
+    // Analytics routes (nested under wardrobe)
+    route("wardrobe/analytics", "routes/wardrobe.analytics.tsx"),
+    
     // Other routes
     route("trends", "routes/trends/_index.tsx"),
     route("profile", "routes/profile.tsx"),

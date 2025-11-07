@@ -3,9 +3,8 @@
 -- Benchmark: Original generated schema with modifications highlighted
 -- ============================================================================
 -- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
-CREATE EXTENSION IF NOT EXISTS "vector";
+-- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS vector;
 
 -- pgvector for AI embeddings
 -- ============================================================================
@@ -238,7 +237,7 @@ CREATE TABLE public.user_profiles (
 -- ============================================================================
 -- MODIFICATION: Added partitioning by user_id for scalability (2 partitions for MVP)
 CREATE TABLE public.clothing_items (
-    id UUID DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     -- Basic Info
     name TEXT NOT NULL,
@@ -317,7 +316,7 @@ ADD
 -- ============================================================================
 -- MODIFICATION: Added partitioning by user_id for scalability (2 partitions for MVP)
 CREATE TABLE public.outfit_recommendations (
-    id UUID DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     -- Context for Recommendation
     occasion occasion NOT NULL,
@@ -377,7 +376,7 @@ VALUES
 -- USER INTERACTIONS TABLE (Feedback Loop)
 -- ============================================================================
 CREATE TABLE public.user_interactions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     recommendation_id UUID,
     clothing_item_id UUID,
@@ -407,7 +406,7 @@ CREATE TABLE public.user_interactions (
 -- WARDROBE GAPS TABLE (Identified Missing Items)
 -- ============================================================================
 CREATE TABLE public.wardrobe_gaps (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     gap_type TEXT NOT NULL,
     -- e.g., 'missing-category', 'color-variety', 'seasonal'
@@ -433,7 +432,7 @@ CREATE TABLE public.wardrobe_gaps (
 -- OUTFIT COLLECTIONS (Saved/Curated Outfits)
 -- ============================================================================
 CREATE TABLE public.outfit_collections (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     description TEXT,
@@ -453,7 +452,7 @@ CREATE TABLE public.outfit_collections (
 -- SEASONAL TRENDS TABLE (Global Fashion Trends)
 -- ============================================================================
 CREATE TABLE public.seasonal_trends (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     season season NOT NULL,
     year INTEGER NOT NULL,
     trending_colors TEXT [],
@@ -477,7 +476,7 @@ CREATE TABLE public.seasonal_trends (
 -- DUPLICATE DETECTION TABLE (Prevent Redundant Uploads)
 -- ============================================================================
 CREATE TABLE public.clothing_duplicates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     original_item_id UUID NOT NULL,
     duplicate_item_id UUID NOT NULL,
@@ -497,18 +496,18 @@ CREATE TABLE public.clothing_duplicates (
 
 -- MODIFICATION: New table for recommender logs (traceability for TFRS training)
 CREATE TABLE public.recommendation_logs (
-    log_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    log_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     recommendation_id UUID,
-        input_context JSONB NOT NULL,
-        -- e.g., {"mood": "relaxed", "weather_temp": 80}
-        output_items UUID [],
-        -- Generated clothing_item_ids
-        ai_confidence DECIMAL(3, 2) CHECK (
-            ai_confidence >= 0
-            AND ai_confidence <= 1
-        ),
-        created_at TIMESTAMPTZ DEFAULT NOW()
+    input_context JSONB NOT NULL,
+    -- e.g., {"mood": "relaxed", "weather_temp": 80}
+    output_items UUID [],
+    -- Generated clothing_item_ids
+    ai_confidence DECIMAL(3, 2) CHECK (
+        ai_confidence >= 0
+        AND ai_confidence <= 1
+    ),
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Index for new table
@@ -658,12 +657,13 @@ WHERE
 -- TRIGGERS (Automatic Timestamp Updates)
 -- ============================================================================
 -- Generic update timestamp trigger function
-CREATE OR REPLACE FUNCTION update_updated_at_column() 
-RETURNS TRIGGER AS $$
-BEGIN 
-    NEW.updated_at = NOW();
-    RETURN NEW;
+CREATE
+OR REPLACE FUNCTION update_updated_at_column() RETURNS TRIGGER AS $$ BEGIN NEW.updated_at = NOW();
+
+RETURN NEW;
+
 END;
+
 $$ LANGUAGE plpgsql;
 
 -- Apply to relevant tables
@@ -841,7 +841,6 @@ SELECT
 
 -- Analytics View (Users can only see their own analytics)
 -- Note: RLS not supported on materialized views, handle in application layer
-
 -- ============================================================================
 -- SUPABASE STORAGE SETUP (Bucket Policies)
 -- ============================================================================
@@ -913,15 +912,16 @@ ADD
 -- HELPER FUNCTIONS
 -- ============================================================================
 -- Function to refresh analytics materialized view
-CREATE OR REPLACE FUNCTION refresh_wardrobe_analytics() 
-RETURNS void AS $$
-BEGIN 
-    REFRESH MATERIALIZED VIEW CONCURRENTLY public.user_wardrobe_analytics;
+CREATE
+OR REPLACE FUNCTION refresh_wardrobe_analytics() RETURNS void AS $$ BEGIN REFRESH MATERIALIZED VIEW CONCURRENTLY public.user_wardrobe_analytics;
+
 END;
+
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to find similar clothing items (vector similarity)
-CREATE OR REPLACE FUNCTION find_similar_items(
+CREATE
+OR REPLACE FUNCTION find_similar_items(
     target_embedding VECTOR(512),
     target_user_id UUID,
     similarity_threshold DECIMAL DEFAULT 0.7,
@@ -931,9 +931,7 @@ CREATE OR REPLACE FUNCTION find_similar_items(
     name TEXT,
     category clothing_category,
     similarity_score DECIMAL
-) AS $$
-BEGIN 
-    RETURN QUERY
+) AS $$ BEGIN RETURN QUERY
 SELECT
     ci.id,
     ci.name,
@@ -950,14 +948,15 @@ ORDER BY
     ci.embedding <=> target_embedding
 LIMIT
     limit_count;
+
 END;
+
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Function to calculate wardrobe diversity score
-CREATE OR REPLACE FUNCTION calculate_wardrobe_diversity(target_user_id UUID) 
-RETURNS DECIMAL AS $$
-DECLARE 
-    diversity_score DECIMAL;
+CREATE
+OR REPLACE FUNCTION calculate_wardrobe_diversity(target_user_id UUID) RETURNS DECIMAL AS $$ DECLARE diversity_score DECIMAL;
+
 BEGIN
 SELECT
     (
@@ -974,8 +973,10 @@ WHERE
     AND deleted_at IS NULL;
 
 -- MODIFICATION: Filter soft deletes
-    RETURN LEAST(diversity_score, 1.0);
+RETURN LEAST(diversity_score, 1.0);
+
 END;
+
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================================
@@ -1001,7 +1002,7 @@ VALUES
         ARRAY ['pastel-pink', 'mint-green', 'lavender'],
         ARRAY ['floral', 'gingham'],
         ARRAY ['romantic', 'cottagecore'],
-        ARRAY ['dresses', 'tops']::clothing_category[],
+        ARRAY ['dresses', 'tops'] :: clothing_category [],
         'Spring 2025 emphasizes soft pastels and feminine silhouettes',
         'global',
         '2025-03-01',
@@ -1013,7 +1014,7 @@ VALUES
         ARRAY ['coral', 'turquoise', 'yellow'],
         ARRAY ['tropical', 'tie-dye'],
         ARRAY ['bohemian', 'resort'],
-        ARRAY ['swimwear', 'dresses']::clothing_category[],
+        ARRAY ['swimwear', 'dresses'] :: clothing_category [],
         'Summer trends focus on vibrant colors and relaxed fits',
         'global',
         '2025-06-01',
@@ -1025,7 +1026,7 @@ VALUES
         ARRAY ['rust', 'olive-green', 'burgundy'],
         ARRAY ['plaid', 'houndstooth'],
         ARRAY ['preppy', 'academia'],
-        ARRAY ['outerwear', 'shoes']::clothing_category[],
+        ARRAY ['outerwear', 'shoes'] :: clothing_category [],
         'Fall 2025 brings back classic patterns with earthy tones',
         'global',
         '2025-09-01',
@@ -1037,7 +1038,7 @@ VALUES
         ARRAY ['charcoal', 'emerald', 'wine-red'],
         ARRAY ['herringbone', 'cable-knit'],
         ARRAY ['minimalist', 'sophisticated'],
-        ARRAY ['outerwear', 'tops']::clothing_category[],
+        ARRAY ['outerwear', 'tops'] :: clothing_category [],
         'Winter trends lean into luxe textures and deep jewel tones',
         'global',
         '2025-12-01',
