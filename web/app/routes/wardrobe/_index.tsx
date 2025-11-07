@@ -52,10 +52,16 @@ export async function loader({ request }: Route.LoaderArgs) {
     limit: parseInt(searchParams.get("limit") || "12"),
   };
 
-  // Build query
+  // Build query with category join
   let query = supabase
     .from("clothing_items")
-    .select("*", { count: "exact" })
+    .select(`
+      *,
+      clothing_categories!category_id(
+        id,
+        name
+      )
+    `, { count: "exact" })
     .eq("user_id", user.id)
     .eq("is_archived", false)
     .is("deleted_at", null);
@@ -440,7 +446,7 @@ function WardrobeGrid({ itemsPromise }: { itemsPromise: Promise<any> }) {
             <CardContent className="pt-4">
               <h3 className="font-semibold truncate">{item.name}</h3>
               <p className="text-sm text-muted-foreground capitalize">
-                {item.category?.name || "Uncategorized"}
+                {item.clothing_categories?.name || "Uncategorized"}
               </p>
               <div className="mt-3 flex flex-wrap gap-1">
                 <Badge variant="secondary" className="text-xs">
