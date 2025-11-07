@@ -3,8 +3,7 @@ import type { Route } from './+types/collections.$collectionId'
 import { Suspense, use, useState } from 'react'
 import { createClient } from '@/lib/supabase.server'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -17,23 +16,24 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const { user } = await requireAuth(request)
   const { supabase } = createClient(request)
 
-  const collectionPromise = supabase
-    .from('outfit_collections')
-    .select('*')
-    .eq('id', params.collectionId)
-    .eq('user_id', user.id)
-    .single()
-    .then(async ({ data: collection, error }) => {
-      if (error || !collection) throw new Error('Collection not found')
-      
-      const { data: items } = await supabase
-        .from('clothing_items')
-        .select('id, name, image_url, primary_color')
-        .in('id', collection.clothing_item_ids)
-        .eq('user_id', user.id)
-      
-      return { ...collection, clothing_items: items || [] }
-    })
+  const collectionPromise = (async () => {
+    const { data: collection, error } = await supabase
+      .from('outfit_collections')
+      .select('*')
+      .eq('id', params.collectionId)
+      .eq('user_id', user.id)
+      .single()
+    
+    if (error || !collection) throw new Error('Collection not found')
+    
+    const { data: items } = await supabase
+      .from('clothing_items')
+      .select('id, name, image_url, primary_color')
+      .in('id', collection.clothing_item_ids)
+      .eq('user_id', user.id)
+    
+    return { ...collection, clothing_items: items || [] }
+  })()
 
   return { collectionPromise }
 }
@@ -182,11 +182,11 @@ function CollectionDetail({ collectionPromise, onToggleFavorite, onDelete }: {
           >
             <Heart className={`h-4 w-4 ${collection.is_favorite ? 'fill-current' : ''}`} />
           </Button>
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/outfits/collections/${collection.id}/edit`}>
+          <Link to={`/outfits/collections/${collection.id}/edit`}>
+            <Button variant="outline" size="sm">
               <Edit className="h-4 w-4" />
-            </Link>
-          </Button>
+            </Button>
+          </Link>
           <Button variant="destructive" size="sm" onClick={onDelete}>
             <Trash2 className="h-4 w-4" />
           </Button>

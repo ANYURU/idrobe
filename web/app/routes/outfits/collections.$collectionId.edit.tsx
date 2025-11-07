@@ -1,7 +1,7 @@
 import { useFormik } from 'formik'
 import { useSubmit, redirect, Link } from 'react-router'
 import type { Route } from './+types/collections.$collectionId.edit'
-import { useState, Suspense, use } from 'react'
+import React, { useState, Suspense, use } from 'react'
 import { loadClothingItems } from '@/lib/loaders'
 import { createClient } from '@/lib/supabase.server'
 import { z } from 'zod'
@@ -24,16 +24,17 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   const { user } = await requireAuth(request)
   const { supabase } = createClient(request)
 
-  const collectionPromise = supabase
-    .from('outfit_collections')
-    .select('*')
-    .eq('id', params.collectionId)
-    .eq('user_id', user.id)
-    .single()
-    .then(({ data: collection, error }) => {
-      if (error || !collection) throw new Error('Collection not found')
-      return collection
-    })
+  const collectionPromise = (async () => {
+    const { data: collection, error } = await supabase
+      .from('outfit_collections')
+      .select('*')
+      .eq('id', params.collectionId)
+      .eq('user_id', user.id)
+      .single()
+    
+    if (error || !collection) throw new Error('Collection not found')
+    return collection
+  })()
 
   return {
     collectionPromise,
@@ -119,7 +120,7 @@ function EditForm({ collectionPromise, itemsPromise, selectedItems, setSelectedI
   collectionPromise: Promise<any>
   itemsPromise: Promise<any>
   selectedItems: string[]
-  setSelectedItems: (items: string[]) => void
+  setSelectedItems: React.Dispatch<React.SetStateAction<string[]>>
   onSubmit: (values: any) => void
 }) {
   const collection = use(collectionPromise)
@@ -135,9 +136,9 @@ function EditForm({ collectionPromise, itemsPromise, selectedItems, setSelectedI
   })
 
   // Initialize selected items
-  useState(() => {
+  React.useEffect(() => {
     setSelectedItems(collection.clothing_item_ids || [])
-  })
+  }, [collection.clothing_item_ids, setSelectedItems])
 
   const toggleItem = (itemId: string) => {
     setSelectedItems(prev =>
@@ -161,7 +162,7 @@ function EditForm({ collectionPromise, itemsPromise, selectedItems, setSelectedI
                   {...formik.getFieldProps('name')}
                 />
                 {formik.touched.name && formik.errors.name && (
-                  <p className="text-sm text-red-500">{formik.errors.name}</p>
+                  <p className="text-sm text-red-500">{String(formik.errors.name)}</p>
                 )}
               </div>
 

@@ -717,7 +717,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                 const isNew = newlyGeneratedIds.includes(rec.id);
                 return (
                   <Link key={rec.id} to={`/outfits/${rec.id}`} className="cursor-pointer">
-                    <Card className={`hover:shadow-lg transition-all cursor-pointer h-full ${
+                    <Card className={`cursor-pointer h-full ${
                       isNew ? 'ring-2 ring-green-500 bg-green-50' : ''
                     }`}>
                     <CardHeader>
@@ -737,11 +737,6 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                             </CardDescription>
                           )}
                         </div>
-                        {rec.ai_score && (
-                          <Badge variant="secondary">
-                            {Math.round(rec.ai_score * 100)}%
-                          </Badge>
-                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -794,7 +789,7 @@ function CollectionsContent({ collectionsPromise }: { collectionsPromise: Promis
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {collections.map((collection: any) => (
             <Link key={collection.id} to={`/outfits/collections/${collection.id}`}>
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+              <Card className="cursor-pointer h-full">
                 <CardHeader>
                   <CardTitle>{collection.name}</CardTitle>
                   {collection.description && (

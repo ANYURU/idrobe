@@ -30,8 +30,8 @@ export default function OnboardingComplete({ loaderData }: Route.ComponentProps)
   const { itemCount } = loaderData
   
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 to-slate-100 p-4 flex items-center justify-center">
-      <Card className="w-full max-w-lg">
+    <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <Card className="w-full max-w-lg bg-card border-border shadow-sm">
         <CardContent className="pt-12 pb-8 text-center space-y-6">
           <div className="flex justify-center">
             <div className="relative">
@@ -41,19 +41,19 @@ export default function OnboardingComplete({ loaderData }: Route.ComponentProps)
           </div>
 
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold">Welcome to iDrobe! 🎉</h1>
-            <p className="text-slate-600 text-lg">
+            <h1 className="text-4xl font-bold text-foreground">Welcome to iDrobe! 🎉</h1>
+            <p className="text-muted-foreground text-lg">
               Your AI stylist is ready to help you look amazing every day.
             </p>
             {itemCount > 0 && (
-              <p className="text-sm text-blue-600 font-medium">
+              <p className="text-sm text-primary font-medium">
                 {itemCount} items uploaded and analyzed!
               </p>
             )}
           </div>
 
           <div className="grid grid-cols-1 gap-3">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+            <div className="bg-linear-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <Shirt className="h-6 w-6 text-purple-600" />
                 <div className="text-left">
@@ -63,7 +63,7 @@ export default function OnboardingComplete({ loaderData }: Route.ComponentProps)
               </div>
             </div>
             
-            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-linear-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <Sparkles className="h-6 w-6 text-blue-600" />
                 <div className="text-left">
@@ -73,7 +73,7 @@ export default function OnboardingComplete({ loaderData }: Route.ComponentProps)
               </div>
             </div>
             
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+            <div className="bg-linear-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <TrendingUp className="h-6 w-6 text-green-600" />
                 <div className="text-left">
@@ -85,23 +85,23 @@ export default function OnboardingComplete({ loaderData }: Route.ComponentProps)
           </div>
 
           <div className="space-y-3">
-            <Button size="lg" className="w-full" asChild>
-              <Link to="/">
+            <Link to="/">
+              <Button size="lg" className="w-full">
                 Explore your wardrobe
-              </Link>
-            </Button>
+              </Button>
+            </Link>
             
             {itemCount < 5 && (
-              <Button variant="outline" size="lg" className="w-full" asChild>
-                <Link to="/wardrobe/add">
+              <Link to="/wardrobe/add">
+                <Button variant="outline" size="lg" className="w-full">
                   <Camera className="h-4 w-4 mr-2" />
                   Add more items
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             )}
           </div>
           
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-muted-foreground">
             💡 Tip: The more items you add, the better your recommendations become!
           </p>
         </CardContent>
