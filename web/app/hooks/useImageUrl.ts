@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase.client';
+import { supabase } from '@/lib/supabase.client';
 
 export function useImageUrl(filePath: string | null) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function useImageUrl(filePath: string | null) {
 
     const generateUrl = async () => {
       try {
-        const supabase = createClient();
+        // Use the imported supabase client
         const { data, error } = await supabase.storage
           .from('clothing')
           .createSignedUrl(filePath, 60 * 60); // 1 hour expiry

@@ -17,6 +17,28 @@ export async function getDailyOutfitData(
   userProfile: any, 
   request: Request
 ): Promise<DailyOutfitData> {
+  // Add timeout wrapper to prevent hanging
+  return Promise.race([
+    getDailyOutfitDataInternal(userId, userProfile, request),
+    new Promise<DailyOutfitData>((_, reject) => 
+      setTimeout(() => reject(new Error('Daily outfit data timeout')), 15000)
+    )
+  ]).catch(error => {
+    console.error('❌ Daily outfit data error:', error);
+    // Return fallback data on timeout/error
+    return {
+      weather: null,
+      recommendations: [],
+      hasWeatherMatch: false
+    };
+  });
+}
+
+async function getDailyOutfitDataInternal(
+  userId: string,
+  userProfile: any, 
+  request: Request
+): Promise<DailyOutfitData> {
   console.log('👕 Daily outfit request for user profile:', { 
     userId,
     city: userProfile?.location_city, 
@@ -26,8 +48,7 @@ export async function getDailyOutfitData(
   // Get current weather
   const weather = await getWeatherForUser(
     userProfile?.location_city, 
-    userProfile?.location_country,
-    request
+    userProfile?.location_country
   );
   
   console.log('🌤️ Weather result:', weather);

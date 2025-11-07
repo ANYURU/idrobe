@@ -4,7 +4,7 @@ interface WeatherData {
   description: string;
 }
 
-export async function getWeatherForUser(city: string, country: string, request: Request): Promise<WeatherData | null> {
+export async function getWeatherForUser(city: string, country: string): Promise<WeatherData | null> {
   console.log('🌤️ Weather request:', { city, country });
   
   if (!city || !country) {
@@ -12,17 +12,34 @@ export async function getWeatherForUser(city: string, country: string, request: 
     return null;
   }
   
+  // Skip weather API in development if no API key
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  if (!apiKey) {
+    console.log('❌ Missing OPENWEATHER_API_KEY, using mock data');
+    return {
+      condition: 'mild',
+      temperature: 20,
+      description: 'pleasant weather'
+    };
+  }
+  
   try {
-    const apiKey = process.env.OPENWEATHER_API_KEY;
-    if (!apiKey) {
-      console.log('❌ Missing OPENWEATHER_API_KEY');
-      return null;
-    }
     
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${country}&appid=${apiKey}&units=metric`;
     console.log('🌐 Fetching weather from:', url.replace(apiKey, 'HIDDEN'));
     
-    const response = await fetch(url);
+    // Add timeout to prevent hanging
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'iDrobe-App/1.0'
+      }
+    });
+    
+    clearTimeout(timeoutId);
     
     if (!response.ok) {
       console.log('❌ Weather API error:', response.status, response.statusText);
