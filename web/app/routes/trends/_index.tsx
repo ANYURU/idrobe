@@ -1,9 +1,16 @@
-import { useLoaderData } from 'react-router'
-import { Suspense, use } from 'react'
+import { useLoaderData, useRevalidator } from 'react-router'
+import { Suspense, use, useEffect } from 'react'
 import type { Route } from './+types/_index'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sparkles } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Sparkles, TrendingUp, Clock, Globe } from 'lucide-react'
+import type { Tables } from '@/lib/database.types'
+
+type SeasonalTrend = Tables<'seasonal_trends'>
+type EnrichedTrend = SeasonalTrend & {
+  trending_category_names: string[]
+}
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import('@/lib/protected-route')
@@ -13,11 +20,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     trendsPromise: (async () => {
       const { createClient } = await import('@/lib/supabase.server')
       const { supabase } = createClient(request)
-
       const { data: trends } = await supabase
         .from('seasonal_trends')
         .select('*')
-        .order('valid_from', { ascending: false })
+        .order('trend_score', { ascending: false })
+        .order('last_synced_at', { ascending: false })
 
       // Fetch category names for trends that have category IDs
       const enrichedTrends = await Promise.all(
@@ -44,12 +51,54 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export default function TrendsPage() {
   const { trendsPromise } = useLoaderData<typeof loader>()
+  const revalidator = useRevalidator()
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const { createClient } = require('@/lib/supabase.client')
+    const supabase = createClient()
+    
+    const subscription = supabase
+      .channel('trends-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'seasonal_trends'
+        },
+        () => revalidator.revalidate()
+      )
+      .subscribe()
+
+    return () => subscription.unsubscribe()
+  }, [revalidator])
+
+  const handleSyncTrends = async () => {
+    try {
+      const response = await fetch('/api/sync-trends', { method: 'POST' })
+      if (response.ok) {
+        revalidator.revalidate()
+      }
+    } catch (error) {
+      console.error('Failed to sync trends:', error)
+    }
+  }
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Fashion Trends</h1>
-        <p className="text-slate-600 mt-1">Stay updated with current and upcoming fashion trends</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <TrendingUp className="h-8 w-8 text-blue-500" />
+            Fashion Trends
+          </h1>
+          <p className="text-slate-600 mt-1">Real-time fashion trends powered by AI and social data</p>
+        </div>
+        <Button onClick={handleSyncTrends} variant="outline" size="sm">
+          <Clock className="h-4 w-4 mr-2" />
+          Sync Latest
+        </Button>
       </div>
 
       <Suspense fallback={<TrendsSkeleton />}>
@@ -59,15 +108,15 @@ export default function TrendsPage() {
   )
 }
 
-function TrendsContent({ trendsPromise }: { trendsPromise: Promise<any> }) {
+function TrendsContent({ trendsPromise }: { trendsPromise: Promise<EnrichedTrend[]> }) {
   const trends = use(trendsPromise)
 
-  const currentTrends = trends.filter(trend => {
+  const currentTrends = trends.filter((trend: EnrichedTrend) => {
     const now = new Date()
     return new Date(trend.valid_from) <= now && now <= new Date(trend.valid_until)
   })
 
-  const upcomingTrends = trends.filter(trend => {
+  const upcomingTrends = trends.filter((trend: EnrichedTrend) => {
     const now = new Date()
     return new Date(trend.valid_from) > now
   })
@@ -110,25 +159,43 @@ function TrendsContent({ trendsPromise }: { trendsPromise: Promise<any> }) {
   )
 }
 
-function TrendCard({ trend, upcoming = false }: { trend: any; upcoming?: boolean }) {
+function TrendCard({ trend, upcoming = false }: { trend: EnrichedTrend; upcoming?: boolean }) {
+  const isExternal = trend.external_source !== 'manual'
+  const trendScore = trend.trend_score || 0.5
+  const popularityScore = trend.popularity_score || 50
+  
   return (
     <Card className={upcoming ? "opacity-75" : ""}>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="capitalize">
+            <CardTitle className="capitalize flex items-center gap-2">
               {trend.season_name} {trend.year}
+              {isExternal && (
+                <Badge variant="outline" className="text-xs">
+                  <Globe className="h-3 w-3 mr-1" />
+                  Live
+                </Badge>
+              )}
             </CardTitle>
             <CardDescription>
               {trend.region && `${trend.region} • `}
               {new Date(trend.valid_from).toLocaleDateString()} - {new Date(trend.valid_until).toLocaleDateString()}
+              {trend.last_synced_at && (
+                <span className="block text-xs mt-1">
+                  Updated: {new Date(trend.last_synced_at).toLocaleString()}
+                </span>
+              )}
             </CardDescription>
           </div>
-          {trend.confidence_score && (
+          <div className="flex flex-col gap-1">
             <Badge variant="secondary">
-              {Math.round(trend.confidence_score * 100)}%
+              {Math.round(trendScore * 100)}% trend
             </Badge>
-          )}
+            <Badge variant="outline">
+              {popularityScore}% popular
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -185,6 +252,27 @@ function TrendCard({ trend, upcoming = false }: { trend: any; upcoming?: boolean
                 </Badge>
               ))}
             </div>
+          </div>
+        )}
+
+        {trend.keywords && trend.keywords.length > 0 && (
+          <div>
+            <p className="text-sm font-medium mb-2">Keywords</p>
+            <div className="flex flex-wrap gap-2">
+              {trend.keywords.map((keyword: string) => (
+                <Badge key={keyword} variant="outline" className="text-xs">
+                  {keyword}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {trend.external_source && trend.external_source !== 'manual' && (
+          <div className="pt-2 border-t">
+            <p className="text-xs text-slate-500">
+              Source: {trend.external_source.replace('_', ' ').toUpperCase()}
+            </p>
           </div>
         )}
       </CardContent>

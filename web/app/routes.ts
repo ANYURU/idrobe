@@ -54,6 +54,7 @@ export default [
   // API routes
   route("api/image-url", "routes/api/image-url.ts"),
   route("api/recommendations/interact", "routes/api/recommendations/interact.ts"),
+  route("api/sync-trends", "routes/api/sync-trends.ts"),
 
   // Catch-all route for unmatched requests
   route("*", "routes/$.tsx"),

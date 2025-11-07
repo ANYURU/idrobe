@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Database } from './database.types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -8,5 +8,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export { createClient }
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+export function createClient() {
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+}
+
+// Legacy export for backward compatibility
+export const supabase = createClient()

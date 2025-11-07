@@ -1,0 +1,3 @@
+-- This migration is no longer needed
+-- The cron job calls the Edge Function directly without authentication
+-- since it's an internal call from the database
