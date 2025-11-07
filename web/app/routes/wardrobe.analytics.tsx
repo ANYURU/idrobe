@@ -1,8 +1,9 @@
 import { useLoaderData } from 'react-router'
-import type { Route } from './+types/analytics'
+import type { Route } from './+types/wardrobe.analytics'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BarChart3, TrendingUp, Shirt, Calendar } from 'lucide-react'
+import type { Tables } from '@/lib/database.types'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import('@/lib/protected-route')
@@ -22,7 +23,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export default function AnalyticsPage() {
-  const { items } = useLoaderData<typeof loader>()
+  const { items } = useLoaderData<typeof loader>() as { items: Tables<'clothing_items'>[] }
 
   // Calculate analytics
   const totalItems = items.length
@@ -113,8 +114,8 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {Object.entries(categoryBreakdown)
-              .sort((a, b) => b[1] - a[1])
-              .map(([category, count]) => (
+              .sort((a, b) => (b[1] as number) - (a[1] as number))
+              .map(([category, count]: [string, number]) => (
                 <div key={category} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium capitalize">{category}</span>
@@ -141,9 +142,9 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {Object.entries(colorBreakdown)
-              .sort((a, b) => b[1] - a[1])
+              .sort((a, b) => (b[1] as number) - (a[1] as number))
               .slice(0, 8)
-              .map(([color, count]) => (
+              .map(([color, count]: [string, number]) => (
                 <div key={color} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium capitalize">{color}</span>
