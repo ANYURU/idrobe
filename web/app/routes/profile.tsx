@@ -1,5 +1,5 @@
 import { useFormik } from 'formik'
-import { useSubmit, redirect } from 'react-router'
+import { useSubmit } from 'react-router'
 import type { Route } from './+types/profile'
 import { loadUserProfile } from '@/lib/loaders'
 import { createClient } from '@/lib/supabase.server'
@@ -151,7 +151,7 @@ export default function ProfilePage({ actionData, loaderData }: Route.ComponentP
                 {...formik.getFieldProps('displayName')}
               />
               {formik.touched.displayName && formik.errors.displayName && (
-                <p className="text-sm text-red-500">{formik.errors.displayName}</p>
+                <p className="text-sm text-red-500">{String(formik.errors.displayName)}</p>
               )}
             </div>
 

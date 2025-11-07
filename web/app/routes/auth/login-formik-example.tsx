@@ -1,5 +1,5 @@
 import { useFormik } from 'formik'
-import { Link, redirect, useSubmit } from 'react-router'
+import { redirect, useSubmit } from 'react-router'
 import type { Route } from './+types/login'
 import { createClient } from '@/lib/supabase.server'
 import { loginSchema } from '@/lib/schemas'

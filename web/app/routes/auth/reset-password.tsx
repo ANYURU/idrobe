@@ -1,5 +1,5 @@
 import { useFormik } from 'formik'
-import { redirect, useSubmit } from 'react-router'
+import { useSubmit } from 'react-router'
 import type { Route } from './+types/reset-password'
 import { createClient } from '@/lib/supabase.server'
 import { resetPasswordSchema } from '@/lib/schemas'

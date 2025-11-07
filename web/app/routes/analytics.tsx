@@ -10,12 +10,13 @@ export default function AnalyticsPage() {
 
   // Calculate analytics
   const totalItems = items.length
-  const categories = new Set(items.map(i => i.category)).size
-  const totalWears = items.reduce((sum, item) => sum + item.times_worn, 0)
+  const categories = new Set(items.map(() => 'uncategorized')).size
+  const totalWears = items.reduce((sum, item) => sum + (item.times_worn || 0), 0)
   const favoriteItems = items.filter(i => i.is_favorite).length
   
-  const categoryBreakdown = items.reduce((acc, item) => {
-    acc[item.category] = (acc[item.category] || 0) + 1
+  const categoryBreakdown = items.reduce((acc) => {
+    const category = 'uncategorized'
+    acc[category] = (acc[category] || 0) + 1
     return acc
   }, {} as Record<string, number>)
 
@@ -25,8 +26,8 @@ export default function AnalyticsPage() {
   }, {} as Record<string, number>)
 
   const mostWornItems = items
-    .filter(i => i.times_worn > 0)
-    .sort((a, b) => b.times_worn - a.times_worn)
+    .filter(i => (i.times_worn || 0) > 0)
+    .sort((a, b) => (b.times_worn || 0) - (a.times_worn || 0))
     .slice(0, 5)
 
   const avgWears = totalItems > 0 ? (totalWears / totalItems).toFixed(1) : '0'
@@ -167,7 +168,7 @@ export default function AnalyticsPage() {
                   />
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-slate-600 capitalize">{item.category}</p>
+                    <p className="text-sm text-slate-600 capitalize">uncategorized</p>
                   </div>
                   <Badge variant="secondary">{item.times_worn} wears</Badge>
                 </div>

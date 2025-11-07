@@ -9,18 +9,18 @@ export default function TagsPage() {
 
   // Collect all tags and their frequencies
   const tagStats = items.reduce((acc, item) => {
-    if (item.style_tags) {
-      item.style_tags.forEach((tag) => {
-        if (!acc[tag]) {
-          acc[tag] = {
-            count: 0,
-            items: [],
-          }
+    // TODO: Add proper style_tags join from database
+    const tags = [] as string[] // Placeholder until proper join is implemented
+    tags.forEach((tag: string) => {
+      if (!acc[tag]) {
+        acc[tag] = {
+          count: 0,
+          items: [],
         }
-        acc[tag].count += 1
-        acc[tag].items.push(item)
-      })
-    }
+      }
+      acc[tag].count += 1
+      acc[tag].items.push(item)
+    })
     return acc
   }, {} as Record<string, { count: number; items: any[] }>)
 

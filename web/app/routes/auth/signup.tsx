@@ -30,7 +30,7 @@ export async function action({ request }: Route.ActionArgs) {
   const password = formData.get("password") as string;
 
   try {
-    const { data, error: authError } = await supabase.auth.signUp({
+    const { error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -65,8 +65,8 @@ export default function Signup({ actionData }: Route.ComponentProps) {
 
   if (actionData?.success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
-        <Card className="w-full max-w-md">
+      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+        <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border shadow-xl">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
               <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
@@ -83,8 +83,8 @@ export default function Signup({ actionData }: Route.ComponentProps) {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border shadow-xl">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">Create account</CardTitle>
           <CardDescription>

@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useClothingItems } from '@/lib/hooks'
 import { useAuth } from '@/lib/hooks'
@@ -31,16 +31,17 @@ export default function CategoriesPage() {
 
   // Group items by category
   const categoryStats = items.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = {
+    const categoryName = 'uncategorized' // TODO: Add proper category join
+    if (!acc[categoryName]) {
+      acc[categoryName] = {
         count: 0,
         colors: new Set<string>(),
         wears: 0,
       }
     }
-    acc[item.category].count += 1
-    acc[item.category].colors.add(item.primary_color)
-    acc[item.category].wears += item.times_worn
+    acc[categoryName].count += 1
+    acc[categoryName].colors.add(item.primary_color)
+    acc[categoryName].wears += (item.times_worn || 0)
     return acc
   }, {} as Record<string, { count: number; colors: Set<string>; wears: number }>)
 

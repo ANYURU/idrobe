@@ -59,8 +59,8 @@ export default function Login({ actionData }: Route.ComponentProps) {
   });
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border shadow-xl">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your iDrobe account</CardDescription>

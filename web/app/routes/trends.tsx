@@ -55,7 +55,7 @@ export default function TrendsPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="capitalize">
-                        {trend.season} {trend.year}
+                        {trend.season_name} {trend.year}
                       </CardTitle>
                       <CardDescription>
                         {trend.region && `${trend.region} • `}
@@ -113,11 +113,11 @@ export default function TrendsPage() {
                     </div>
                   )}
 
-                  {trend.trending_categories && trend.trending_categories.length > 0 && (
+                  {trend.trending_category_ids && trend.trending_category_ids.length > 0 && (
                     <div>
                       <p className="text-sm font-medium mb-2">Trending Categories</p>
                       <div className="flex flex-wrap gap-2">
-                        {trend.trending_categories.map((cat) => (
+                        {trend.trending_category_ids.map((cat: string) => (
                           <Badge key={cat} variant="secondary" className="capitalize">
                             {cat}
                           </Badge>
@@ -143,7 +143,7 @@ export default function TrendsPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <CardTitle className="capitalize">
-                        {trend.season} {trend.year}
+                        {trend.season_name} {trend.year}
                       </CardTitle>
                       <CardDescription>
                         {trend.region && `${trend.region} • `}
