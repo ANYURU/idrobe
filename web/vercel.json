@@ -1,8 +1,27 @@
 {
-  "rewrites": [
+  "buildCommand": "npm run build",
+  "nodeVersion": "22.x",
+  "outputDirectory": "build/client",
+  "functions": {
+    "build/server/index.js": {
+      "runtime": "nodejs22.x"
+    }
+  },
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/"
+      "src": "/build/client/(.*)",
+      "dest": "/build/client/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/build/server/index.js"
     }
   ]
 }
