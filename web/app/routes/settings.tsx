@@ -1,7 +1,6 @@
 import { useLoaderData, useSubmit } from 'react-router'
 import type { Route } from './+types/settings'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 
