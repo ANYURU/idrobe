@@ -30,11 +30,14 @@ export async function action({ request }: Route.ActionArgs) {
   const password = formData.get("password") as string;
 
   try {
+    const url = new URL(request.url);
+    const baseUrl = `${url.protocol}//${url.host}`;
+    
     const { error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: "http://localhost:3000/auth/confirm"
+        emailRedirectTo: `${baseUrl}/auth/confirm`
       }
     });
 
