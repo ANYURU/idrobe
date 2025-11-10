@@ -11,10 +11,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await requireAuth(request)
   const { supabase } = createClient(request)
   
-  // Check if user has already completed their profile
+  // Check profile immediately for redirect
   const { data: profile } = await supabase
     .from('user_profiles')
-    .select('display_name, style_preferences, location, fit_preferences')
+    .select('display_name, style_preferences, location_city, location_country, preferred_fit_name')
     .eq('user_id', user.id)
     .single()
   
@@ -23,7 +23,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     return redirect('/onboarding/upload')
   }
   
-  return null;
+  return null
 }
 
 export default function OnboardingWelcome() {

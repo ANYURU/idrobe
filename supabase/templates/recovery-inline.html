@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Your Password - IDrobe</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #2D2A26; background-color: #F1EBE4; margin: 0; padding: 20px;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 600px; margin: 0 auto; background: white;">
+        <tr>
+            <td style="background: #F1EBE4; padding: 30px; text-align: center;">
+                <div style="display: inline-block; margin-bottom: 20px;">
+                    <span style="font-size: 28px; font-weight: bold; color: #8B4513; text-transform: uppercase; letter-spacing: 2px;">IDrobe</span>
+                </div>
+                <h1 style="font-size: 24px; font-weight: bold; color: #2D2A26; margin: 0;">Reset Your Password</h1>
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="content" style="padding: 40px 30px;">
+                <p style="font-size: 16px; color: #6B5B4F; margin-bottom: 30px; text-align: center;">
+                    We received a request to reset your password for your IDrobe account. 
+                    Click the button below to create a new password.
+                </p>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{{ .SiteURL }}/auth/reset-password?token_hash={{ .TokenHash }}&type=recovery" class="button" style="display: inline-block; background: #8B4513; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                        Reset Your Password
+                    </a>
+                </div>
+                
+                <div style="background: #FFF3CD; border: 1px solid #FFEAA7; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🔒</div>
+                    <p style="margin: 0; font-size: 14px; color: #856404;">
+                        <strong>Security Notice:</strong> This link will expire in 1 hour for your security. 
+                        If you didn't request this password reset, you can safely ignore this email.
+                    </p>
+                </div>
+            </td>
+        </tr>
+        
+        <tr>
+            <td style="background: #F8F6F3; padding: 20px 30px; text-align: center; font-size: 14px; color: #6B5B4F;">
+                <p style="margin: 0 0 10px 0;">If you're having trouble clicking the button, copy and paste this URL into your browser:</p>
+                <p style="word-break: break-all; font-size: 12px; color: #8B4513; margin: 0 0 20px 0;">
+                    {{ .SiteURL }}/auth/reset-password?token_hash={{ .TokenHash }}&type=recovery
+                </p>
+                <p style="margin: 0; font-size: 12px;">© 2024 IDrobe. Your Smart Wardrobe Assistant.</p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

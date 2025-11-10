@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, AlertCircle, Camera } from "lucide-react";
+import { Upload, Camera } from "lucide-react";
+import { useToast } from "@/lib/use-toast";
 import { UploadedItem, type Analysis } from "@/components/UploadedItem";
 import { createClient } from "@/lib/supabase.server";
 
@@ -316,7 +316,8 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     console.log(`[WARDROBE-ADD] All items saved successfully`);
-    return redirect("/wardrobe");
+    // For redirect actions, we can't show toast, but we could add a success param
+    return redirect("/wardrobe?success=items-added");
   } catch (error) {
     console.error("[WARDROBE-ADD] Fatal error:", error);
     console.error(
@@ -324,6 +325,7 @@ export async function action({ request }: Route.ActionArgs) {
       error instanceof Error ? error.stack : "No stack trace"
     );
     return {
+      success: false,
       error: error instanceof Error ? error.message : "Failed to save items",
     };
   }
@@ -332,11 +334,11 @@ export async function action({ request }: Route.ActionArgs) {
 export default function AddItemPage({}: Route.ComponentProps) {
   const navigate = useNavigate();
   const submit = useSubmit();
+  const toast = useToast();
   const actionData = useActionData() as
     | { success?: boolean; error?: string }
     | undefined;
   const [files, setFiles] = useState<File[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [analyzedItems, setAnalyzedItems] = useState<boolean[]>([]);
   const itemRefs = useRef<({ getAnalysis: () => Analysis | null } | null)[]>(
@@ -348,11 +350,11 @@ export default function AddItemPage({}: Route.ComponentProps) {
 
     const validFiles = selectedFiles.filter((file) => {
       if (!file.type.startsWith("image/")) {
-        setError("Only image files are allowed");
+        toast.error("Only image files are allowed");
         return false;
       }
       if (file.size > 5 * 1024 * 1024) {
-        setError("File size must be less than 5MB");
+        toast.error("File size must be less than 5MB");
         return false;
       }
       return true;
@@ -363,7 +365,6 @@ export default function AddItemPage({}: Route.ComponentProps) {
       ...prev,
       ...new Array(validFiles.length).fill(false),
     ]);
-    setError(null);
   };
 
   const removeItem = (index: number) => {
@@ -414,7 +415,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
 
     if (analyzedItemsData.length === 0) {
       console.log("[CLIENT] No items to save, showing error");
-      setError("Please upload at least one item");
+      toast.error("Please upload at least one item");
       return;
     }
 
@@ -451,10 +452,15 @@ export default function AddItemPage({}: Route.ComponentProps) {
 
     if (actionData?.error) {
       console.error("[CLIENT] Save failed:", actionData.error);
-      setError(actionData.error);
+      toast.error(actionData.error, {
+        action: {
+          label: 'Retry',
+          onClick: () => window.location.reload()
+        }
+      });
       setSaving(false);
     }
-  }, [actionData, navigate]);
+  }, [actionData, navigate, toast]);
 
   return (
     <div className="min-h-screen bg-background p-4">
@@ -468,12 +474,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
           </p>
         </div>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+
 
         <Card className="bg-card/80 backdrop-blur-sm border-border shadow-sm">
           <CardHeader>

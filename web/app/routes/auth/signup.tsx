@@ -42,12 +42,21 @@ export async function action({ request }: Route.ActionArgs) {
     });
 
     if (authError) {
-      return { error: authError.message };
+      return { 
+        success: false,
+        error: authError.message 
+      };
     }
 
-    return { success: true };
+    return { 
+      success: true,
+      message: "Account created! Check your email to verify."
+    };
   } catch (error) {
-    return { error: 'An unexpected error occurred during signup' };
+    return { 
+      success: false,
+      error: 'An unexpected error occurred during signup' 
+    };
   }
 }
 

@@ -6,6 +6,8 @@ import {
   ScrollRestoration,
 } from 'react-router'
 import { ThemeProvider } from '@/contexts/ThemeContext'
+import { ClientOnly } from '@/components/ClientOnly'
+import { Toaster } from 'sonner'
 
 import './index.css'
 
@@ -22,6 +24,14 @@ export default function Root() {
         <ThemeProvider>
           <Outlet />
         </ThemeProvider>
+        <ClientOnly>
+          <Toaster 
+            position="top-right" 
+            richColors 
+            closeButton 
+            duration={4000}
+          />
+        </ClientOnly>
         <ScrollRestoration />
         <Scripts />
       </body>

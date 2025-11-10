@@ -1,5 +1,4 @@
 import { useFormik } from 'formik'
-import { useSubmit } from 'react-router'
 import type { Route } from './+types/profile'
 import { loadUserProfile } from '@/lib/loaders'
 import { createClient } from '@/lib/supabase.server'
@@ -9,8 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle, CheckCircle } from 'lucide-react'
+import { useActionWithToast } from '@/hooks/use-action-with-toast'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 const BODY_TYPES = [
@@ -66,14 +64,20 @@ export async function action({ request }: Route.ActionArgs) {
     })
 
   if (updateError) {
-    return { error: updateError.message }
+    return { 
+      success: false,
+      error: updateError.message 
+    }
   }
 
-  return { success: true }
+  return { 
+    success: true, 
+    message: 'Profile updated successfully!' 
+  }
 }
 
-export default function ProfilePage({ actionData, loaderData }: Route.ComponentProps) {
-  const submit = useSubmit()
+export default function ProfilePage({ loaderData }: Route.ComponentProps) {
+  const { submit, isSubmitting } = useActionWithToast()
   const { user, profile } = loaderData
 
   const formik = useFormik({
@@ -88,7 +92,7 @@ export default function ProfilePage({ actionData, loaderData }: Route.ComponentP
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(userProfileSchema.partial()),
     onSubmit: (values) => {
-      submit(values, { method: 'post' })
+      submit(values)
     },
   })
 
@@ -99,21 +103,7 @@ export default function ProfilePage({ actionData, loaderData }: Route.ComponentP
         <p className="text-slate-600 mt-1">Manage your account and preferences</p>
       </div>
 
-      {actionData?.error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{actionData.error}</AlertDescription>
-        </Alert>
-      )}
 
-      {actionData?.success && (
-        <Alert className="bg-green-50 border-green-200">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <AlertDescription className="text-green-800">
-            Profile updated successfully
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Account Info */}
       <Card>
@@ -231,8 +221,8 @@ export default function ProfilePage({ actionData, loaderData }: Route.ComponentP
               </div>
             </div>
 
-            <Button type="submit" disabled={formik.isSubmitting} className="w-full">
-              {formik.isSubmitting ? 'Saving...' : 'Save Changes'}
+            <Button type="submit" disabled={isSubmitting} className="w-full">
+              {isSubmitting ? 'Saving...' : 'Save Changes'}
             </Button>
           </form>
         </CardContent>

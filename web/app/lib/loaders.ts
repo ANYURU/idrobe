@@ -254,56 +254,49 @@ export async function loadWardrobeAnalytics(userId: string, request: Request) {
 }
 
 /**
- * Parallel loader for dashboard with timeout protection
+ * Load user interactions (likes/dislikes)
  */
-export async function loadDashboardData(userId: string, request: Request) {
-  try {
-    // Add timeout wrapper to prevent hanging
-    return await Promise.race([
-      loadDashboardDataInternal(userId, request),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Dashboard data timeout')), 20000) // 20 second timeout
-      )
-    ]);
-  } catch (error) {
-    console.error('❌ Dashboard data error:', error);
-    // Return minimal fallback data on timeout/error
-    return {
-      profile: null,
-      items: [],
-      recommendations: [],
-      collections: [],
-      gaps: [],
-      analytics: null,
-      dailyOutfit: {
-        weather: null,
-        recommendations: [],
-        hasWeatherMatch: false
-      },
-    };
+export async function loadUserInteractions(userId: string, request: Request) {
+  const { supabase } = createClient(request)
+  const { data, error } = await supabase
+    .from('user_interactions')
+    .select('interaction_type_name')
+    .eq('user_id', userId)
+    .not('recommendation_id', 'is', null)
+
+  if (error) {
+    return []
   }
+
+  return data || []
 }
 
-async function loadDashboardDataInternal(userId: string, request: Request) {
-  const [profile, items, recommendations, collections, gaps, analytics] = await Promise.all([
-    loadUserProfile(userId, request),
-    loadClothingItems(userId, request),
-    loadOutfitRecommendations(userId, request),
-    loadOutfitCollections(userId, request),
-    loadWardrobeGaps(userId, request),
-    loadWardrobeAnalytics(userId, request),
-  ])
-
-  // Get daily outfit recommendations based on weather
-  const dailyOutfit = await getDailyOutfitData(userId, profile, request)
-
+/**
+ * Streaming loader for dashboard - returns individual promises for independent rendering
+ */
+export function loadDashboardData(userId: string, request: Request) {
+  // Return individual promises so each widget can render independently
   return {
-    profile,
-    items,
-    recommendations,
-    collections,
-    gaps,
-    analytics,
-    dailyOutfit,
-  }
+    profilePromise: loadUserProfile(userId, request).catch(() => null),
+    itemsPromise: loadClothingItems(userId, request).catch(() => []),
+    recommendationsPromise: loadOutfitRecommendations(userId, request).catch(() => []),
+    collectionsPromise: loadOutfitCollections(userId, request).catch(() => []),
+    gapsPromise: loadWardrobeGaps(userId, request).catch(() => []),
+    analyticsPromise: loadWardrobeAnalytics(userId, request).catch(() => null),
+    interactionsPromise: loadUserInteractions(userId, request).catch(() => []),
+    dailyOutfitPromise: (async () => {
+      try {
+        const profile = await loadUserProfile(userId, request);
+        return await getDailyOutfitData(userId, profile, request);
+      } catch (error) {
+        console.error('Daily outfit error:', error);
+        return {
+          weather: null,
+          recommendations: [],
+          hasWeatherMatch: false,
+          error: 'Unable to load weather recommendations'
+        };
+      }
+    })()
+  };
 }

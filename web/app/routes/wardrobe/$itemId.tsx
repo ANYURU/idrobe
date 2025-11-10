@@ -53,10 +53,22 @@ export async function action({ request, params }: Route.ActionArgs) {
       .eq("user_id", user.id);
 
     if (error) {
-      return { error: "Failed to update item" };
+      return { 
+        success: false,
+        error: "Failed to update item" 
+      };
     }
 
-    return { success: true };
+    const action = isFavorite ? 'favorited' : 'unfavorited';
+    const archiveAction = isArchived ? 'archived' : 'unarchived';
+    const message = formData.has("isFavorite") ? 
+      `Item ${action} successfully!` : 
+      `Item ${archiveAction} successfully!`;
+    
+    return { 
+      success: true,
+      message 
+    };
   }
 
   if (request.method === "DELETE") {
@@ -67,10 +79,17 @@ export async function action({ request, params }: Route.ActionArgs) {
       .eq("user_id", user.id);
 
     if (error) {
-      return { error: "Failed to delete item" };
+      return { 
+        success: false,
+        error: "Failed to delete item" 
+      };
     }
 
-    throw redirect("/wardrobe");
+    return {
+      success: true,
+      message: "Item deleted successfully!",
+      data: { redirect: "/wardrobe" }
+    };
   }
 
   return null;

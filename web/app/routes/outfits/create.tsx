@@ -1,9 +1,10 @@
 import { useFormik } from 'formik'
-import { useSubmit, redirect } from 'react-router'
+import { useNavigate } from 'react-router'
 import type { Route } from './+types/create'
 import { useState, Suspense, use, useEffect } from 'react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useSearchParams } from 'react-router'
+import { useActionWithToast } from '@/hooks/use-action-with-toast'
 
 import { createClient } from '@/lib/supabase.server'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
@@ -12,8 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle } from 'lucide-react'
+
 import { ClothingImage } from '@/components/ClothingImage'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { Textarea } from '@/components/ui/textarea'
@@ -111,14 +111,22 @@ export async function action({ request }: Route.ActionArgs) {
     })
 
   if (insertError) {
-    return { error: insertError.message }
+    return { 
+      success: false,
+      error: insertError.message 
+    }
   }
 
-  return redirect('/outfits?tab=collections')
+  return { 
+    success: true, 
+    message: `Collection "${name}" created successfully!`,
+    data: { redirect: '/outfits?tab=collections' }
+  }
 }
 
-export default function CreateOutfitPage({ actionData, loaderData }: Route.ComponentProps) {
-  const submit = useSubmit()
+export default function CreateOutfitPage({ loaderData }: Route.ComponentProps) {
+  const navigate = useNavigate()
+  const { submit, isSubmitting, data } = useActionWithToast<{ redirect?: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [showNaming, setShowNaming] = useState(false)
@@ -144,6 +152,13 @@ export default function CreateOutfitPage({ actionData, loaderData }: Route.Compo
     }
   }, [debouncedSearch])
 
+  // Handle successful creation with redirect
+  useEffect(() => {
+    if (data?.redirect) {
+      navigate(data.redirect)
+    }
+  }, [data, navigate])
+
   const formik = useFormik({
     initialValues: {
       name: '',
@@ -151,12 +166,11 @@ export default function CreateOutfitPage({ actionData, loaderData }: Route.Compo
     },
     validationSchema: toFormikValidationSchema(collectionSchema),
     onSubmit: (values) => {
-      const formData = new FormData()
-      formData.append('name', values.name)
-      formData.append('description', values.description)
-      formData.append('selectedItems', JSON.stringify(selectedItems))
-
-      submit(formData, { method: 'post' })
+      submit({
+        name: values.name,
+        description: values.description,
+        selectedItems: JSON.stringify(selectedItems)
+      })
     },
   })
 
@@ -182,7 +196,7 @@ export default function CreateOutfitPage({ actionData, loaderData }: Route.Compo
 
   const handleContinue = () => {
     if (selectedItems.length === 0) {
-      alert('Please select at least one item')
+      // We could use a toast here, but inline validation is better UX
       return
     }
     setShowNaming(true)
@@ -202,12 +216,7 @@ export default function CreateOutfitPage({ actionData, loaderData }: Route.Compo
         </p>
       </div>
 
-      {actionData?.error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{actionData.error}</AlertDescription>
-        </Alert>
-      )}
+
 
       {/* Collection Preview - Shows when items are selected */}
       {selectedItems.length > 0 && (
@@ -275,8 +284,8 @@ export default function CreateOutfitPage({ actionData, loaderData }: Route.Compo
               </div>
 
               <div className="flex gap-3">
-                <Button type="submit" disabled={formik.isSubmitting} className="flex-1">
-                  {formik.isSubmitting ? 'Creating Collection...' : 'Create Collection'}
+                <Button type="submit" disabled={isSubmitting} className="flex-1">
+                  {isSubmitting ? 'Creating Collection...' : 'Create Collection'}
                 </Button>
                 <Button 
                   type="button" 

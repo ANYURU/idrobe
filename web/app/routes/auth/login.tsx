@@ -1,4 +1,5 @@
 import { useFormik } from "formik";
+import { useEffect } from "react";
 import { Link, redirect, useSubmit, useNavigation } from "react-router";
 import { createClient } from "@/lib/supabase.server";
 import type { Route } from "./+types/login";
@@ -14,8 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { useToast } from "@/lib/use-toast";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
@@ -36,16 +36,26 @@ export async function action({ request }: Route.ActionArgs) {
   });
   
   if (authError) {
-    return { error: authError.message };
+    return { 
+      success: false,
+      error: authError.message 
+    };
   }
 
   throw redirect("/", { headers });
 }
 
 export default function Login({ actionData }: Route.ComponentProps) {
+  const toast = useToast();
   const submit = useSubmit();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
+
+  useEffect(() => {
+    if (actionData?.error) {
+      toast.error(actionData.error);
+    }
+  }, [actionData?.error, toast]);
 
   const formik = useFormik({
     initialValues: {
@@ -66,12 +76,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <CardDescription>Sign in to your iDrobe account</CardDescription>
         </CardHeader>
         <CardContent>
-          {actionData?.error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{actionData.error}</AlertDescription>
-            </Alert>
-          )}
+
 
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div className="space-y-2">

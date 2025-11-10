@@ -12,6 +12,13 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, AlertCircle, Camera } from "lucide-react";
 import { UploadedItem, type Analysis } from "@/components/UploadedItem";
+import type { Tables } from "@/lib/database.types";
+
+type ClothingItem = Tables<'clothing_items'> & {
+  category?: { name: string } | null;
+  subcategory?: { name: string } | null;
+  signed_url?: string | null;
+};
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { createClient } = await import("@/lib/supabase.server");
@@ -292,7 +299,7 @@ export async function action({ request }: ActionFunctionArgs) {
   }
 }
 
-export default function OnboardingUpload({ loaderData }: { loaderData: { items: any[] } }) {
+export default function OnboardingUpload({ loaderData }: { loaderData: { items: ClothingItem[] } }) {
   const navigate = useNavigate();
   const submit = useSubmit();
   const actionData = useActionData() as { success?: boolean; error?: string } | undefined;
@@ -410,8 +417,6 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
       setSaving(false);
     }
   }, [actionData, navigate]);
-
-
 
   return (
     <div className="p-4">
@@ -562,3 +567,4 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
     </div>
   );
 }
+
