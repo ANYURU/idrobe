@@ -55,23 +55,30 @@ export default function TrendsPage() {
 
   // Set up real-time subscription
   useEffect(() => {
-    const { createClient } = require('@/lib/supabase.client')
-    const supabase = createClient()
-    
-    const subscription = supabase
-      .channel('trends-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'seasonal_trends'
-        },
-        () => revalidator.revalidate()
-      )
-      .subscribe()
+    const setupSubscription = async () => {
+      const { createClient } = await import('@/lib/supabase.client')
+      const supabase = createClient()
+      
+      const subscription = supabase
+        .channel('trends-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'seasonal_trends'
+          },
+          () => revalidator.revalidate()
+        )
+        .subscribe()
 
-    return () => subscription.unsubscribe()
+      return () => subscription.unsubscribe()
+    }
+    
+    let cleanup: (() => void) | undefined
+    setupSubscription().then(fn => { cleanup = fn })
+    
+    return () => cleanup?.()
   }, [revalidator])
 
   const handleSyncTrends = async () => {
