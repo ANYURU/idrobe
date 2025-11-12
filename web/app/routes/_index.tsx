@@ -10,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Plus,
   Shirt,
   Palette,
   TrendingUp,
@@ -230,7 +229,7 @@ function DashboardContent({ promises }: { promises: DashboardPromises }) {
         </Suspense>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs">
         <Suspense fallback={<RecentItemsSkeleton />}>
           <RecentItemsCard p={promises.itemsPromise} />
         </Suspense>
@@ -410,11 +409,8 @@ function RecentItemsCard({ p }: { p: Promise<ClothingItem[]> }) {
         {(!items || items.length === 0) && (
           <p className="text-sm text-muted-foreground">No items yet</p>
         )}
-        <Button className="w-full">
-          <Link to="/wardrobe/add">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
-          </Link>
+        <Button className="w-full" asChild>
+          <Link to="/wardrobe">View All Items</Link>
         </Button>
       </CardContent>
     </Card>
