@@ -21,7 +21,7 @@ export default function Root() {
         <Links />
       </head>
       <body suppressHydrationWarning={true}>
-        <ThemeProvider>
+        <ThemeProvider defaultTheme="warm" storageKey="idrobe-theme">
           <Outlet />
         </ThemeProvider>
         <ClientOnly>

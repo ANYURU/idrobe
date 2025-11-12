@@ -1,15 +1,15 @@
 import { useTheme } from '@/contexts/ThemeContext'
-import { SidebarMenuButton } from '@/components/ui/sidebar'
-import { Sun, Moon, Palette } from 'lucide-react'
+import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Sun, Moon, Palette, ChevronUp } from 'lucide-react'
 
 export function SidebarThemeToggle() {
   const { theme, setTheme } = useTheme()
-
-  const nextTheme = () => {
-    if (theme === 'light') return 'warm'
-    if (theme === 'warm') return 'dark'
-    return 'light'
-  }
 
   const getThemeIcon = () => {
     if (theme === 'light') return <Sun />
@@ -24,13 +24,30 @@ export function SidebarThemeToggle() {
   }
 
   return (
-    <SidebarMenuButton
-      onClick={() => setTheme(nextTheme())}
-      tooltip={`${getThemeLabel()} Mode`}
-      className="hover:cursor-pointer"
-    >
-      {getThemeIcon()}
-      <span>{getThemeLabel()} Mode</span>
-    </SidebarMenuButton>
+    <SidebarMenuItem>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuButton className="hover:cursor-pointer">
+            {getThemeIcon()}
+            <span>{getThemeLabel()} Mode</span>
+            <ChevronUp className="ml-auto" />
+          </SidebarMenuButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="top" align="start" className="w-[--radix-popper-anchor-width]">
+          <DropdownMenuItem onClick={() => setTheme('light')}>
+            <Sun className="mr-2 h-4 w-4" />
+            Light
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme('warm')}>
+            <Palette className="mr-2 h-4 w-4" />
+            Warm
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTheme('dark')}>
+            <Moon className="mr-2 h-4 w-4" />
+            Dark
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
   )
 }

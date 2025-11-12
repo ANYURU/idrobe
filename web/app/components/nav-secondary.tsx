@@ -5,7 +5,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
 export function NavSecondary({
@@ -22,9 +21,7 @@ export function NavSecondary({
     <SidebarGroup {...props}>
       <SidebarGroupContent>
         <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarThemeToggle />
-          </SidebarMenuItem>
+          <SidebarThemeToggle />
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
