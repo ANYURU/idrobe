@@ -1,8 +1,8 @@
 import { useTheme } from '@/contexts/ThemeContext'
-import { Button } from '@/components/ui/button'
+import { SidebarMenuButton } from '@/components/ui/sidebar'
 import { Sun, Moon, Palette } from 'lucide-react'
 
-export function ThemeToggle() {
+export function SidebarThemeToggle() {
   const { theme, setTheme } = useTheme()
 
   const nextTheme = () => {
@@ -12,9 +12,9 @@ export function ThemeToggle() {
   }
 
   const getThemeIcon = () => {
-    if (theme === 'light') return <Sun className="h-4 w-4" />
-    if (theme === 'warm') return <Palette className="h-4 w-4" />
-    return <Moon className="h-4 w-4" />
+    if (theme === 'light') return <Sun />
+    if (theme === 'warm') return <Palette />
+    return <Moon />
   }
 
   const getThemeLabel = () => {
@@ -24,14 +24,13 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
+    <SidebarMenuButton
       onClick={() => setTheme(nextTheme())}
-      className="w-full justify-start"
+      tooltip={`${getThemeLabel()} Mode`}
+      className="hover:cursor-pointer"
     >
       {getThemeIcon()}
-      <span className="ml-2">{getThemeLabel()} Mode</span>
-    </Button>
+      <span>{getThemeLabel()} Mode</span>
+    </SidebarMenuButton>
   )
 }
