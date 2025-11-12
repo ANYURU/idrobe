@@ -1,12 +1,19 @@
-import { Link, useSubmit, redirect } from 'react-router'
+import { Link, useSubmit, redirect, useNavigate } from 'react-router'
 import type { Route } from './+types/collections.$collectionId'
 import { Suspense, use, useState } from 'react'
 import { createClient } from '@/lib/supabase.server'
 import { Button } from '@/components/ui/button'
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 import { OutfitPreview } from '@/components/OutfitPreview'
 import { ClothingImage } from '@/components/ClothingImage'
 import { ArrowLeft, Edit, Trash2, Heart, AlertCircle } from 'lucide-react'
@@ -36,6 +43,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   })()
 
   return { collectionPromise }
+}
+
+function CollectionBreadcrumbName({ collectionPromise }: { collectionPromise: Promise<any> }) {
+  const collection = use(collectionPromise)
+  return <BreadcrumbPage>{collection.name}</BreadcrumbPage>
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
@@ -74,6 +86,7 @@ export async function action({ request, params }: Route.ActionArgs) {
 
 export default function CollectionDetailPage({ loaderData, actionData }: Route.ComponentProps) {
   const submit = useSubmit()
+  const navigate = useNavigate()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleDelete = () => {
@@ -92,13 +105,38 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <Link 
-          to="/outfits?tab=collections" 
-          className="inline-flex items-center text-muted-foreground hover:text-slate-900 mb-4"
+        {/* Mobile: Back button only */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="-ml-2 md:hidden mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Collections
-        </Link>
+          Back
+        </Button>
+        
+        {/* Desktop: Breadcrumb only */}
+        <Breadcrumb className="hidden md:block">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">Home</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/outfits?tab=collections">Collections</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <Suspense fallback={<BreadcrumbPage>Loading...</BreadcrumbPage>}>
+                <CollectionBreadcrumbName collectionPromise={loaderData.collectionPromise} />
+              </Suspense>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
 
       {actionData?.error && (

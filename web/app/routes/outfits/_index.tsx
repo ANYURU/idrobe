@@ -302,7 +302,7 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="whitespace-nowrap">
+        <Button className="whitespace-nowrap hover:scale-[1.02] transition-transform hover:cursor-pointer">
           <Sparkles className="mr-2 h-4 w-4 shrink-0" />
           Generate New Outfits
         </Button>
@@ -687,7 +687,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                   onClick={handleGenerateRecommendations}
                   disabled={generateFetcher.state !== 'idle'}
                 >
-                  <RefreshCw className={`mr-2 w-4 h-4 ${generateFetcher.state === 'submitting' ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`mr-2 w-4 h-4 hover:cursor-pointer ${generateFetcher.state === 'submitting' ? 'animate-spin' : ''}`} />
                   {generateFetcher.state === 'submitting' ? 'Generating...' : 'Get Fresh Suggestions'}
                 </Button>
                 <Button variant="outline">

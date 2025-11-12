@@ -1,9 +1,17 @@
-import { redirect, useSubmit, Link } from "react-router";
+import { redirect, useSubmit, Link, useNavigate } from "react-router";
 import { useState, Suspense, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { AlertCircle, Heart, Trash2, Share2, ArrowLeft, ExternalLink } from "lucide-react";
 import { ClothingImage } from "@/components/ClothingImage";
 import type { Route } from "./+types/$outfitId";
@@ -115,13 +123,58 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function OutfitDetailPage({ loaderData }: Route.ComponentProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <div className="mb-6">
+        {/* Mobile: Back button only */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="-ml-2 md:hidden mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        {/* Desktop: Breadcrumb only */}
+        <Breadcrumb className="hidden md:block">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">Home</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/outfits">Outfits</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <Suspense fallback={<BreadcrumbPage>Loading...</BreadcrumbPage>}>
+                <OutfitBreadcrumbName outfitPromise={loaderData.outfitPromise} />
+              </Suspense>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <Suspense fallback={<OutfitDetailSkeleton />}>
         <OutfitDetailContent outfitPromise={loaderData.outfitPromise} />
       </Suspense>
     </div>
   );
+}
+
+function OutfitBreadcrumbName({ outfitPromise }: { outfitPromise: Promise<any> }) {
+  const { outfit, isRecommendation } = use(outfitPromise);
+  const name = isRecommendation
+    ? `${outfit.occasion_name ? outfit.occasion_name.charAt(0).toUpperCase() + outfit.occasion_name.slice(1) : ""} Outfit`
+    : outfit.name || "Untitled Outfit";
+  return <BreadcrumbPage>{name}</BreadcrumbPage>;
 }
 
 function OutfitDetailContent({
@@ -161,27 +214,6 @@ function OutfitDetailContent({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-
-      {/* Back Navigation */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link to="/outfits">
-          <Button variant="ghost" size="sm" className="flex items-center gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Outfits
-          </Button>
-        </Link>
-        <div className="text-sm text-muted-foreground">
-          <Link to="/outfits" className="hover:text-foreground">
-            Outfits
-          </Link>
-          <span className="mx-2">/</span>
-          <span className="text-foreground">
-            {isRecommendation
-              ? `${outfit.occasion ? outfit.occasion.charAt(0).toUpperCase() + outfit.occasion.slice(1) : ""} Outfit`
-              : outfit.name || "Untitled Outfit"}
-          </span>
-        </div>
-      </div>
 
       <div className="flex items-start justify-between">
         <div>

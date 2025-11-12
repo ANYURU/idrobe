@@ -1,9 +1,17 @@
-import { useFetcher, useNavigate } from "react-router";
+import { useFetcher, useNavigate, Link } from "react-router";
 import { Suspense, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Heart, Trash2, Archive } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Heart, Trash2, Archive, ArrowLeft } from "lucide-react";
 import { ClothingImage } from "@/components/ClothingImage";
 import { createClient } from "@/lib/supabase.server";
 import type { Route } from "./+types/$itemId";
@@ -96,13 +104,55 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function ItemDetailPage({ loaderData }: Route.ComponentProps) {
+  const navigate = useNavigate();
+
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
+      <div className="mb-6">
+        {/* Mobile: Back button only */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="-ml-2 md:hidden mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        {/* Desktop: Breadcrumb only */}
+        <Breadcrumb className="hidden md:block">
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">Home</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/wardrobe">Wardrobe</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <Suspense fallback={<BreadcrumbPage>Loading...</BreadcrumbPage>}>
+                <BreadcrumbItemName itemPromise={loaderData.itemPromise} />
+              </Suspense>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
       <Suspense fallback={<ItemDetailSkeleton />}>
         <ItemDetailContent itemPromise={loaderData.itemPromise} />
       </Suspense>
     </div>
   );
+}
+
+function BreadcrumbItemName({ itemPromise }: { itemPromise: Promise<any> }) {
+  const { item } = use(itemPromise);
+  return <BreadcrumbPage>{item.name}</BreadcrumbPage>;
 }
 
 function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
