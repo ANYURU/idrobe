@@ -466,7 +466,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-semibold">
             Add Items to Wardrobe
           </h1>
           <p className="text-muted-foreground">
@@ -488,7 +488,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-slate-400 transition">
+            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-border/80 transition">
               <input
                 type="file"
                 multiple
@@ -517,7 +517,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
                     </p>
                   )}
                   {analyzedCount === files.length && files.length > 0 && (
-                    <p className="text-sm text-blue-600 font-medium">
+                    <p className="text-sm text-primary font-medium">
                       All items analyzed ✓
                     </p>
                   )}

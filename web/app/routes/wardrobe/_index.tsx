@@ -217,9 +217,9 @@ export default function WardrobePage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Your Wardrobe</h1>
+          <h1 className="text-2xl font-semibold">Your Wardrobe</h1>
           <Suspense
-            fallback={<p className="text-muted-foreground mt-1">Loading...</p>}
+            fallback={<p className="text-muted-foreground text-sm mt-0.5">Loading...</p>}
           >
             <ItemCountWrapper itemsPromise={itemsPromise} />
           </Suspense>
@@ -286,7 +286,7 @@ export default function WardrobePage() {
             <div className="mt-4 pt-4 border-t border-border">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Category
                   </label>
                   <SearchableSelect
@@ -309,7 +309,7 @@ export default function WardrobePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Subcategory
                   </label>
                   <SearchableSelect
@@ -336,7 +336,7 @@ export default function WardrobePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Sort By
                   </label>
                   <Select
@@ -356,7 +356,7 @@ export default function WardrobePage() {
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Items per page
                   </label>
                   <Select
@@ -402,7 +402,7 @@ export default function WardrobePage() {
 function ItemCountWrapper({ itemsPromise }: { itemsPromise: Promise<any> }) {
   const data = use(itemsPromise);
   return (
-    <p className="text-muted-foreground mt-1">{data.total} items in your wardrobe</p>
+    <p className="text-muted-foreground text-sm mt-0.5">{data.total} items in your wardrobe</p>
   );
 }
 

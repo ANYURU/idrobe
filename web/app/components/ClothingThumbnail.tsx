@@ -11,20 +11,20 @@ export function ClothingThumbnail({ filePath, alt, className }: ClothingThumbnai
 
   if (!filePath || filePath.includes('undefined') || filePath.startsWith('http')) {
     return (
-      <div className={`bg-slate-100 flex items-center justify-center ${className}`}>
-        <div className="w-8 h-8 bg-slate-300 rounded"></div>
+      <div className={`bg-muted flex items-center justify-center ${className}`}>
+        <div className="w-8 h-8 bg-muted-foreground/30 rounded"></div>
       </div>
     );
   }
 
   if (isLoading || !url) {
-    return <div className={`bg-slate-200 animate-pulse ${className}`} />;
+    return <div className={`bg-muted animate-pulse ${className}`} />;
   }
 
   if (error) {
     return (
-      <div className={`bg-slate-100 flex items-center justify-center ${className}`}>
-        <div className="w-8 h-8 bg-slate-300 rounded"></div>
+      <div className={`bg-muted flex items-center justify-center ${className}`}>
+        <div className="w-8 h-8 bg-muted-foreground/30 rounded"></div>
       </div>
     );
   }

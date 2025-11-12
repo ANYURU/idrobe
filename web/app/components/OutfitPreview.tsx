@@ -26,7 +26,7 @@ export function OutfitPreview({ items, maxItems = 3, size = 'md' }: OutfitPrevie
   return (
     <div className="flex gap-2 flex-wrap">
       {displayItems.map((item) => (
-        <div key={item.id} className={`${sizeClasses[size]} rounded-lg overflow-hidden bg-slate-100`}>
+        <div key={item.id} className={`${sizeClasses[size]} rounded-lg overflow-hidden bg-muted`}>
           <ClothingImage
             filePath={item.image_url}
             alt={item.name}
@@ -35,7 +35,7 @@ export function OutfitPreview({ items, maxItems = 3, size = 'md' }: OutfitPrevie
         </div>
       ))}
       {remainingCount > 0 && (
-        <div className={`${sizeClasses[size]} bg-slate-200 rounded-lg flex items-center justify-center text-xs font-medium text-slate-600`}>
+        <div className={`${sizeClasses[size]} bg-muted rounded-lg flex items-center justify-center text-xs font-medium text-muted-foreground`}>
           +{remainingCount}
         </div>
       )}

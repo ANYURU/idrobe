@@ -99,8 +99,8 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Profile Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account and preferences</p>
+        <h1 className="text-2xl font-semibold">Profile Settings</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">Manage your account and preferences</p>
       </div>
 
 
@@ -141,7 +141,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
                 {...formik.getFieldProps('displayName')}
               />
               {formik.touched.displayName && formik.errors.displayName && (
-                <p className="text-sm text-red-500">{String(formik.errors.displayName)}</p>
+                <p className="text-sm text-destructive">{String(formik.errors.displayName)}</p>
               )}
             </div>
 
@@ -229,10 +229,10 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-red-200 bg-red-50">
+      <Card className="border-destructive/50 bg-destructive/5">
         <CardHeader>
-          <CardTitle className="text-red-900">Danger Zone</CardTitle>
-          <CardDescription className="text-red-800">
+          <CardTitle className="text-destructive">Danger Zone</CardTitle>
+          <CardDescription className="text-destructive/80">
             Irreversible actions
           </CardDescription>
         </CardHeader>
@@ -240,7 +240,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
           <Button variant="destructive" disabled>
             Delete Account
           </Button>
-          <p className="text-sm text-red-800 mt-2">
+          <p className="text-sm text-destructive/80 mt-2">
             This action cannot be undone. All your data will be permanently deleted.
           </p>
         </CardContent>

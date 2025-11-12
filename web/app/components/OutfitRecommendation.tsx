@@ -70,14 +70,14 @@ export function OutfitRecommendation({
               size="sm"
               className={`transition-all ${
                 currentInteraction === 'liked' 
-                  ? 'bg-green-500 hover:bg-green-600 text-white' 
+                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
                   : currentInteraction === 'disliked'
                   ? 'opacity-50'
-                  : 'hover:text-green-600'
+                  : 'hover:text-primary'
               }`}
             >
               <Heart className={`h-4 w-4 ${
-                currentInteraction === 'liked' ? 'fill-white' : ''
+                currentInteraction === 'liked' ? 'fill-current' : ''
               }`} />
             </Button>
           </Form>
@@ -108,7 +108,7 @@ export function OutfitRecommendation({
       {currentInteraction && (
         <div className={`text-center p-2 rounded text-xs transition-all duration-300 ${
           currentInteraction === 'liked' 
-            ? 'bg-green-500/10 text-green-600 dark:text-green-400' 
+            ? 'bg-primary/10 text-primary' 
             : 'bg-muted/50 text-muted-foreground'
         }`}>
           <p>

@@ -49,8 +49,8 @@ export default function SettingsPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl font-semibold">Settings</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">
           Manage your app preferences and account
         </p>
       </div>

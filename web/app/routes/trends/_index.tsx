@@ -96,11 +96,11 @@ export default function TrendsPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <TrendingUp className="h-8 w-8 text-blue-500" />
+          <h1 className="text-2xl font-semibold flex items-center gap-2">
+            <TrendingUp className="h-6 w-6 text-primary" />
             Fashion Trends
           </h1>
-          <p className="text-muted-foreground mt-1">Real-time fashion trends powered by AI and social data</p>
+          <p className="text-muted-foreground text-sm mt-0.5">Real-time fashion trends powered by AI and social data</p>
         </div>
         <Button onClick={handleSyncTrends} variant="outline" size="sm">
           <Clock className="h-4 w-4 mr-2" />
@@ -207,7 +207,7 @@ function TrendCard({ trend, upcoming = false }: { trend: EnrichedTrend; upcoming
       </CardHeader>
       <CardContent className="space-y-4">
         {trend.trend_description && (
-          <p className="text-sm text-slate-700">{trend.trend_description}</p>
+          <p className="text-sm text-foreground">{trend.trend_description}</p>
         )}
 
         {trend.trending_colors && trend.trending_colors.length > 0 && (
@@ -291,26 +291,26 @@ function TrendsSkeleton() {
   return (
     <>
       <div>
-        <div className="h-8 bg-slate-200 rounded w-48 mb-4 animate-pulse" />
+        <div className="h-8 bg-muted rounded w-48 mb-4 animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
-                    <div className="h-6 bg-slate-200 rounded w-32 animate-pulse" />
-                    <div className="h-4 bg-slate-200 rounded w-48 animate-pulse" />
+                    <div className="h-6 bg-muted rounded w-32 animate-pulse" />
+                    <div className="h-4 bg-muted rounded w-48 animate-pulse" />
                   </div>
-                  <div className="h-6 bg-slate-200 rounded w-12 animate-pulse" />
+                  <div className="h-6 bg-muted rounded w-12 animate-pulse" />
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="h-4 bg-slate-200 rounded w-full animate-pulse" />
+                <div className="h-4 bg-muted rounded w-full animate-pulse" />
                 <div className="space-y-2">
-                  <div className="h-4 bg-slate-200 rounded w-24 animate-pulse" />
+                  <div className="h-4 bg-muted rounded w-24 animate-pulse" />
                   <div className="flex gap-2">
                     {[...Array(3)].map((_, j) => (
-                      <div key={j} className="h-6 bg-slate-200 rounded w-16 animate-pulse" />
+                      <div key={j} className="h-6 bg-muted rounded w-16 animate-pulse" />
                     ))}
                   </div>
                 </div>

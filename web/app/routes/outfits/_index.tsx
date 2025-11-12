@@ -212,8 +212,8 @@ export default function OutfitsPage({ loaderData }: Route.ComponentProps) {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Outfits</h1>
-          <p className="text-muted-foreground mt-1">
+          <h1 className="text-2xl font-semibold">Outfits</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
             Manage your outfit recommendations and collections
           </p>
         </div>
@@ -317,8 +317,8 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
         <div className="space-y-4">
           {generateFetcher.data?.success ? (
             <div className="text-center py-4">
-              <div className="text-green-600 mb-2">
-                <Sparkles className="h-8 w-8 mx-auto mb-2" />
+              <div className="mb-2">
+                <Sparkles className="h-8 w-8 mx-auto mb-2 text-primary" />
                 <p className="font-medium">
                   {generateFetcher.data?.count || 0} New Outfits Generated!
                 </p>
@@ -594,10 +594,10 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
           </div>
 
           {showFilters && (
-            <div className="mt-4 pt-4 border-t border-slate-200">
+            <div className="mt-4 pt-4 border-t border-border">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Occasion
                   </label>
                   <SearchableSelect
@@ -614,7 +614,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Mood
                   </label>
                   <SearchableSelect
@@ -631,7 +631,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Sort By
                   </label>
                   <Select
@@ -650,7 +650,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                  <label className="block text-sm font-medium mb-1">
                     Items per page
                   </label>
                   <Select
@@ -718,7 +718,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                 return (
                   <Link key={rec.id} to={`/outfits/${rec.id}`} className="cursor-pointer">
                     <Card className={`cursor-pointer h-full ${
-                      isNew ? 'ring-2 ring-green-500 bg-green-50' : ''
+                      isNew ? 'ring-2 ring-primary/50 bg-primary/5' : ''
                     }`}>
                     <CardHeader>
                       <div className="flex items-start justify-between">
@@ -726,7 +726,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                           <CardTitle className="capitalize flex items-center gap-2">
                             {rec.occasion_name || 'Outfit'}
                             {isNew && (
-                              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                              <Badge variant="secondary" className="text-xs">
                                 New
                               </Badge>
                             )}
@@ -753,7 +753,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
               })}
             </div>
             
-            <Suspense fallback={<div className="h-16 bg-slate-100 rounded animate-pulse" />}>
+            <Suspense fallback={<div className="h-16 bg-muted rounded animate-pulse" />}>
               <Pagination
                 currentPage={currentData.page}
                 totalPages={currentData.totalPages}
@@ -822,9 +822,9 @@ function RecommendationsSkeleton() {
       <Card className="border">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 h-10 bg-slate-200 rounded animate-pulse" />
+            <div className="flex-1 h-10 bg-muted rounded animate-pulse" />
             <div className="flex gap-2">
-              <div className="w-20 h-10 bg-slate-200 rounded animate-pulse" />
+              <div className="w-20 h-10 bg-muted rounded animate-pulse" />
             </div>
           </div>
         </CardContent>
@@ -834,14 +834,14 @@ function RecommendationsSkeleton() {
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
             <CardHeader>
-              <div className="h-6 bg-slate-200 rounded w-32 mb-2 animate-pulse" />
-              <div className="h-4 bg-slate-200 rounded w-24 animate-pulse" />
+              <div className="h-6 bg-muted rounded w-32 mb-2 animate-pulse" />
+              <div className="h-4 bg-muted rounded w-24 animate-pulse" />
             </CardHeader>
             <CardContent className="space-y-3">
-              <div className="h-4 bg-slate-200 rounded w-full animate-pulse" />
+              <div className="h-4 bg-muted rounded w-full animate-pulse" />
               <div className="flex gap-2">
                 {[...Array(4)].map((_, j) => (
-                  <div key={j} className="w-12 h-12 bg-slate-200 rounded animate-pulse" />
+                  <div key={j} className="w-12 h-12 bg-muted rounded animate-pulse" />
                 ))}
               </div>
             </CardContent>
@@ -858,16 +858,16 @@ function CollectionsSkeleton() {
       {[...Array(4)].map((_, i) => (
         <Card key={i}>
           <CardHeader>
-            <div className="h-6 bg-slate-200 rounded w-32 mb-2 animate-pulse" />
-            <div className="h-4 bg-slate-200 rounded w-24 animate-pulse" />
+            <div className="h-6 bg-muted rounded w-32 mb-2 animate-pulse" />
+            <div className="h-4 bg-muted rounded w-24 animate-pulse" />
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex gap-2">
               {[...Array(3)].map((_, j) => (
-                <div key={j} className="w-12 h-12 bg-slate-200 rounded animate-pulse" />
+                <div key={j} className="w-12 h-12 bg-muted rounded animate-pulse" />
               ))}
             </div>
-            <div className="h-4 bg-slate-200 rounded w-20 animate-pulse" />
+            <div className="h-4 bg-muted rounded w-20 animate-pulse" />
           </CardContent>
         </Card>
       ))}

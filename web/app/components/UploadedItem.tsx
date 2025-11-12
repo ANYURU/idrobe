@@ -123,7 +123,7 @@ export function UploadedItem({
 
   return (
     <>
-      <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200">
+      <div className="flex items-center gap-3 p-3 bg-card rounded-lg border border-border">
         <div className="relative">
           <img
             src={URL.createObjectURL(file)}
@@ -132,7 +132,7 @@ export function UploadedItem({
           />
           <button
             onClick={onRemove}
-            className="absolute -top-1 -right-1 w-5 h-5 bg-slate-800 text-white rounded-full flex items-center justify-center hover:bg-slate-900 transition-colors"
+            className="absolute -top-1 -right-1 w-5 h-5 bg-foreground text-background rounded-full flex items-center justify-center hover:bg-foreground/90 transition-colors"
           >
             <X className="h-3 w-3" />
           </button>
@@ -141,36 +141,36 @@ export function UploadedItem({
         <div className="flex-1 min-w-0">
           {analysis ? (
             <>
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {analysis.name}
               </p>
               <div className="flex items-center gap-1 mt-1">
-                <span className="text-xs bg-slate-100 text-slate-700 px-2 py-0.5 rounded">
+                <span className="text-xs bg-muted text-foreground px-2 py-0.5 rounded">
                   {analysis.category}
                 </span>
-                <span className="text-xs text-slate-500">•</span>
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-muted-foreground">•</span>
+                <span className="text-xs text-muted-foreground">
                   {analysis.primary_color}
                 </span>
               </div>
             </>
           ) : isAnalyzing ? (
             <>
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {file.name}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <Loader2 className="h-3 w-3 animate-spin text-blue-600" />
-                <span className="text-xs text-slate-600">Analyzing...</span>
+                <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                <span className="text-xs text-muted-foreground">Analyzing...</span>
               </div>
             </>
           ) : hasFailed ? (
             <>
-              <p className="text-sm font-medium text-slate-900 truncate">
+              <p className="text-sm font-medium text-foreground truncate">
                 {file.name}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-xs text-red-600">Analysis failed</p>
+                <p className="text-xs text-destructive">Analysis failed</p>
                 <div className="flex gap-1">
                   <Button
                     variant="ghost"
@@ -186,7 +186,7 @@ export function UploadedItem({
                         encType: "multipart/form-data",
                       });
                     }}
-                    className="h-5 px-2 text-xs text-blue-600 hover:text-blue-700"
+                    className="h-5 px-2 text-xs text-primary hover:text-primary/80"
                   >
                     Retry
                   </Button>
@@ -219,7 +219,7 @@ export function UploadedItem({
                         setHasNotified(true);
                       }
                     }}
-                    className="h-5 px-2 text-xs text-green-600 hover:text-green-700"
+                    className="h-5 px-2 text-xs text-primary hover:text-primary/80"
                   >
                     Manual
                   </Button>
@@ -269,7 +269,7 @@ function ItemModal({ file, analysis, isEditing, onSave }: {
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 bg-black/50" />
-      <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-border shadow-lg">
         <div className="flex items-start gap-4 mb-4">
           <img
             src={URL.createObjectURL(file)}
@@ -277,13 +277,13 @@ function ItemModal({ file, analysis, isEditing, onSave }: {
             className="w-20 h-20 object-cover rounded-lg"
           />
           <div className="flex-1">
-            <Dialog.Title className="font-semibold text-slate-900">
+            <Dialog.Title className="font-semibold text-foreground">
               {analysis.name}
             </Dialog.Title>
-            <p className="text-sm text-slate-600 mt-1">Clothing Item Details</p>
+            <p className="text-sm text-muted-foreground mt-1">Clothing Item Details</p>
           </div>
           <Dialog.Close asChild>
-            <button className="text-slate-400 hover:text-slate-600">
+            <button className="text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
           </Dialog.Close>
@@ -308,23 +308,23 @@ function ViewMode({ analysis }: {
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <p className="text-xs font-medium text-slate-500 mb-1">Category</p>
-            <p className="text-sm text-slate-900">{analysis.category}</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Category</p>
+            <p className="text-sm text-foreground">{analysis.category}</p>
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 mb-1">Color</p>
-            <p className="text-sm text-slate-900">{analysis.primary_color}</p>
+            <p className="text-xs font-medium text-muted-foreground mb-1">Color</p>
+            <p className="text-sm text-foreground">{analysis.primary_color}</p>
           </div>
         </div>
 
         {analysis.style_tags.length > 0 && (
           <div>
-            <p className="text-xs font-medium text-slate-500 mb-2">Style Tags</p>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Style Tags</p>
             <div className="flex gap-1 flex-wrap">
               {analysis.style_tags.map((tag: string, i: number) => (
                 <span
                   key={i}
-                  className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded"
+                  className="text-xs bg-muted text-foreground px-2 py-1 rounded"
                 >
                   {tag}
                 </span>
@@ -334,15 +334,15 @@ function ViewMode({ analysis }: {
         )}
 
         <div>
-          <p className="text-xs font-medium text-slate-500 mb-1">AI Confidence</p>
+          <p className="text-xs font-medium text-muted-foreground mb-1">AI Confidence</p>
           <div className="flex items-center gap-2">
-            <div className="flex-1 bg-slate-200 rounded-full h-2">
+            <div className="flex-1 bg-muted rounded-full h-2">
               <div
-                className="bg-blue-600 h-2 rounded-full transition-all"
+                className="bg-primary h-2 rounded-full transition-all"
                 style={{ width: `${analysis.confidence * 100}%` }}
               />
             </div>
-            <span className="text-xs text-slate-600">
+            <span className="text-xs text-muted-foreground">
               {Math.round(analysis.confidence * 100)}%
             </span>
           </div>
@@ -400,46 +400,46 @@ function EditForm({ analysis, onSave }: {
     <form onSubmit={formik.handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-medium text-slate-500 block mb-1">Name *</label>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">Name *</label>
           <input
             type="text"
             {...formik.getFieldProps('name')}
             className={`w-full text-sm border rounded px-2 py-1 ${
-              formik.touched.name && formik.errors.name ? 'border-red-500' : ''
+              formik.touched.name && formik.errors.name ? 'border-destructive' : ''
             }`}
           />
           {formik.touched.name && formik.errors.name && (
-            <p className="text-xs text-red-600 mt-1">{formik.errors.name}</p>
+            <p className="text-xs text-destructive mt-1">{formik.errors.name}</p>
           )}
         </div>
         <div>
-          <label className="text-xs font-medium text-slate-500 block mb-1">Category *</label>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">Category *</label>
           <input
             type="text"
             {...formik.getFieldProps('category')}
             className={`w-full text-sm border rounded px-2 py-1 ${
-              formik.touched.category && formik.errors.category ? 'border-red-500' : ''
+              formik.touched.category && formik.errors.category ? 'border-destructive' : ''
             }`}
           />
           {formik.touched.category && formik.errors.category && (
-            <p className="text-xs text-red-600 mt-1">{formik.errors.category}</p>
+            <p className="text-xs text-destructive mt-1">{formik.errors.category}</p>
           )}
         </div>
         <div>
-          <label className="text-xs font-medium text-slate-500 block mb-1">Primary Color *</label>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">Primary Color *</label>
           <input
             type="text"
             {...formik.getFieldProps('primary_color')}
             className={`w-full text-sm border rounded px-2 py-1 ${
-              formik.touched.primary_color && formik.errors.primary_color ? 'border-red-500' : ''
+              formik.touched.primary_color && formik.errors.primary_color ? 'border-destructive' : ''
             }`}
           />
           {formik.touched.primary_color && formik.errors.primary_color && (
-            <p className="text-xs text-red-600 mt-1">{formik.errors.primary_color}</p>
+            <p className="text-xs text-destructive mt-1">{formik.errors.primary_color}</p>
           )}
         </div>
         <div>
-          <label className="text-xs font-medium text-slate-500 block mb-1">Brand</label>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">Brand</label>
           <input
             type="text"
             {...formik.getFieldProps('brand')}
@@ -450,7 +450,7 @@ function EditForm({ analysis, onSave }: {
       
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="text-xs font-medium text-slate-500 block mb-1">Subcategory</label>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">Subcategory</label>
           <input
             type="text"
             {...formik.getFieldProps('subcategory')}
@@ -459,7 +459,7 @@ function EditForm({ analysis, onSave }: {
           />
         </div>
         <div>
-          <label className="text-xs font-medium text-slate-500 block mb-1">Fit</label>
+          <label className="text-xs font-medium text-muted-foreground block mb-1">Fit</label>
           <select
             {...formik.getFieldProps('fit')}
             className="w-full text-sm border rounded px-2 py-1"
@@ -475,7 +475,7 @@ function EditForm({ analysis, onSave }: {
       </div>
       
       <div>
-        <label className="text-xs font-medium text-slate-500 block mb-1">Style Tags</label>
+        <label className="text-xs font-medium text-muted-foreground block mb-1">Style Tags</label>
         <input
           type="text"
           {...formik.getFieldProps('style_tags')}

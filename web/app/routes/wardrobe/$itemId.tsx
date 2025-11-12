@@ -1,4 +1,4 @@
-import { useFetcher, useNavigate, redirect } from "react-router";
+import { useFetcher, useNavigate } from "react-router";
 import { Suspense, use } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,15 +136,15 @@ function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
         <ClothingImage
           filePath={item.image_url}
           alt={item.name}
-          className="w-full h-96 rounded-lg object-contain bg-slate-50"
+          className="w-full h-96 rounded-lg object-contain bg-muted/30"
         />
       </div>
 
       {/* Details */}
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">{item.name}</h1>
-          <p className="text-muted-foreground capitalize mt-1">
+          <h1 className="text-2xl font-semibold">{item.name}</h1>
+          <p className="text-muted-foreground text-sm capitalize mt-0.5">
             {item.category?.name}
             {item.subcategory && ` • ${item.subcategory.name}`}
           </p>
@@ -227,7 +227,7 @@ function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
               <CardTitle className="text-lg">Notes</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-slate-700">{item.notes}</p>
+              <p className="text-foreground">{item.notes}</p>
             </CardContent>
           </Card>
         )}
@@ -268,21 +268,21 @@ function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
 function ItemDetailSkeleton() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div className="w-full h-96 bg-slate-200 rounded-lg animate-pulse" />
+      <div className="w-full h-96 bg-muted rounded-lg animate-pulse" />
       <div className="space-y-6">
         <div>
-          <div className="h-8 bg-slate-200 rounded w-48 mb-2 animate-pulse" />
-          <div className="h-4 bg-slate-200 rounded w-32 animate-pulse" />
+          <div className="h-8 bg-muted rounded w-48 mb-2 animate-pulse" />
+          <div className="h-4 bg-muted rounded w-32 animate-pulse" />
         </div>
         <Card>
           <CardHeader>
-            <div className="h-6 bg-slate-200 rounded w-20 animate-pulse" />
+            <div className="h-6 bg-muted rounded w-20 animate-pulse" />
           </CardHeader>
           <CardContent className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i}>
-                <div className="h-4 bg-slate-200 rounded w-16 mb-1 animate-pulse" />
-                <div className="h-5 bg-slate-200 rounded w-24 animate-pulse" />
+                <div className="h-4 bg-muted rounded w-16 mb-1 animate-pulse" />
+                <div className="h-5 bg-muted rounded w-24 animate-pulse" />
               </div>
             ))}
           </CardContent>
@@ -291,7 +291,7 @@ function ItemDetailSkeleton() {
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="h-10 bg-slate-200 rounded w-32 animate-pulse"
+              className="h-10 bg-muted rounded w-32 animate-pulse"
             />
           ))}
         </div>

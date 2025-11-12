@@ -171,11 +171,11 @@ function OutfitDetailContent({
           </Button>
         </Link>
         <div className="text-sm text-muted-foreground">
-          <Link to="/outfits" className="hover:text-slate-700">
+          <Link to="/outfits" className="hover:text-foreground">
             Outfits
           </Link>
           <span className="mx-2">/</span>
-          <span className="text-slate-900">
+          <span className="text-foreground">
             {isRecommendation
               ? `${outfit.occasion ? outfit.occasion.charAt(0).toUpperCase() + outfit.occasion.slice(1) : ""} Outfit`
               : outfit.name || "Untitled Outfit"}
@@ -185,7 +185,7 @@ function OutfitDetailContent({
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl font-semibold">
             {isRecommendation
               ? `${outfit.occasion ? outfit.occasion.charAt(0).toUpperCase() + outfit.occasion.slice(1) : ""} Outfit`
               : outfit.name || "Untitled Outfit"}
@@ -223,7 +223,7 @@ function OutfitDetailContent({
                 <ClothingImage
                   filePath={item.image_url}
                   alt={item.name}
-                  className="w-full h-40 object-contain bg-slate-50"
+                  className="w-full h-40 object-contain bg-muted/30"
                 />
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
@@ -303,7 +303,7 @@ function OutfitDetailContent({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {similarOutfits.map((similar: any) => (
                 <Link key={similar.id} to={`/outfits/${similar.id}`}>
-                  <div className="border rounded-lg p-3 hover:bg-slate-50 transition-colors">
+                  <div className="border rounded-lg p-3 hover:bg-muted/50 transition-colors">
                     <p className="font-medium text-sm truncate">
                       {similar.name || `${similar.occasion} outfit`}
                     </p>
@@ -335,20 +335,20 @@ function OutfitDetailSkeleton() {
     <>
       {/* Back Navigation Skeleton */}
       <div className="flex items-center gap-4 mb-6">
-        <div className="h-8 w-32 bg-slate-200 rounded animate-pulse" />
-        <div className="h-4 w-48 bg-slate-200 rounded animate-pulse" />
+        <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+        <div className="h-4 w-48 bg-muted rounded animate-pulse" />
       </div>
 
       <div className="flex items-start justify-between">
         <div>
-          <div className="h-8 bg-slate-200 rounded w-64 mb-2 animate-pulse" />
-          <div className="h-4 bg-slate-200 rounded w-96 animate-pulse" />
+          <div className="h-8 bg-muted rounded w-64 mb-2 animate-pulse" />
+          <div className="h-4 bg-muted rounded w-96 animate-pulse" />
         </div>
         <div className="flex gap-2">
           {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className="h-8 w-8 bg-slate-200 rounded animate-pulse"
+              className="h-8 w-8 bg-muted rounded animate-pulse"
             />
           ))}
         </div>
@@ -357,10 +357,10 @@ function OutfitDetailSkeleton() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
-            <div className="w-full h-40 bg-slate-200 animate-pulse" />
+            <div className="w-full h-40 bg-muted animate-pulse" />
             <CardContent className="pt-3">
-              <div className="h-4 bg-slate-200 rounded w-20 mb-2 animate-pulse" />
-              <div className="h-5 bg-slate-200 rounded w-16 animate-pulse" />
+              <div className="h-4 bg-muted rounded w-20 mb-2 animate-pulse" />
+              <div className="h-5 bg-muted rounded w-16 animate-pulse" />
             </CardContent>
           </Card>
         ))}
@@ -368,13 +368,13 @@ function OutfitDetailSkeleton() {
 
       <Card>
         <CardHeader>
-          <div className="h-6 bg-slate-200 rounded w-24 animate-pulse" />
+          <div className="h-6 bg-muted rounded w-24 animate-pulse" />
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i}>
-              <div className="h-4 bg-slate-200 rounded w-16 mb-1 animate-pulse" />
-              <div className="h-8 bg-slate-200 rounded w-12 animate-pulse" />
+              <div className="h-4 bg-muted rounded w-16 mb-1 animate-pulse" />
+              <div className="h-8 bg-muted rounded w-12 animate-pulse" />
             </div>
           ))}
         </CardContent>

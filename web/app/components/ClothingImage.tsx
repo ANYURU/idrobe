@@ -18,15 +18,15 @@ export function ClothingImage({ filePath, alt, className = '' }: ClothingImagePr
 
   if (!filePath || fetcher.data?.error) {
     return (
-      <div className={`bg-slate-100 flex items-center justify-center ${className}`}>
-        <span className="text-slate-400 text-sm">No image</span>
+      <div className={`bg-muted flex items-center justify-center ${className}`}>
+        <span className="text-muted-foreground text-sm">No image</span>
       </div>
     );
   }
 
   if (fetcher.state === 'loading' || !fetcher.data?.signedUrl) {
     return (
-      <div className={`bg-slate-200 animate-pulse ${className}`} />
+      <div className={`bg-muted animate-pulse ${className}`} />
     );
   }
 
