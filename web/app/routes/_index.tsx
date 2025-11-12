@@ -1,12 +1,27 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardAction,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Shirt, Palette, TrendingUp, Sparkles } from "lucide-react";
+import {
+  Plus,
+  Shirt,
+  Palette,
+  TrendingUp,
+  Sparkles,
+  Heart,
+} from "lucide-react";
 import { Link, redirect, useSearchParams } from "react-router";
 import { loadDashboardData } from "@/lib/loaders";
 import { ClothingThumbnail } from "@/components/ClothingThumbnail";
 import { OutfitRecommendation } from "@/components/OutfitRecommendation";
-import { createClient } from '@/lib/supabase.server';
+import { createClient } from "@/lib/supabase.server";
 import { Suspense, use, useEffect, useRef } from "react";
 import type { Route } from "./+types/_index";
 import type { Tables } from "@/lib/database.types";
@@ -76,83 +91,86 @@ type RecommendationForComponent = {
     image_url: string;
   }>;
   userInteraction?: {
-    interaction_type_name: 'liked' | 'disliked';
+    interaction_type_name: "liked" | "disliked";
   } | null;
 };
 
-function mapRecommendationToComponent(rec: OutfitRecommendation | any): RecommendationForComponent {
+function mapRecommendationToComponent(
+  rec: OutfitRecommendation | any
+): RecommendationForComponent {
   return {
     id: rec.id,
-    name: rec.name || `${rec.occasion_name || 'Daily'} Outfit`,
-    description: rec.description || rec.recommendation_reason || 'AI-generated outfit recommendation',
+    name: rec.name || `${rec.occasion_name || "Daily"} Outfit`,
+    description:
+      rec.description ||
+      rec.recommendation_reason ||
+      "AI-generated outfit recommendation",
     items: rec.clothing_items || rec.items || [],
-    userInteraction: null
+    userInteraction: null,
   };
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
-  const code = url.searchParams.get('code');
-  
+  const code = url.searchParams.get("code");
+
   // Handle auth callback
   if (code) {
-    const { createClient } = await import('@/lib/supabase.server');
+    const { createClient } = await import("@/lib/supabase.server");
 
     const { supabase } = createClient(request);
-    
+
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (!error) {
-      return redirect('/onboarding/welcome');
+      return redirect("/onboarding/welcome");
     } else {
-      return redirect('/auth/login?error=confirmation_failed');
+      return redirect("/auth/login?error=confirmation_failed");
     }
   }
-  
-  const { requireAuth } = await import('@/lib/protected-route');
+
+  const { requireAuth } = await import("@/lib/protected-route");
   const { user } = await requireAuth(request);
-  
+
   // Check if user has completed onboarding
-  const { createClient } = await import('@/lib/supabase.server');
+  const { createClient } = await import("@/lib/supabase.server");
   const { supabase } = createClient(request);
-  
+
   const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('onboarding_completed')
-    .eq('user_id', user.id)
+    .from("user_profiles")
+    .select("onboarding_completed")
+    .eq("user_id", user.id)
     .single();
-  
+
   // Redirect to onboarding if not completed
   if (!profile?.onboarding_completed) {
-    return redirect('/onboarding/welcome');
+    return redirect("/onboarding/welcome");
   }
-  
+
   // Return individual promises for streaming
   return loadDashboardData(user.id, request);
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const { requireAuth } = await import('@/lib/protected-route');
+  const { requireAuth } = await import("@/lib/protected-route");
   const { user } = await requireAuth(request);
-  
+
   const { supabase } = createClient(request);
   const formData = await request.formData();
-  
-  const liked = formData.get('liked') === 'true';
-  const recommendationId = formData.get('recommendation_id') as string;
-  
+
+  const liked = formData.get("liked") === "true";
+  const recommendationId = formData.get("recommendation_id") as string;
+
   if (!recommendationId) {
-    throw new Error('Missing recommendation ID');
+    throw new Error("Missing recommendation ID");
   }
 
   // Save interaction
-  await supabase
-    .from('user_interactions')
-    .insert({
-      user_id: user.id,
-      recommendation_id: recommendationId,
-      interaction_type_name: liked ? 'liked' : 'disliked',
-    });
+  await supabase.from("user_interactions").insert({
+    user_id: user.id,
+    recommendation_id: recommendationId,
+    interaction_type_name: liked ? "liked" : "disliked",
+  });
 
   return { success: true };
 }
@@ -163,28 +181,17 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
   const hasShownToast = useRef(false);
 
   useEffect(() => {
-    if (searchParams.get('login') === 'success' && !hasShownToast.current) {
-      toast.success('Welcome back!');
+    if (searchParams.get("login") === "success" && !hasShownToast.current) {
+      toast.success("Welcome back!");
       hasShownToast.current = true;
       // Clean URL without reload
-      window.history.replaceState({}, '', '/');
+      window.history.replaceState({}, "", "/");
     }
   }, [searchParams, toast]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="p-6 space-y-6">
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-sm">
-          <h1 className="text-3xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-            Welcome back!
-          </h1>
-          <p className="text-slate-600 mt-2">
-            Here's what's happening with your wardrobe
-          </p>
-        </div>
-
-        <DashboardContent promises={loaderData} />
-      </div>
+    <div className="@container/main space-y-4">
+      <DashboardContent promises={loaderData} />
     </div>
   );
 }
@@ -192,25 +199,42 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 function DashboardContent({ promises }: { promises: DashboardPromises }) {
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mb-2">
+        <h2 className="text-xl font-semibold">Welcome back!</h2>
+        <p className="text-muted-foreground text-sm mt-0.5">
+          Here's what's happening with your wardrobe
+        </p>
+      </div>
+
+      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
         <Suspense fallback={<StatCardSkeleton />}>
-          <ItemsStatCard p={promises.itemsPromise} ap={promises.analyticsPromise} />
+          <ItemsStatCard
+            p={promises.itemsPromise}
+            ap={promises.analyticsPromise}
+          />
         </Suspense>
-        
+
         <Suspense fallback={<StatCardSkeleton />}>
-          <RecommendationsStatCard rp={promises.recommendationsPromise} ip={promises.interactionsPromise} />
+          <FavoriteItemsCard p={promises.itemsPromise} />
         </Suspense>
-        
+
+        <Suspense fallback={<StatCardSkeleton />}>
+          <RecommendationsStatCard
+            rp={promises.recommendationsPromise}
+            ip={promises.interactionsPromise}
+          />
+        </Suspense>
+
         <Suspense fallback={<StatCardSkeleton />}>
           <WardrobeScoreCard p={promises.analyticsPromise} />
         </Suspense>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Suspense fallback={<RecentItemsSkeleton />}>
           <RecentItemsCard p={promises.itemsPromise} />
         </Suspense>
-        
+
         <Suspense fallback={<WeatherOutfitSkeleton />}>
           <WeatherOutfitCard p={promises.dailyOutfitPromise} />
         </Suspense>
@@ -219,57 +243,108 @@ function DashboardContent({ promises }: { promises: DashboardPromises }) {
   );
 }
 
-function ItemsStatCard({ p, ap }: { p: Promise<ClothingItem[]>; ap: Promise<WardrobeAnalytics | null> }) {
+function ItemsStatCard({
+  p,
+  ap,
+}: {
+  p: Promise<ClothingItem[]>;
+  ap: Promise<WardrobeAnalytics | null>;
+}) {
   const items = use(p);
   const analytics = use(ap);
-  
+
   const totalItems = items?.length || 0;
-  const categoryDiversity = analytics?.category_diversity || 
-    new Set(items?.map((item: ClothingItem) => item.category_id).filter(Boolean)).size;
+  const categoryDiversity =
+    analytics?.category_diversity ||
+    new Set(
+      items?.map((item: ClothingItem) => item.category_id).filter(Boolean)
+    ).size;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Total Items</CardTitle>
-        <Shirt className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{totalItems}</div>
-        <div className="text-xs text-muted-foreground">
-          <Badge variant="secondary" className="text-xs">
-            {categoryDiversity} categories
+    <Card className="@container/card">
+      <CardHeader>
+        <CardDescription>Total Items</CardDescription>
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          {totalItems}
+        </CardTitle>
+        <CardAction>
+          <Badge variant="outline">
+            <Shirt className="size-4" />
           </Badge>
+        </CardAction>
+      </CardHeader>
+      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <div className="line-clamp-1 flex gap-2 font-medium">
+          {categoryDiversity} categories
         </div>
-      </CardContent>
+        <div className="text-muted-foreground">Across your wardrobe</div>
+      </CardFooter>
     </Card>
   );
 }
 
-function RecommendationsStatCard({ rp, ip }: { rp: Promise<OutfitRecommendation[]>; ip: Promise<UserInteraction[]> }) {
-  const recommendations = use(rp);
-  const interactions = use(ip);
-  
-  const totalOutfits = recommendations?.length || 0;
-  const likedRecommendations = interactions?.filter(interaction => 
-    interaction.interaction_type_name === 'liked'
-  ).length || 0;
+function FavoriteItemsCard({ p }: { p: Promise<ClothingItem[]> }) {
+  const items = use(p);
+  const favoriteCount = items?.filter((item) => item.is_favorite).length || 0;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-          AI Recommendations
+    <Card className="@container/card">
+      <CardHeader>
+        <CardDescription>Favorite Items</CardDescription>
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          {favoriteCount}
         </CardTitle>
-        <Palette className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{totalOutfits}</div>
-        <div className="text-xs text-muted-foreground">
-          <Badge variant="secondary" className="text-xs">
-            {likedRecommendations} liked
+        <CardAction>
+          <Badge variant="outline">
+            <Heart className="size-4" />
           </Badge>
+        </CardAction>
+      </CardHeader>
+      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <div className="line-clamp-1 flex gap-2 font-medium">
+          Your favorites
         </div>
-      </CardContent>
+        <div className="text-muted-foreground">Most loved pieces</div>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function RecommendationsStatCard({
+  rp,
+  ip,
+}: {
+  rp: Promise<OutfitRecommendation[]>;
+  ip: Promise<UserInteraction[]>;
+}) {
+  const recommendations = use(rp);
+  const interactions = use(ip);
+
+  const totalOutfits = recommendations?.length || 0;
+  const likedRecommendations =
+    interactions?.filter(
+      (interaction) => interaction.interaction_type_name === "liked"
+    ).length || 0;
+
+  return (
+    <Card className="@container/card">
+      <CardHeader>
+        <CardDescription>AI Recommendations</CardDescription>
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+          {totalOutfits}
+        </CardTitle>
+        <CardAction>
+          <Badge variant="outline">
+            <Palette className="size-4" />
+          </Badge>
+        </CardAction>
+      </CardHeader>
+      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <div className="line-clamp-1 flex gap-2 font-medium">
+          {likedRecommendations} liked
+        </div>
+        <div className="text-muted-foreground">AI-curated outfits for you</div>
+      </CardFooter>
     </Card>
   );
 }
@@ -277,25 +352,29 @@ function RecommendationsStatCard({ rp, ip }: { rp: Promise<OutfitRecommendation[
 function WardrobeScoreCard({ p }: { p: Promise<WardrobeAnalytics | null> }) {
   const analytics = use(p);
   // Calculate wardrobe score from available analytics data
-  const wardrobeScore = analytics?.avg_sustainability ? 
-    Math.round(analytics.avg_sustainability * 100) : 0;
+  const wardrobeScore = analytics?.avg_sustainability
+    ? Math.round(analytics.avg_sustainability * 100)
+    : 0;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">
-          Wardrobe Score
-        </CardTitle>
-        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">
+    <Card className="@container/card">
+      <CardHeader>
+        <CardDescription>Wardrobe Score</CardDescription>
+        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
           {Math.round(wardrobeScore)}%
+        </CardTitle>
+        <CardAction>
+          <Badge variant="outline">
+            <TrendingUp className="size-4" />
+          </Badge>
+        </CardAction>
+      </CardHeader>
+      <CardFooter className="flex-col items-start gap-1.5 text-sm">
+        <div className="line-clamp-1 flex gap-2 font-medium">
+          Acceptance rate
         </div>
-        <p className="text-xs text-muted-foreground">
-          Recommendation acceptance
-        </p>
-      </CardContent>
+        <div className="text-muted-foreground">Based on your interactions</div>
+      </CardFooter>
     </Card>
   );
 }
@@ -318,11 +397,12 @@ function RecentItemsCard({ p }: { p: Promise<ClothingItem[]> }) {
               className="w-12 h-12 bg-muted rounded-lg"
             />
             <div className="space-y-1">
-              <p className="text-sm font-medium leading-none">
-                {item.name}
-              </p>
+              <p className="text-sm font-medium leading-none">{item.name}</p>
               <p className="text-sm text-muted-foreground">
-                Added {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'Unknown'}
+                Added{" "}
+                {item.created_at
+                  ? new Date(item.created_at).toLocaleDateString()
+                  : "Unknown"}
               </p>
             </div>
           </div>
@@ -351,10 +431,9 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
       <CardHeader>
         <CardTitle>Today's Outfit</CardTitle>
         <CardDescription>
-          {dailyOutfitData?.weather ? 
-            `Perfect for ${dailyOutfitData.weather.description}, ${dailyOutfitData.weather.temperature}°C` : 
-            "AI-curated for your day"
-          }
+          {dailyOutfitData?.weather
+            ? `Perfect for ${dailyOutfitData.weather.description}, ${dailyOutfitData.weather.temperature}°C`
+            : "AI-curated for your day"}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -371,21 +450,20 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
                   <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 </div>
                 <div>
-                  <p className="font-medium mb-1">Let's create your perfect look!</p>
+                  <p className="font-medium mb-1">
+                    Let's create your perfect look!
+                  </p>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Having trouble generating today's outfit. Try adding more items or create one manually.
+                    Having trouble generating today's outfit. Try adding more
+                    items or create one manually.
                   </p>
                 </div>
                 <div className="flex gap-2 justify-center">
                   <Button size="sm">
-                    <Link to="/recommendations">
-                      Generate Outfit
-                    </Link>
+                    <Link to="/recommendations">Generate Outfit</Link>
                   </Button>
                   <Button variant="outline" size="sm">
-                    <Link to="/wardrobe/add">
-                      Add Items
-                    </Link>
+                    <Link to="/wardrobe/add">Add Items</Link>
                   </Button>
                 </div>
               </>
@@ -401,9 +479,7 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
                   </p>
                 </div>
                 <Button>
-                  <Link to="/recommendations">
-                    Create Today's Look
-                  </Link>
+                  <Link to="/recommendations">Create Today's Look</Link>
                 </Button>
               </>
             )}
