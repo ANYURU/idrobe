@@ -170,7 +170,7 @@ function OutfitDetailContent({
             Back to Outfits
           </Button>
         </Link>
-        <div className="text-sm text-slate-500">
+        <div className="text-sm text-muted-foreground">
           <Link to="/outfits" className="hover:text-slate-700">
             Outfits
           </Link>
@@ -191,7 +191,7 @@ function OutfitDetailContent({
               : outfit.name || "Untitled Outfit"}
           </h1>
           {(outfit.description || outfit.recommendation_reason) && (
-            <p className="text-slate-600 mt-2">
+            <p className="text-muted-foreground mt-2">
               {outfit.description || outfit.recommendation_reason}
             </p>
           )}
@@ -226,7 +226,7 @@ function OutfitDetailContent({
                   className="w-full h-40 object-contain bg-slate-50"
                 />
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ExternalLink className="h-4 w-4 text-slate-600" />
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
               <CardContent className="pt-3">
@@ -246,19 +246,19 @@ function OutfitDetailContent({
         </CardHeader>
         <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-sm text-slate-600">Items</p>
+            <p className="text-sm text-muted-foreground">Items</p>
             <p className="text-2xl font-bold">{items.length}</p>
           </div>
           <div>
-            <p className="text-sm text-slate-600">Times Worn</p>
+            <p className="text-sm text-muted-foreground">Times Worn</p>
             <p className="text-2xl font-bold">{outfit.times_worn || 0}</p>
           </div>
           <div>
-            <p className="text-sm text-slate-600">Total Cost</p>
+            <p className="text-sm text-muted-foreground">Total Cost</p>
             <p className="text-2xl font-bold">${totalCost.toFixed(0)}</p>
           </div>
           <div>
-            <p className="text-sm text-slate-600">Cost per Wear</p>
+            <p className="text-sm text-muted-foreground">Cost per Wear</p>
             <p className="text-2xl font-bold">
               {outfit.times_worn > 0 ? `$${costPerWear.toFixed(0)}` : "-"}
             </p>
@@ -273,7 +273,7 @@ function OutfitDetailContent({
         </CardHeader>
         <CardContent>
           <div>
-            <p className="text-sm font-medium text-slate-600 mb-2">Best for:</p>
+            <p className="text-sm font-medium text-muted-foreground mb-2">Best for:</p>
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline" className="capitalize">
                 {outfit.occasion || "Any occasion"}
@@ -307,7 +307,7 @@ function OutfitDetailContent({
                     <p className="font-medium text-sm truncate">
                       {similar.name || `${similar.occasion} outfit`}
                     </p>
-                    <p className="text-xs text-slate-600 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       {similar.clothing_item_ids.length} items
                     </p>
                   </div>

@@ -50,7 +50,7 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
             <div className="text-center space-y-4">
               <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
               <h2 className="text-xl font-semibold">Check your email</h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 We've sent a password reset link to your email. Click the link to reset your password.
               </p>
               <Link to="/auth/login" className="text-blue-600 hover:underline block">
@@ -97,7 +97,7 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
             </Button>
           </form>
 
-          <p className="mt-4 text-sm text-center text-slate-600">
+          <p className="mt-4 text-sm text-center text-muted-foreground">
             <Link to="/auth/login" className="text-blue-600 hover:underline">
               Back to login
             </Link>

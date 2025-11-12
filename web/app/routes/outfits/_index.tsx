@@ -213,7 +213,7 @@ export default function OutfitsPage({ loaderData }: Route.ComponentProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Outfits</h1>
-          <p className="text-slate-600 mt-1">
+          <p className="text-muted-foreground mt-1">
             Manage your outfit recommendations and collections
           </p>
         </div>
@@ -322,7 +322,7 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
                 <p className="font-medium">
                   {generateFetcher.data?.count || 0} New Outfits Generated!
                 </p>
-                <p className="text-sm text-slate-600">Check the highlighted recommendations below</p>
+                <p className="text-sm text-muted-foreground">Check the highlighted recommendations below</p>
               </div>
             </div>
           ) : (
@@ -338,13 +338,13 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
           {!generateFetcher.data?.success && generateFetcher.state !== 'submitting' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-600">Quick suggestions:</p>
+                <p className="text-sm text-muted-foreground">Quick suggestions:</p>
                 {quickSuggestions.length > 5 && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowMore(!showMore)}
-                    className="text-xs text-slate-500 cursor-pointer"
+                    className="text-xs text-muted-foreground cursor-pointer"
                   >
                     {showMore ? 'Show less' : `+${quickSuggestions.length - 5} more`}
                   </Button>
@@ -517,7 +517,7 @@ function OutfitsContent({ recommendationsPromise, collectionsPromise, occasions,
       <TabsContent value="collections" className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold">My Collections</h3>
-          <p className="text-sm text-slate-600">Your saved outfit combinations</p>
+          <p className="text-sm text-muted-foreground">Your saved outfit combinations</p>
         </div>
         
         <Suspense fallback={<CollectionsSkeleton />}>
@@ -554,7 +554,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Search recommendations..."
                 value={searchInput}
@@ -565,7 +565,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                 <button
                   type="button"
                   onClick={() => setSearchInput('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 w-4 h-4 cursor-pointer"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-muted-foreground w-4 h-4 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -678,8 +678,8 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
       {currentData.items.length === 0 ? (
           <Card>
             <CardContent className="pt-12 pb-12 text-center">
-              <p className="text-slate-600 mb-4">No recommendations found</p>
-              <p className="text-sm text-slate-500 mb-4">
+              <p className="text-muted-foreground mb-4">No recommendations found</p>
+              <p className="text-sm text-muted-foreground mb-4">
                 Try adjusting your filters or add items to your wardrobe
               </p>
               <div className="flex gap-2 justify-center">
@@ -699,7 +699,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 {currentData.total} recommendations found
               </p>
               <Button
@@ -741,7 +741,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {rec.recommendation_reason && (
-                        <p className="text-sm text-slate-600">
+                        <p className="text-sm text-muted-foreground">
                           {rec.recommendation_reason}
                         </p>
                       )}
@@ -776,8 +776,8 @@ function CollectionsContent({ collectionsPromise }: { collectionsPromise: Promis
       {collections.length === 0 ? (
         <Card>
           <CardContent className="pt-12 pb-12 text-center">
-            <p className="text-slate-600 mb-4">No collections yet</p>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-muted-foreground mb-4">No collections yet</p>
+            <p className="text-sm text-muted-foreground mb-4">
               Create a collection to save your favorite outfit combinations
             </p>
             <Button>
@@ -800,7 +800,7 @@ function CollectionsContent({ collectionsPromise }: { collectionsPromise: Promis
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <OutfitPreview items={collection.clothing_items || []} />
-                  <div className="flex gap-2 text-sm text-slate-600">
+                  <div className="flex gap-2 text-sm text-muted-foreground">
                     <span>{collection.clothing_item_ids?.length || 0} items</span>
                     {(collection.times_worn ?? 0) > 0 && (
                       <span>• Worn {collection.times_worn}x</span>

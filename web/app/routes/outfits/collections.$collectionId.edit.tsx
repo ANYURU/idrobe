@@ -76,13 +76,13 @@ export default function EditCollectionPage({ actionData, loaderData, params }: R
       <div className="mb-6">
         <Link 
           to={`/outfits/collections/${params.collectionId}`}
-          className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-4"
+          className="inline-flex items-center text-muted-foreground hover:text-slate-900 mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Collection
         </Link>
         <h1 className="text-3xl font-bold">Edit Collection</h1>
-        <p className="text-slate-600 mt-1">Update your outfit collection</p>
+        <p className="text-muted-foreground mt-1">Update your outfit collection</p>
       </div>
 
       {actionData?.error && (
@@ -177,7 +177,7 @@ function EditForm({ collectionPromise, itemsPromise, selectedItems, setSelectedI
                 />
               </div>
 
-              <div className="text-sm text-slate-600">
+              <div className="text-sm text-muted-foreground">
                 {selectedItems.length} item(s) selected
               </div>
 
@@ -199,7 +199,7 @@ function EditForm({ collectionPromise, itemsPromise, selectedItems, setSelectedI
           </CardHeader>
           <CardContent>
             {items.length === 0 ? (
-              <p className="text-slate-600 text-center py-8">
+              <p className="text-muted-foreground text-center py-8">
                 No items in your wardrobe yet. Add some items first.
               </p>
             ) : (

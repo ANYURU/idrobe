@@ -468,9 +468,9 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
                 id="file-input"
               />
               <label htmlFor="file-input" className="cursor-pointer block">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="font-medium">Click to upload or drag and drop</p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   PNG, JPG, WebP up to 5MB
                 </p>
               </label>
@@ -481,7 +481,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{files.length} item(s) uploaded</p>
                   {analyzedCount < files.length && (
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-muted-foreground">
                       {analyzedCount} of {files.length} analyzed
                     </p>
                   )}
@@ -549,7 +549,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
                     )}
                     <div className="text-xs">
                       <p className="font-medium truncate">{item.name}</p>
-                      <p className="text-slate-500 capitalize">
+                      <p className="text-muted-foreground capitalize">
                         {item.category?.name} • {item.primary_color}
                       </p>
                     </div>
@@ -560,7 +560,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
           </Card>
         )}
         
-        <div className="text-center text-sm text-slate-600">
+        <div className="text-center text-sm text-muted-foreground">
           <p>Don't worry, you can add more items anytime!</p>
         </div>
       </div>

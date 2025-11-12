@@ -51,7 +51,7 @@ export default function ResetPassword({ actionData }: Route.ComponentProps) {
             <div className="text-center space-y-4">
               <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
               <h2 className="text-xl font-semibold">Password reset successful!</h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 Your password has been reset. Redirecting to login...
               </p>
             </div>

@@ -100,7 +100,7 @@ export default function TrendsPage() {
             <TrendingUp className="h-8 w-8 text-blue-500" />
             Fashion Trends
           </h1>
-          <p className="text-slate-600 mt-1">Real-time fashion trends powered by AI and social data</p>
+          <p className="text-muted-foreground mt-1">Real-time fashion trends powered by AI and social data</p>
         </div>
         <Button onClick={handleSyncTrends} variant="outline" size="sm">
           <Clock className="h-4 w-4 mr-2" />
@@ -138,7 +138,7 @@ function TrendsContent({ trendsPromise }: { trendsPromise: Promise<EnrichedTrend
         </h2>
         {currentTrends.length === 0 ? (
           <Card>
-            <CardContent className="pt-6 pb-6 text-center text-slate-600">
+            <CardContent className="pt-6 pb-6 text-center text-muted-foreground">
               No current trends available
             </CardContent>
           </Card>
@@ -277,7 +277,7 @@ function TrendCard({ trend, upcoming = false }: { trend: EnrichedTrend; upcoming
 
         {trend.external_source && trend.external_source !== 'manual' && (
           <div className="pt-2 border-t">
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Source: {trend.external_source.replace('_', ' ').toUpperCase()}
             </p>
           </div>

@@ -83,7 +83,7 @@ export default function Signup({}: Route.ComponentProps) {
             <div className="text-center space-y-4">
               <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
               <h2 className="text-xl font-semibold">Account created!</h2>
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 Check your email to verify your account before signing in.
               </p>
               <Link
@@ -157,7 +157,7 @@ export default function Signup({}: Route.ComponentProps) {
             </Button>
           </form>
 
-          <p className="mt-4 text-sm text-center text-slate-600">
+          <p className="mt-4 text-sm text-center text-muted-foreground">
             Already have an account?{" "}
             <Link to="/auth/login" className="text-blue-600 hover:underline">
               Sign in

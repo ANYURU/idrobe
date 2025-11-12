@@ -50,7 +50,7 @@ export default function SettingsPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-slate-600 mt-1">
+        <p className="text-muted-foreground mt-1">
           Manage your app preferences and account
         </p>
       </div>
@@ -65,11 +65,11 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium">Email</Label>
-              <p className="text-sm text-slate-600">{user.email}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
             <div>
               <Label className="text-sm font-medium">Member Since</Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 {new Date(user.created_at).toLocaleDateString()}
               </p>
             </div>
@@ -91,7 +91,7 @@ export default function SettingsPage() {
               <Label htmlFor="daily-recommendations">
                 Daily Recommendations
               </Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Get daily outfit suggestions
               </p>
             </div>
@@ -100,7 +100,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="trend-alerts">Trend Alerts</Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Notifications about new fashion trends
               </p>
             </div>
@@ -121,7 +121,7 @@ export default function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="public-collections">Public Collections</Label>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 Allow others to see your public outfit collections
               </p>
             </div>

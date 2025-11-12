@@ -469,7 +469,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
           <h1 className="text-3xl font-bold bg-linear-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
             Add Items to Wardrobe
           </h1>
-          <p className="text-slate-600">
+          <p className="text-muted-foreground">
             Upload multiple clothing items and let AI analyze them instantly!
           </p>
         </div>
@@ -499,9 +499,9 @@ export default function AddItemPage({}: Route.ComponentProps) {
                 id="file-input"
               />
               <label htmlFor="file-input" className="cursor-pointer block">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
                 <p className="font-medium">Click to upload or drag and drop</p>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   PNG, JPG, WebP up to 5MB each
                 </p>
               </label>
@@ -512,7 +512,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
                 <div className="flex items-center justify-between">
                   <p className="font-medium">{files.length} item(s) uploaded</p>
                   {analyzedCount < files.length && (
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-muted-foreground">
                       {analyzedCount} of {files.length} analyzed
                     </p>
                   )}
@@ -556,7 +556,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
           </CardContent>
         </Card>
 
-        <div className="text-center text-sm text-slate-600">
+        <div className="text-center text-sm text-muted-foreground">
           <p>AI will analyze each item automatically after upload</p>
         </div>
       </div>

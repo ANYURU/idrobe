@@ -105,7 +105,7 @@ export default function Login({}: Route.ComponentProps) {
             >
               Forgot password?
             </Link>
-            <p className="text-slate-600">
+            <p className="text-muted-foreground">
               Don't have an account?{" "}
               <Link to="/auth/signup" className="text-blue-600 hover:underline">
                 Sign up

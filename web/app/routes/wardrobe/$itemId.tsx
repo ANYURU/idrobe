@@ -144,7 +144,7 @@ function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">{item.name}</h1>
-          <p className="text-slate-600 capitalize mt-1">
+          <p className="text-muted-foreground capitalize mt-1">
             {item.category?.name}
             {item.subcategory && ` • ${item.subcategory.name}`}
           </p>
@@ -157,18 +157,18 @@ function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
           <CardContent className="space-y-3">
             {item.brand && (
               <div>
-                <p className="text-sm text-slate-600">Brand</p>
+                <p className="text-sm text-muted-foreground">Brand</p>
                 <p className="font-medium">{item.brand}</p>
               </div>
             )}
             {item.size && (
               <div>
-                <p className="text-sm text-slate-600">Size</p>
+                <p className="text-sm text-muted-foreground">Size</p>
                 <p className="font-medium">{item.size}</p>
               </div>
             )}
             <div>
-              <p className="text-sm text-slate-600">Color</p>
+              <p className="text-sm text-muted-foreground">Color</p>
               <div className="flex flex-wrap gap-2 mt-1">
                 <Badge>{item.primary_color}</Badge>
                 {Array.isArray(item.secondary_colors) &&
@@ -181,7 +181,7 @@ function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
             </div>
             {Array.isArray(item.material) && item.material.length > 0 && (
               <div>
-                <p className="text-sm text-slate-600">Material</p>
+                <p className="text-sm text-muted-foreground">Material</p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {item.material.map((mat: string) => (
                     <Badge key={mat} variant="secondary">
@@ -193,12 +193,12 @@ function ItemDetailContent({ itemPromise }: { itemPromise: Promise<any> }) {
             )}
             {item.pattern && (
               <div>
-                <p className="text-sm text-slate-600">Pattern</p>
+                <p className="text-sm text-muted-foreground">Pattern</p>
                 <p className="font-medium capitalize">{item.pattern}</p>
               </div>
             )}
             <div>
-              <p className="text-sm text-slate-600">Times Worn</p>
+              <p className="text-sm text-muted-foreground">Times Worn</p>
               <p className="font-medium">{item.times_worn}</p>
             </div>
           </CardContent>

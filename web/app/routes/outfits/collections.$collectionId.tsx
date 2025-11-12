@@ -94,7 +94,7 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
       <div className="mb-6">
         <Link 
           to="/outfits?tab=collections" 
-          className="inline-flex items-center text-slate-600 hover:text-slate-900 mb-4"
+          className="inline-flex items-center text-muted-foreground hover:text-slate-900 mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Collections
@@ -123,7 +123,7 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
               <CardTitle>Delete Collection</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-slate-600">
+              <p className="text-muted-foreground">
                 Are you sure you want to delete this collection? This action cannot be undone.
               </p>
               <div className="flex gap-2">
@@ -163,9 +163,9 @@ function CollectionDetail({ collectionPromise, onToggleFavorite, onDelete }: {
             )}
           </div>
           {collection.description && (
-            <p className="text-slate-600">{collection.description}</p>
+            <p className="text-muted-foreground">{collection.description}</p>
           )}
-          <div className="flex gap-4 text-sm text-slate-500 mt-2">
+          <div className="flex gap-4 text-sm text-muted-foreground mt-2">
             <span>{collection.clothing_item_ids?.length || 0} items</span>
             {collection.times_worn > 0 && (
               <span>Worn {collection.times_worn} times</span>

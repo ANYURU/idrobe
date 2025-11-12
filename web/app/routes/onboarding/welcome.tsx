@@ -98,7 +98,7 @@ export default function OnboardingWelcome() {
           </CardContent>
         </Card>
 
-        <div className="text-center text-sm text-slate-600">
+        <div className="text-center text-sm text-muted-foreground">
           <p>You can skip this and go to your dashboard anytime</p>
           <Link to="/" className="text-blue-600 hover:underline">
             Go to dashboard

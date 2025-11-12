@@ -53,7 +53,7 @@ export default function AnalyticsPage() {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Wardrobe Analytics</h1>
-        <p className="text-slate-600 mt-1">Insights about your clothing collection</p>
+        <p className="text-muted-foreground mt-1">Insights about your clothing collection</p>
       </div>
 
       {/* Key Metrics */}
@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalItems}</div>
-            <p className="text-xs text-slate-600">{categories} categories</p>
+            <p className="text-xs text-muted-foreground">{categories} categories</p>
           </CardContent>
         </Card>
 
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalWears}</div>
-            <p className="text-xs text-slate-600">Avg {avgWears} per item</p>
+            <p className="text-xs text-muted-foreground">Avg {avgWears} per item</p>
           </CardContent>
         </Card>
 
@@ -87,7 +87,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{favoriteItems}</div>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-muted-foreground">
               {totalItems > 0 ? Math.round((favoriteItems / totalItems) * 100) : 0}% of wardrobe
             </p>
           </CardContent>
@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{categories}</div>
-            <p className="text-xs text-slate-600">Different categories</p>
+            <p className="text-xs text-muted-foreground">Different categories</p>
           </CardContent>
         </Card>
       </div>
@@ -175,7 +175,7 @@ export default function AnalyticsPage() {
             <div className="space-y-4">
               {mostWornItems.map((item, index) => (
                 <div key={item.id} className="flex items-center gap-4">
-                  <div className="text-2xl font-bold text-slate-400 w-8">
+                  <div className="text-2xl font-bold text-muted-foreground w-8">
                     #{index + 1}
                   </div>
                   <img
@@ -185,7 +185,7 @@ export default function AnalyticsPage() {
                   />
                   <div className="flex-1">
                     <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-slate-600 capitalize">uncategorized</p>
+                    <p className="text-sm text-muted-foreground capitalize">uncategorized</p>
                   </div>
                   <Badge variant="secondary">{item.times_worn} wears</Badge>
                 </div>
