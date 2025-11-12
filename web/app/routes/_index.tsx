@@ -1,15 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Shirt, Palette, TrendingUp } from "lucide-react";
-import { Link, redirect } from "react-router";
+import { Plus, Shirt, Palette, TrendingUp, Sparkles } from "lucide-react";
+import { Link, redirect, useSearchParams } from "react-router";
 import { loadDashboardData } from "@/lib/loaders";
 import { ClothingThumbnail } from "@/components/ClothingThumbnail";
 import { OutfitRecommendation } from "@/components/OutfitRecommendation";
 import { createClient } from '@/lib/supabase.server';
-import { Suspense, use } from "react";
+import { Suspense, use, useEffect, useRef } from "react";
 import type { Route } from "./+types/_index";
 import type { Tables } from "@/lib/database.types";
+import { useToast } from "@/lib/use-toast";
 
 type ClothingItem = Tables<"clothing_items">;
 type UserProfile = Tables<"user_profiles">;
@@ -157,6 +158,19 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
+  const [searchParams] = useSearchParams();
+  const toast = useToast();
+  const hasShownToast = useRef(false);
+
+  useEffect(() => {
+    if (searchParams.get('login') === 'success' && !hasShownToast.current) {
+      toast.success('Welcome back!');
+      hasShownToast.current = true;
+      // Clean URL without reload
+      window.history.replaceState({}, '', '/');
+    }
+  }, [searchParams, toast]);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="p-6 space-y-6">
@@ -328,30 +342,71 @@ function RecentItemsCard({ p }: { p: Promise<ClothingItem[]> }) {
 }
 
 function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
-  const dailyOutfit = use(p);
+  const dailyOutfitData = use(p);
+  const recommendation = dailyOutfitData?.recommendations?.[0];
+  const hasError = dailyOutfitData?.error;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Today's Outfit</CardTitle>
-        <CardDescription>AI-generated based on weather</CardDescription>
+        <CardDescription>
+          {dailyOutfitData?.weather ? 
+            `Perfect for ${dailyOutfitData.weather.description}, ${dailyOutfitData.weather.temperature}°C` : 
+            "AI-curated for your day"
+          }
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        {dailyOutfit ? (
+        {recommendation ? (
           <OutfitRecommendation
-            recommendation={mapRecommendationToComponent(dailyOutfit)}
+            recommendation={mapRecommendationToComponent(recommendation)}
             showInteractions={false}
           />
         ) : (
-          <div className="text-center py-8">
-            <p className="text-sm text-muted-foreground mb-4">
-              No outfit generated yet
-            </p>
-            <Button>
-              <Link to="/recommendations">
-                Generate Outfit
-              </Link>
-            </Button>
+          <div className="text-center py-8 space-y-4">
+            {hasError ? (
+              <>
+                <div className="text-muted-foreground">
+                  <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                </div>
+                <div>
+                  <p className="font-medium mb-1">Let's create your perfect look!</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Having trouble generating today's outfit. Try adding more items or create one manually.
+                  </p>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <Button size="sm">
+                    <Link to="/recommendations">
+                      Generate Outfit
+                    </Link>
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <Link to="/wardrobe/add">
+                      Add Items
+                    </Link>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-muted-foreground">
+                  <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                </div>
+                <div>
+                  <p className="font-medium mb-1">Ready to get styled?</p>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Let our AI create the perfect outfit for your day
+                  </p>
+                </div>
+                <Button>
+                  <Link to="/recommendations">
+                    Create Today's Look
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         )}
       </CardContent>

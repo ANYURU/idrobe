@@ -172,11 +172,9 @@ Return ONLY this JSON:
     }
     
     // Add timeout to prevent hanging
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
+    const controller = new AbortController();// 30 soecnd timeout    
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,8 +184,6 @@ Return ONLY this JSON:
         })
       }
     );
-    
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error('❌ Gemini API error:', response.status);

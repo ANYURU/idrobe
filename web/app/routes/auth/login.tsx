@@ -1,6 +1,5 @@
 import { useFormik } from "formik";
-import { useEffect } from "react";
-import { Link, redirect, useSubmit, useNavigation } from "react-router";
+import { Link, redirect } from "react-router";
 import { createClient } from "@/lib/supabase.server";
 import type { Route } from "./+types/login";
 import { loginSchema } from "@/lib/schemas";
@@ -15,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useToast } from "@/lib/use-toast";
+import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
@@ -25,7 +24,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const { supabase, headers } = createClient(request);
-  
+
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -34,28 +33,19 @@ export async function action({ request }: Route.ActionArgs) {
     email,
     password,
   });
-  
+
   if (authError) {
-    return { 
+    return {
       success: false,
-      error: authError.message 
+      error: authError.message,
     };
   }
 
-  throw redirect("/", { headers });
+  throw redirect("/?login=success", { headers });
 }
 
-export default function Login({ actionData }: Route.ComponentProps) {
-  const toast = useToast();
-  const submit = useSubmit();
-  const navigation = useNavigation();
-  const isSubmitting = navigation.state === "submitting";
-
-  useEffect(() => {
-    if (actionData?.error) {
-      toast.error(actionData.error);
-    }
-  }, [actionData?.error, toast]);
+export default function Login({}: Route.ComponentProps) {
+  const { submit, isSubmitting } = useActionWithToast();
 
   const formik = useFormik({
     initialValues: {
@@ -64,7 +54,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
     },
     validationSchema: toFormikValidationSchema(loginSchema),
     onSubmit: (values) => {
-      submit(values, { method: "post" });
+      submit(values);
     },
   });
 
@@ -76,8 +66,6 @@ export default function Login({ actionData }: Route.ComponentProps) {
           <CardDescription>Sign in to your iDrobe account</CardDescription>
         </CardHeader>
         <CardContent>
-
-
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -105,11 +93,7 @@ export default function Login({ actionData }: Route.ComponentProps) {
               )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={formik.isSubmitting}
-            >
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting ? "Signing in..." : "Sign in"}
             </Button>
           </form>

@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { Link, useSubmit } from "react-router";
+import { Link } from "react-router";
 import type { Route } from "./+types/signup";
 import { createClient } from "@/lib/supabase.server";
 import { signupSchema } from "@/lib/schemas";
@@ -14,8 +14,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { CheckCircle } from "lucide-react";
+import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
@@ -32,36 +32,36 @@ export async function action({ request }: Route.ActionArgs) {
   try {
     const url = new URL(request.url);
     const baseUrl = `${url.protocol}//${url.host}`;
-    
+
     const { error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${baseUrl}/auth/confirm`
-      }
+        emailRedirectTo: `${baseUrl}/auth/confirm`,
+      },
     });
 
     if (authError) {
-      return { 
+      return {
         success: false,
-        error: authError.message 
+        error: authError.message,
       };
     }
 
-    return { 
+    return {
       success: true,
-      message: "Account created! Check your email to verify."
+      message:
+        "Account created successfully! Please check your email to verify your account.",
     };
   } catch (error) {
-    return { 
-      success: false,
-      error: 'An unexpected error occurred during signup' 
+    return {
+      error: "An unexpected error occurred during signup",
     };
   }
 }
 
-export default function Signup({ actionData }: Route.ComponentProps) {
-  const submit = useSubmit();
+export default function Signup({}: Route.ComponentProps) {
+  const { submit, isSubmitting, success } = useActionWithToast();
 
   const formik = useFormik({
     initialValues: {
@@ -71,11 +71,11 @@ export default function Signup({ actionData }: Route.ComponentProps) {
     },
     validationSchema: toFormikValidationSchema(signupSchema),
     onSubmit: (values) => {
-      submit(values, { method: "post" });
+      submit(values);
     },
   });
 
-  if (actionData?.success) {
+  if (success) {
     return (
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
         <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border shadow-xl">
@@ -84,9 +84,14 @@ export default function Signup({ actionData }: Route.ComponentProps) {
               <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
               <h2 className="text-xl font-semibold">Account created!</h2>
               <p className="text-slate-600">
-                Check your email to verify your account. Redirecting to
-                onboarding...
+                Check your email to verify your account before signing in.
               </p>
+              <Link
+                to="/auth/login"
+                className="inline-block mt-4 text-blue-600 hover:underline"
+              >
+                Go to Sign In
+              </Link>
             </div>
           </CardContent>
         </Card>
@@ -104,13 +109,6 @@ export default function Signup({ actionData }: Route.ComponentProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {actionData?.error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{actionData.error}</AlertDescription>
-            </Alert>
-          )}
-
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -154,12 +152,8 @@ export default function Signup({ actionData }: Route.ComponentProps) {
                 )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={formik.isSubmitting}
-            >
-              {formik.isSubmitting ? "Creating account..." : "Create account"}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Creating account..." : "Create account"}
             </Button>
           </form>
 
