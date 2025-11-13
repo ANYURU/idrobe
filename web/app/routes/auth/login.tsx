@@ -43,7 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
-  throw redirect("/?login=success", { headers });
+  throw redirect("/dashboard?login=success", { headers });
 }
 
 export default function Login({}: Route.ComponentProps) {

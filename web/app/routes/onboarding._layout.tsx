@@ -22,7 +22,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // If onboarding is completed and not on complete page, redirect to dashboard
   if (profile?.onboarding_completed && currentPath !== "/onboarding/complete") {
-    return redirect("/");
+    return redirect("/dashboard");
   }
 
   // If no profile exists and not on welcome/profile pages, redirect to welcome

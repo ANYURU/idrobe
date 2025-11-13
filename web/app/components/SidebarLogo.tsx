@@ -4,7 +4,7 @@ import { SidebarMenuButton } from "@/components/ui/sidebar"
 export function SidebarLogo() {
   return (
     <SidebarMenuButton size="lg" asChild tooltip="IDrobe">
-      <Link to="/">
+      <Link to="/dashboard">
         <div className="flex size-8 items-center justify-center rounded-full border-2 border-[#8B4513] shrink-0">
           <svg
             width="20"

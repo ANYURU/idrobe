@@ -3,7 +3,7 @@ import { type RouteConfig, index, route, layout } from "@react-router/dev/routes
 export default [
   // Guest layout (redirects authenticated users)
   layout("routes/guest._layout.tsx", [
-    route("guest", "routes/guest/_index.tsx"),
+    index("routes/_index.tsx"),
   ]),
 
   // Auth layout (redirects authenticated users)
@@ -27,7 +27,7 @@ export default [
 
   // Protected layout (requires authentication)
   layout("routes/_layout.tsx", [
-    index("routes/_index.tsx"),
+    route("dashboard", "routes/dashboard/_index.tsx"),
     
     // Wardrobe routes
     route("wardrobe", "routes/wardrobe/_index.tsx"),

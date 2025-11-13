@@ -16,7 +16,7 @@ export async function loader({ request }: { request: Request }) {
   // Verify session is authentic
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
-    throw redirect("/");
+    throw redirect("/dashboard");
   }
 
   return { user: null };

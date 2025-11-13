@@ -39,7 +39,7 @@ export async function requireGuest(request: Request) {
   // Verify session is authentic
   const { data: { user } } = await supabase.auth.getUser()
   if (user) {
-    throw redirect('/')
+    throw redirect('/dashboard')
   }
   
   return { headers }

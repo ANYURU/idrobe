@@ -11,7 +11,7 @@ export async function loader({ request }: { request: Request }) {
 
   // If user is logged in, redirect to dashboard
   if (user) {
-    throw redirect("/");
+    throw redirect("/dashboard");
   }
 
   return { user: null };
