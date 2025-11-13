@@ -13,14 +13,7 @@ export async function generateDailyOutfit(
 ) {
   const { supabase } = createClient(request);
   
-  // Check for similar weather outfit from today
   const today = new Date().toISOString().split('T')[0];
-  console.log('🔍 Checking for today\'s outfit:', {
-    user_id: userProfile.user_id,
-    weather_condition: weather.condition,
-    temp_range: [weather.temperature - 5, weather.temperature + 5],
-    today_start: `${today}T00:00:00Z`
-  });
   
   const { data: todayOutfit } = await supabase
     .from('outfit_recommendations')
@@ -32,11 +25,7 @@ export async function generateDailyOutfit(
     .gte('generated_at', `${today}T00:00:00Z`)
     .limit(1);
 
-    console.log("Today outfit: ",todayOutfit)
-    
-  console.log('📊 Today\'s outfit query result:', todayOutfit?.length || 0);
   if (todayOutfit && todayOutfit.length > 0) {
-    console.log('🔄 Using similar weather outfit from today');
     
     // Fetch clothing item details for the cached outfit
     const outfitWithItems = await Promise.all(todayOutfit.map(async (outfit) => {
@@ -55,17 +44,10 @@ export async function generateDailyOutfit(
       };
     }));
     
-    console.log('📦 Returning outfit with items:', outfitWithItems.map(o => ({
-      id: o.id,
-      name: o.name,
-      items_count: o.items?.length || 0
-    })));
     return outfitWithItems;
   }
 
-  // Fallback: Check yesterday's outfit with broader temperature range
   const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  console.log('🔍 Checking yesterday\'s outfit for fallback');
   
   const { data: yesterdayOutfit } = await supabase
     .from('outfit_recommendations')
@@ -78,14 +60,26 @@ export async function generateDailyOutfit(
     .lt('generated_at', `${today}T00:00:00Z`)
     .limit(1);
     
-  console.log('📊 Yesterday\'s outfit query result:', yesterdayOutfit?.length || 0);
   if (yesterdayOutfit && yesterdayOutfit.length > 0) {
-    console.log('🔄 Using similar weather outfit from yesterday');
-    return yesterdayOutfit;
+    
+    const outfitWithItems = await Promise.all(yesterdayOutfit.map(async (outfit) => {
+      const { data: clothingItems } = await supabase
+        .from('clothing_items')
+        .select('id, name, image_url')
+        .in('id', outfit.clothing_item_ids)
+        .eq('user_id', userProfile.user_id);
+        
+      return {
+        ...outfit,
+        name: outfit.name || "Yesterday's Look",
+        description: outfit.recommendation_reason || `Good for ${weather.description}`,
+        items: clothingItems || []
+      };
+    }));
+    
+    return outfitWithItems;
   }
   
-  console.log('🚀 No cached outfits found, proceeding with AI generation');
-
   // Get user's clothing items
   const { data: items } = await supabase
     .from('clothing_items')
@@ -96,18 +90,8 @@ export async function generateDailyOutfit(
     .order('last_worn_date', { ascending: true, nullsFirst: true });
 
   if (!items || items.length < 2) {
-    console.log('❌ Not enough items for daily outfit generation');
     return null;
   }
-
-  console.log('👕 Available items for AI generation:', items.length);
-  console.log('📋 Items details:', items.slice(0, 5).map(item => ({
-    id: item.id,
-    name: item.name,
-    category: item.category,
-    primary_color: item.primary_color,
-    times_worn: item.times_worn || 0
-  })));
 
   const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   const isWeekend = dayOfWeek === 'Saturday' || dayOfWeek === 'Sunday';
@@ -167,7 +151,6 @@ Return ONLY this JSON:
     // Skip AI generation in development if no API key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.log('❌ Missing GEMINI_API_KEY, skipping AI generation');
       return null;
     }
     
@@ -186,7 +169,6 @@ Return ONLY this JSON:
     );
 
     if (!response.ok) {
-      console.error('❌ Gemini API error:', response.status);
       return null;
     }
 
@@ -194,12 +176,10 @@ Return ONLY this JSON:
     const recommendationsText = result.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!recommendationsText) {
-      console.error('❌ Empty response from Gemini');
       return null;
     }
 
     const cleanText = recommendationsText.replace(/```json\n?|```/g, '').trim();
-    console.log('🤖 AI response:', cleanText);
     const recommendations = JSON.parse(cleanText);
 
     // Validate and save
@@ -209,10 +189,7 @@ Return ONLY this JSON:
       rec.clothing_item_ids.every((id: string) => items.find(item => item.id === id))
     );
 
-    console.log('🔍 Valid recommendations found:', validRecs.length);
     if (validRecs.length === 0) {
-      console.log('❌ No valid daily outfit combinations found');
-      console.log('📊 All recommendations:', recommendations);
       return null;
     }
 
@@ -240,7 +217,6 @@ Return ONLY this JSON:
         .single();
         
       if (saveError) {
-        console.error('❌ Failed to save daily outfit:', saveError);
         continue;
       }
 
@@ -252,11 +228,9 @@ Return ONLY this JSON:
       });
     }
 
-    console.log('✅ Generated and saved daily outfit:', savedRecs.length);
     return savedRecs;
 
   } catch (error) {
-    console.error('❌ Daily outfit generation error:', error);
     return null;
   }
 }

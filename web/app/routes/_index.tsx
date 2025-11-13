@@ -104,7 +104,7 @@ function mapRecommendationToComponent(
       rec.description ||
       rec.recommendation_reason ||
       "AI-generated outfit recommendation",
-    items: rec.clothing_items || rec.items || [],
+    items: rec.items || rec.clothing_items || [],
     userInteraction: null,
   };
 }
@@ -421,6 +421,8 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
   const dailyOutfitData = use(p);
   const recommendation = dailyOutfitData?.recommendations?.[0];
   const hasError = dailyOutfitData?.error;
+
+  console.log("Daily Outfit Recommendation", recommendation);
 
   return (
     <Card>

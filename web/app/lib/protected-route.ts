@@ -8,21 +8,19 @@ import { createClient } from './supabase.server'
 export async function requireAuth(request: Request) {
   const { supabase, headers } = createClient(request)
   
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
-    if (error || !user) {
-      throw redirect('/auth/login')
-    }
-    
-    return { user, headers }
-  } catch (error: any) {
-    // Handle refresh token errors by redirecting to login
-    if (error?.code === 'refresh_token_not_found') {
-      throw redirect('/auth/login')
-    }
-    throw error
+  // Quick check: if no session, redirect immediately
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
+    throw redirect('/auth/login?error=session_expired')
   }
+  
+  // Security check: verify session is authentic
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) {
+    throw redirect('/auth/login?error=session_expired')
+  }
+  
+  return { user, headers }
 }
 
 /**
@@ -32,16 +30,17 @@ export async function requireAuth(request: Request) {
 export async function requireGuest(request: Request) {
   const { supabase, headers } = createClient(request)
   
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (user) {
-      throw redirect('/')
-    }
-    
-    return { headers }
-  } catch (error: any) {
-    // If there's an auth error, treat as guest
+  // Quick check session first
+  const { data: { session } } = await supabase.auth.getSession()
+  if (!session) {
     return { headers }
   }
+  
+  // Verify session is authentic
+  const { data: { user } } = await supabase.auth.getUser()
+  if (user) {
+    throw redirect('/')
+  }
+  
+  return { headers }
 }

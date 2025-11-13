@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { Link, redirect } from "react-router";
+import { Link, redirect, useSearchParams } from "react-router";
 import { createClient } from "@/lib/supabase.server";
 import type { Route } from "./+types/login";
 import { loginSchema } from "@/lib/schemas";
@@ -15,6 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useActionWithToast } from "@/hooks/use-action-with-toast";
+import { useEffect, useRef } from "react";
+import { useToast } from "@/lib/use-toast";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
@@ -46,6 +48,17 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function Login({}: Route.ComponentProps) {
   const { submit, isSubmitting } = useActionWithToast();
+  const [searchParams] = useSearchParams();
+  const toast = useToast();
+  const hasShownToast = useRef(false);
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error === 'session_expired' && !hasShownToast.current) {
+      toast.error('Your session has expired. Please sign in again.');
+      hasShownToast.current = true;
+    }
+  }, [searchParams, toast]);
 
   const formik = useFormik({
     initialValues: {

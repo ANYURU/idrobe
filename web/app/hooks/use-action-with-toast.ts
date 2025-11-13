@@ -1,5 +1,5 @@
 import { useFetcher } from 'react-router'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useToast } from '@/lib/use-toast'
 
 // Standardized response format for all actions
@@ -12,23 +12,27 @@ export interface ActionResponse<TData = unknown> {
 
 export function useActionWithToast<TData = unknown>(actionUrl?: string) {
   const fetcher = useFetcher<ActionResponse<TData>>()
-  const toast = useToast()
+  const { error: showError, success: showSuccess } = useToast()
+
+  const lastDataRef = useRef<ActionResponse<TData> | undefined>(undefined)
 
   // Handle toast notifications based on response
   useEffect(() => {
-    if (fetcher.data) {
+    if (fetcher.data && fetcher.data !== lastDataRef.current) {
+      lastDataRef.current = fetcher.data
+      
       if (fetcher.data.error) {
-        toast.error(fetcher.data.error, {
+        showError(fetcher.data.error, {
           action: fetcher.formData ? {
             label: 'Retry',
             onClick: () => fetcher.submit(fetcher.formData!, { method: 'post' })
           } : undefined
         })
       } else if (fetcher.data.success && fetcher.data.message) {
-        toast.success(fetcher.data.message)
+        showSuccess(fetcher.data.message)
       }
     }
-  }, [fetcher.data, toast])
+  }, [fetcher.data, fetcher.formData, showError, showSuccess])
 
   const submit = (data: FormData | Record<string, string | number | boolean>, options?: {
     method?: 'post' | 'put' | 'patch' | 'delete'

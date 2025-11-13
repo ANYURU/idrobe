@@ -6,9 +6,15 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 export async function loader({ request }: { request: Request }) {
   const { supabase } = createClient(request);
+  
+  // Quick check session first
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    return { user: null };
+  }
+  
+  // Verify session is authentic
   const { data: { user } } = await supabase.auth.getUser();
-
-  // If user is logged in, redirect to dashboard
   if (user) {
     throw redirect("/");
   }

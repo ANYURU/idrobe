@@ -17,15 +17,12 @@ export async function getDailyOutfitData(
   userProfile: any, 
   request: Request
 ): Promise<DailyOutfitData> {
-  // Add timeout wrapper to prevent hanging
   return Promise.race([
     getDailyOutfitDataInternal(userId, userProfile, request),
     new Promise<DailyOutfitData>((_, reject) => 
       setTimeout(() => reject(new Error('Daily outfit data timeout')), 15000)
     )
-  ]).catch(error => {
-    console.error('❌ Daily outfit data error:', error);
-    // Return fallback data on timeout/error
+  ]).catch(() => {
     return {
       weather: null,
       recommendations: [],
@@ -39,26 +36,15 @@ async function getDailyOutfitDataInternal(
   userProfile: any, 
   request: Request
 ): Promise<DailyOutfitData> {
-  console.log('👕 Daily outfit request for user profile:', { 
-    userId,
-    city: userProfile?.location_city, 
-    country: userProfile?.location_country
-  });
-
-  // Get current weather
   const weather = await getWeatherForUser(
     userProfile?.location_city, 
     userProfile?.location_country
   );
-  
-  console.log('🌤️ Weather result:', weather);
 
-  // Use Supabase to query recommendations with proper joins
   const { createClient } = await import('./supabase.server');
   const { supabase } = createClient(request);
 
   if (!weather) {
-    console.log('❌ No weather data, using recent recommendations');
     const { data: recentRecs } = await supabase
       .from('outfit_recommendations')
       .select(`
@@ -73,12 +59,11 @@ async function getDailyOutfitDataInternal(
       .order('generated_at', { ascending: false })
       .limit(2);
     
-    // Fetch clothing items for each recommendation
     const enrichedRecs = await Promise.all(
       (recentRecs || []).map(async (rec) => {
         const { data: items } = await supabase
           .from('clothing_items')
-          .select('*')
+          .select('id, name, image_url')
           .in('id', rec.clothing_item_ids || [])
           .eq('user_id', userId);
         
@@ -99,9 +84,6 @@ async function getDailyOutfitDataInternal(
     };
   }
 
-  console.log('🔍 Looking for weather matches. Current weather:', weather);
-
-  // Query for exact weather matches with interactions
   const { data: exactMatches } = await supabase
     .from('outfit_recommendations')
     .select(`
@@ -119,17 +101,12 @@ async function getDailyOutfitDataInternal(
     .order('generated_at', { ascending: false })
     .limit(2);
 
-  console.log('🎯 Exact matches found:', exactMatches?.length || 0);
-
   if (exactMatches && exactMatches.length > 0) {
-    console.log('✅ Using exact weather matches');
-    
-    // Fetch clothing items for each recommendation
     const enrichedMatches = await Promise.all(
       exactMatches.map(async (rec) => {
         const { data: items } = await supabase
           .from('clothing_items')
-          .select('*')
+          .select('id, name, image_url')
           .in('id', rec.clothing_item_ids || [])
           .eq('user_id', userId);
         
@@ -150,7 +127,6 @@ async function getDailyOutfitDataInternal(
     };
   }
 
-  // Query for similar weather conditions with interactions
   const { data: similarMatches } = await supabase
     .from('outfit_recommendations')
     .select(`
@@ -166,17 +142,12 @@ async function getDailyOutfitDataInternal(
     .order('generated_at', { ascending: false })
     .limit(2);
 
-  console.log('🔄 Similar matches found:', similarMatches?.length || 0);
-
   if (similarMatches && similarMatches.length > 0) {
-    console.log('✅ Using similar weather matches');
-    
-    // Fetch clothing items for each recommendation
     const enrichedMatches = await Promise.all(
       similarMatches.map(async (rec) => {
         const { data: items } = await supabase
           .from('clothing_items')
-          .select('*')
+          .select('id, name, image_url')
           .in('id', rec.clothing_item_ids || [])
           .eq('user_id', userId);
         
@@ -197,28 +168,20 @@ async function getDailyOutfitDataInternal(
     };
   }
 
-  // Final fallback: Generate fresh AI recommendations
-  console.log('🤖 No weather matches found, generating fresh daily outfit');
   try {
     const generated = await generateDailyOutfit(userProfile, weather, request);
-    console.log('📊 AI generation result:', generated?.length || 0, 'outfits');
     if (generated && generated.length > 0) {
-      console.log('✅ Generated fresh daily outfit successfully');
       return {
         weather,
         recommendations: generated.slice(0, 2),
         hasWeatherMatch: true,
         isGenerated: true
       };
-    } else {
-      console.log('❌ AI generation returned empty result');
     }
   } catch (error) {
-    console.log('❌ Failed to generate daily outfit:', error);
+    // Continue to fallback
   }
   
-  // Ultimate fallback: recent recommendations
-  console.log('🔄 Using recent recommendations as ultimate fallback');
   const { data: fallbackRecs } = await supabase
     .from('outfit_recommendations')
     .select(`
@@ -233,12 +196,11 @@ async function getDailyOutfitDataInternal(
     .order('generated_at', { ascending: false })
     .limit(2);
   
-  // Fetch clothing items for each recommendation
   const enrichedFallback = await Promise.all(
     (fallbackRecs || []).map(async (rec) => {
       const { data: items } = await supabase
         .from('clothing_items')
-        .select('*')
+        .select('id, name, image_url')
         .in('id', rec.clothing_item_ids || [])
         .eq('user_id', userId);
       
@@ -252,18 +214,9 @@ async function getDailyOutfitDataInternal(
     })
   );
     
-  const result = {
+  return {
     weather,
     recommendations: enrichedFallback,
     hasWeatherMatch: false
   };
-  
-  console.log('📤 Final result:', result.recommendations.length, 'recommendations');
-  console.log('🖼️ Sample recommendation data:', result.recommendations[0] ? {
-    id: result.recommendations[0].id,
-    name: result.recommendations[0].name,
-    items: result.recommendations[0].items?.length || 0,
-    clothing_item_ids: result.recommendations[0].clothing_item_ids
-  } : 'No recommendations');
-  return result;
 }
