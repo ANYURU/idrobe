@@ -422,7 +422,7 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
   const recommendation = dailyOutfitData?.recommendations?.[0];
   const hasError = dailyOutfitData?.error;
 
-  console.log("Daily Outfit Recommendation", recommendation);
+
 
   return (
     <Card>

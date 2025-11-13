@@ -174,7 +174,6 @@ export async function loadWardrobeGaps(userId: string, request: Request) {
     .order('priority', { ascending: false })
 
   if (error) {
-    console.error('Wardrobe gaps query error:', error)
     return []
   }
 
@@ -289,7 +288,6 @@ export function loadDashboardData(userId: string, request: Request) {
         const profile = await loadUserProfile(userId, request);
         return await getDailyOutfitData(userId, profile, request);
       } catch (error) {
-        console.error('Daily outfit error:', error);
         return {
           weather: null,
           recommendations: [],

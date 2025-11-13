@@ -5,17 +5,12 @@ interface WeatherData {
 }
 
 export async function getWeatherForUser(city: string, country: string): Promise<WeatherData | null> {
-  console.log('🌤️ Weather request:', { city, country });
-  
   if (!city || !country) {
-    console.log('❌ Missing city or country');
     return null;
   }
   
-  // Skip weather API in development if no API key
   const apiKey = process.env.OPENWEATHER_API_KEY;
   if (!apiKey) {
-    console.log('❌ Missing OPENWEATHER_API_KEY, using mock data');
     return {
       condition: 'mild',
       temperature: 20,
@@ -24,13 +19,10 @@ export async function getWeatherForUser(city: string, country: string): Promise<
   }
   
   try {
-    
     const url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${country}&appid=${apiKey}&units=metric`;
-    console.log('🌐 Fetching weather from:', url.replace(apiKey, 'HIDDEN'));
     
-    // Add timeout to prevent hanging
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
     
     const response = await fetch(url, {
       signal: controller.signal,
@@ -42,23 +34,17 @@ export async function getWeatherForUser(city: string, country: string): Promise<
     clearTimeout(timeoutId);
     
     if (!response.ok) {
-      console.log('❌ Weather API error:', response.status, response.statusText);
       return null;
     }
     
     const data = await response.json();
-    console.log('✅ Weather data:', data);
     
-    const result = {
+    return {
       condition: mapWeatherCondition(data.weather[0].main.toLowerCase()),
       temperature: Math.round(data.main.temp),
       description: data.weather[0].description
     };
-    
-    console.log('🌤️ Processed weather:', result);
-    return result;
   } catch (error) {
-    console.log('❌ Weather fetch error:', error);
     return null;
   }
 }
