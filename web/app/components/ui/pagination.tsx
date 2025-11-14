@@ -18,8 +18,6 @@ export function Pagination({
   onPageChange,
   className = "",
 }: PaginationProps) {
-  console.log('Pagination props:', { currentPage, totalPages, totalItems, pageSize });
-  
   if (totalPages <= 1) return null;
 
   const startItem = (currentPage - 1) * pageSize + 1;
@@ -28,7 +26,7 @@ export function Pagination({
   // Generate page numbers to show
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    
+
     if (totalPages <= 7) {
       // Show all pages if 7 or fewer
       for (let i = 1; i <= totalPages; i++) {
@@ -37,29 +35,29 @@ export function Pagination({
     } else {
       // Always show first page
       pages.push(1);
-      
+
       if (currentPage > 4) {
         pages.push("...");
       }
-      
+
       // Show pages around current page
       const start = Math.max(2, currentPage - 1);
       const end = Math.min(totalPages - 1, currentPage + 1);
-      
+
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
-      
+
       if (currentPage < totalPages - 3) {
         pages.push("...");
       }
-      
+
       // Always show last page
       if (totalPages > 1) {
         pages.push(totalPages);
       }
     }
-    
+
     return pages;
   };
 
@@ -68,7 +66,7 @@ export function Pagination({
       <p className="text-sm text-slate-600">
         Showing {startItem} to {endItem} of {totalItems} items
       </p>
-      
+
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
@@ -79,7 +77,7 @@ export function Pagination({
           <ChevronLeft className="w-4 h-4" />
           Previous
         </Button>
-        
+
         <div className="flex items-center gap-1">
           {getPageNumbers().map((page, index) => (
             <div key={index}>
@@ -100,7 +98,7 @@ export function Pagination({
             </div>
           ))}
         </div>
-        
+
         <Button
           variant="outline"
           size="sm"

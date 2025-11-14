@@ -1,4 +1,4 @@
-import { ClothingImage } from "./ClothingImage";
+import { ClothingImageCard } from "./ClothingImageCard";
 
 interface ClothingItem {
   id: string;
@@ -26,11 +26,12 @@ export function OutfitPreview({ items, maxItems = 3, size = 'md' }: OutfitPrevie
   return (
     <div className="flex gap-2 flex-wrap">
       {displayItems.map((item) => (
-        <div key={item.id} className={`${sizeClasses[size]} rounded-lg overflow-hidden bg-muted`}>
-          <ClothingImage
+        <div key={item.id} className={`${sizeClasses[size]} rounded-lg overflow-hidden`}>
+          <ClothingImageCard
             filePath={item.image_url}
             alt={item.name}
             className="w-full h-full object-cover"
+            fallbackClassName={`${sizeClasses[size]}`}
           />
         </div>
       ))}

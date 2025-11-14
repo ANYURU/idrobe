@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { ClothingImage } from "@/components/ClothingImage";
+import { ClothingImageCard } from "@/components/ClothingImageCard";
 import { Pagination } from "@/components/ui/pagination";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { Route } from "./+types/_index";
@@ -22,8 +22,6 @@ import type { Tables } from "@/lib/database.types";
 
 type Category = Tables<"clothing_categories">;
 type Subcategory = Tables<"clothing_subcategories">;
-
-
 
 interface WardrobeFilters {
   search: string;
@@ -55,13 +53,16 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Build query with category join
   let query = supabase
     .from("clothing_items")
-    .select(`
+    .select(
+      `
       *,
       clothing_categories!category_id(
         id,
         name
       )
-    `, { count: "exact" })
+    `,
+      { count: "exact" }
+    )
     .eq("user_id", user.id)
     .eq("is_archived", false)
     .is("deleted_at", null);
@@ -127,14 +128,16 @@ export async function loader({ request }: Route.LoaderArgs) {
   // Fetch categories and subcategories for filter dropdown
   const { data: categories } = await supabase
     .from("clothing_categories")
-    .select(`
+    .select(
+      `
       id, 
       name,
       clothing_subcategories(
         id,
         name
       )
-    `)
+    `
+    )
     .eq("is_active", true)
     .is("parent_category_id", null)
     .order("display_order", { ascending: true });
@@ -147,7 +150,9 @@ export async function loader({ request }: Route.LoaderArgs) {
       totalPages,
       limit: filters.limit,
     }),
-    categories: (categories || []) as (Category & { clothing_subcategories: Subcategory[] })[],
+    categories: (categories || []) as (Category & {
+      clothing_subcategories: Subcategory[];
+    })[],
     filters,
   };
 }
@@ -188,8 +193,6 @@ export default function WardrobePage() {
     fetcher.load(`/wardrobe?${params.toString()}`);
   }, [searchParams]);
 
-
-
   const updateFilters = (newFilters: Partial<WardrobeFilters>) => {
     const params = new URLSearchParams(searchParams);
     Object.entries(newFilters).forEach(([key, value]) => {
@@ -207,11 +210,16 @@ export default function WardrobePage() {
   };
 
   const resetFilters = () => {
-    setSearchInput('');
+    setSearchInput("");
     setSearchParams({});
   };
 
-  const hasActiveFilters = filters.search || filters.category || filters.subcategory || filters.sortBy !== 'recent' || filters.limit !== 12;
+  const hasActiveFilters =
+    filters.search ||
+    filters.category ||
+    filters.subcategory ||
+    filters.sortBy !== "recent" ||
+    filters.limit !== 12;
 
   return (
     <div className="p-6 space-y-6">
@@ -219,7 +227,9 @@ export default function WardrobePage() {
         <div>
           <h1 className="text-2xl font-semibold">Your Wardrobe</h1>
           <Suspense
-            fallback={<p className="text-muted-foreground text-sm mt-0.5">Loading...</p>}
+            fallback={
+              <p className="text-muted-foreground text-sm mt-0.5">Loading...</p>
+            }
           >
             <ItemCountWrapper itemsPromise={itemsPromise} />
           </Suspense>
@@ -248,12 +258,12 @@ export default function WardrobePage() {
                 placeholder="Search items..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className={`pl-10 ${searchInput ? 'pr-10' : ''}`}
+                className={`pl-10 ${searchInput ? "pr-10" : ""}`}
               />
               {searchInput && (
                 <button
                   type="button"
-                  onClick={() => setSearchInput('')}
+                  onClick={() => setSearchInput("")}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground w-4 h-4"
                 >
                   <X className="w-4 h-4" />
@@ -300,10 +310,11 @@ export default function WardrobePage() {
                     }
                     options={[
                       { value: "all", label: "All categories" },
-                      ...loaderData.categories.map(cat => ({
+                      ...loaderData.categories.map((cat) => ({
                         value: cat.name,
-                        label: cat.name.charAt(0).toUpperCase() + cat.name.slice(1)
-                      }))
+                        label:
+                          cat.name.charAt(0).toUpperCase() + cat.name.slice(1),
+                      })),
                     ]}
                     placeholder="All categories"
                   />
@@ -322,14 +333,16 @@ export default function WardrobePage() {
                     }
                     options={[
                       { value: "all", label: "All subcategories" },
-                      ...(filters.category ? 
-                        loaderData.categories
-                          .find(cat => cat.name === filters.category)
-                          ?.clothing_subcategories?.map(sub => ({
-                            value: sub.name,
-                            label: sub.name.charAt(0).toUpperCase() + sub.name.slice(1)
-                          })) || []
-                        : [])
+                      ...(filters.category
+                        ? loaderData.categories
+                            .find((cat) => cat.name === filters.category)
+                            ?.clothing_subcategories?.map((sub) => ({
+                              value: sub.name,
+                              label:
+                                sub.name.charAt(0).toUpperCase() +
+                                sub.name.slice(1),
+                            })) || []
+                        : []),
                     ]}
                     placeholder="All subcategories"
                     disabled={!filters.category}
@@ -386,9 +399,7 @@ export default function WardrobePage() {
       </Suspense>
 
       <Suspense
-        fallback={
-          <div className="h-16 bg-muted rounded animate-pulse"></div>
-        }
+        fallback={<div className="h-16 bg-muted rounded animate-pulse"></div>}
       >
         <PaginationWrapper
           itemsPromise={itemsPromise}
@@ -402,7 +413,9 @@ export default function WardrobePage() {
 function ItemCountWrapper({ itemsPromise }: { itemsPromise: Promise<any> }) {
   const data = use(itemsPromise);
   return (
-    <p className="text-muted-foreground text-sm mt-0.5">{data.total} items in your wardrobe</p>
+    <p className="text-muted-foreground text-sm mt-0.5">
+      {data.total} items in your wardrobe
+    </p>
   );
 }
 
@@ -428,15 +441,12 @@ function WardrobeGrid({ itemsPromise }: { itemsPromise: Promise<any> }) {
         <Link key={item.id} to={`/wardrobe/${item.id}`}>
           <Card className="border cursor-pointer h-full hover:bg-muted/50 transition-colors">
             <div className="relative">
-              <Suspense fallback={
-                <div className="w-full h-48 bg-muted rounded-t-lg animate-pulse" />
-              }>
-                <ClothingImage
-                  filePath={item.image_url}
-                  alt={item.name}
-                  className="w-full h-48 object-contain rounded-t-lg bg-muted/30"
-                />
-              </Suspense>
+              <ClothingImageCard
+                filePath={item.image_url}
+                alt={item.name}
+                className="w-full h-48 object-contain rounded-t-lg bg-muted/30"
+                fallbackClassName="w-full h-48 rounded-t-lg"
+              />
               <div className="absolute top-2 right-2 flex gap-2">
                 {item.is_favorite && (
                   <Heart className="h-5 w-5 text-red-500 fill-red-500" />

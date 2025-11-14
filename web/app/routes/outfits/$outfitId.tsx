@@ -1,6 +1,7 @@
-import { redirect, useSubmit, Link, useNavigate } from "react-router";
-import { useState, Suspense, use } from "react";
+import { redirect, useSubmit, Link, useNavigate, useFetcher } from "react-router";
+import { useState, Suspense, use, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/lib/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -12,8 +13,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { AlertCircle, Heart, Trash2, Share2, ArrowLeft, ExternalLink } from "lucide-react";
-import { ClothingImage } from "@/components/ClothingImage";
+import { AlertCircle, Heart, Trash2, Share2, ArrowLeft, ExternalLink, Check, Calendar } from "lucide-react";
+import { ClothingImageCard } from "@/components/ClothingImageCard";
 import type { Route } from "./+types/$outfitId";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -24,10 +25,11 @@ export async function loader({ request, params }: Route.LoaderArgs) {
     throw new Error("Outfit ID is required");
   }
 
+  const { createClient } = await import("@/lib/supabase.server");
+  const { supabase } = createClient(request);
+
   return {
     outfitPromise: (async () => {
-      const { createClient } = await import("@/lib/supabase.server");
-      const { supabase } = createClient(request);
 
       // Try to find in collections first
       let { data: outfit, error: collectionError } = await supabase
@@ -90,6 +92,16 @@ export async function loader({ request, params }: Route.LoaderArgs) {
         costPerWear,
       };
     })(),
+    wearHistoryPromise: (async () => {
+      const { data } = await supabase
+        .from("wear_history")
+        .select("id, worn_date, occasion_name, notes")
+        .eq("outfit_id", params.outfitId)
+        .eq("user_id", user.id)
+        .order("worn_date", { ascending: false })
+        .limit(5);
+      return data || [];
+    })(),
   };
 }
 
@@ -98,6 +110,24 @@ export async function action({ request, params }: Route.ActionArgs) {
   const { user } = await requireAuth(request);
   const { createClient } = await import("@/lib/supabase.server");
   const { supabase } = createClient(request);
+
+  if (request.method === "POST") {
+    const { error } = await supabase.rpc("mark_outfit_worn", {
+      p_outfit_id: params.outfitId,
+    });
+
+    if (error) {
+      return {
+        success: false,
+        error: "Failed to mark outfit as worn",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Outfit marked as worn today!",
+    };
+  }
 
   const formData = await request.formData();
   const action = formData.get("action");
@@ -163,7 +193,10 @@ export default function OutfitDetailPage({ loaderData }: Route.ComponentProps) {
       </div>
 
       <Suspense fallback={<OutfitDetailSkeleton />}>
-        <OutfitDetailContent outfitPromise={loaderData.outfitPromise} />
+        <OutfitDetailContent 
+          outfitPromise={loaderData.outfitPromise}
+          wearHistoryPromise={loaderData.wearHistoryPromise}
+        />
       </Suspense>
     </div>
   );
@@ -179,11 +212,16 @@ function OutfitBreadcrumbName({ outfitPromise }: { outfitPromise: Promise<any> }
 
 function OutfitDetailContent({
   outfitPromise,
+  wearHistoryPromise,
 }: {
   outfitPromise: Promise<any>;
+  wearHistoryPromise: Promise<any>;
 }) {
 
   const submit = useSubmit();
+  const fetcher = useFetcher();
+  const toast = useToast();
+  const hasShownToast = useRef(false);
   const {
     outfit,
     items,
@@ -192,7 +230,27 @@ function OutfitDetailContent({
     totalCost,
     costPerWear,
   } = use(outfitPromise);
+  const wearHistory = use(wearHistoryPromise);
   const [error] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (fetcher.data && !hasShownToast.current) {
+      if (fetcher.data.success && fetcher.data.message) {
+        toast.success(fetcher.data.message);
+        hasShownToast.current = true;
+      } else if (fetcher.data.error) {
+        toast.error(fetcher.data.error);
+        hasShownToast.current = true;
+      }
+    }
+    if (fetcher.state === "idle" && hasShownToast.current) {
+      hasShownToast.current = false;
+    }
+  }, [fetcher.data, fetcher.state, toast]);
+
+  const handleMarkAsWorn = () => {
+    fetcher.submit({}, { method: "POST" });
+  };
 
   const handleToggleFavorite = () => {
     submit(
@@ -230,6 +288,14 @@ function OutfitDetailContent({
         </div>
         <div className="flex gap-2">
           <Button
+            onClick={handleMarkAsWorn}
+            disabled={fetcher.state !== "idle"}
+            size="sm"
+          >
+            <Check className="h-4 w-4 mr-2" />
+            Wore This Today
+          </Button>
+          <Button
             variant={outfit.is_favorite ? "default" : "outline"}
             onClick={handleToggleFavorite}
             size="sm"
@@ -252,10 +318,11 @@ function OutfitDetailContent({
           <Link key={item.id} to={`/wardrobe/${item.id}`}>
             <Card className="overflow-hidden cursor-pointer group">
               <div className="relative">
-                <ClothingImage
+                <ClothingImageCard
                   filePath={item.image_url}
                   alt={item.name}
                   className="w-full h-40 object-contain bg-muted/30"
+                  fallbackClassName="w-full h-40"
                 />
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
@@ -324,6 +391,30 @@ function OutfitDetailContent({
           </div>
         </CardContent>
       </Card>
+
+      {/* Wear History */}
+      {wearHistory.length > 0 && (
+        <Card className="border">
+          <CardHeader>
+            <CardTitle>Wear History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {wearHistory.map((entry: any) => (
+                <div key={entry.id} className="flex items-center gap-2 text-sm">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>{new Date(entry.worn_date).toLocaleDateString()}</span>
+                  {entry.occasion_name && (
+                    <Badge variant="outline" className="text-xs">
+                      {entry.occasion_name}
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Similar Outfits */}
       {similarOutfits.length > 0 && (

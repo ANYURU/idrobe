@@ -31,7 +31,7 @@ export function OutfitRecommendation({
   return (
     <div className={`p-3 bg-muted/50 rounded-lg space-y-3 ${className}`}>
       <div>
-        <p className="font-medium text-sm">{recommendation.name}</p>
+        <p className="font-medium text-sm capitalize">{recommendation.name}</p>
         <p className="text-xs text-muted-foreground mt-1">
           {recommendation.description}
         </p>
