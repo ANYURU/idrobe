@@ -2,9 +2,10 @@ import { useSearchParams, useLoaderData, useFetcher } from "react-router";
 import { useState, useEffect, Suspense, use } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Search, Heart, Filter, X, RotateCcw } from "lucide-react";
 import {
   Select,
@@ -222,35 +223,40 @@ export default function WardrobePage() {
     filters.limit !== 12;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Your Wardrobe</h1>
-          <Suspense
-            fallback={
-              <p className="text-muted-foreground text-sm mt-0.5">Loading...</p>
-            }
-          >
-            <ItemCountWrapper itemsPromise={itemsPromise} />
-          </Suspense>
+    <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
+      {/* Page header */}
+      <header className="space-y-4 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-semibold truncate">Your Wardrobe</h1>
+            <Suspense
+              fallback={
+                <Skeleton className="h-4 w-32 mt-1" />
+              }
+            >
+              <ItemCountWrapper itemsPromise={itemsPromise} />
+            </Suspense>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            <Link to="/wardrobe/analytics" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="w-full sm:w-auto whitespace-nowrap">
+                Analytics
+              </Button>
+            </Link>
+            <Link to="/wardrobe/add" className="flex-1 sm:flex-none">
+              <Button className="w-full sm:w-auto whitespace-nowrap">
+                <Plus className="mr-2 h-4 w-4 shrink-0" />
+                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline">Add Item</span>
+              </Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Link to="/wardrobe/analytics">
-            <Button variant="outline" className="whitespace-nowrap">
-              Analytics
-            </Button>
-          </Link>
-          <Link to="/wardrobe/add">
-            <Button className="whitespace-nowrap">
-              <Plus className="mr-2 h-4 w-4 shrink-0" />
-              Add Item
-            </Button>
-          </Link>
-        </div>
-      </div>
+      </header>
 
-      <Card className="border ">
-        <CardContent className="p-4">
+      {/* Search and filters */}
+      <section className="bg-muted/30 rounded-lg p-4" aria-label="Search and filter options">
+        <form role="search">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -272,6 +278,7 @@ export default function WardrobePage() {
             </div>
             <div className="flex gap-2">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2"
@@ -281,6 +288,7 @@ export default function WardrobePage() {
               </Button>
               {hasActiveFilters && (
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={resetFilters}
                   className="flex items-center gap-2"
@@ -291,8 +299,9 @@ export default function WardrobePage() {
               )}
             </div>
           </div>
+        </form>
 
-          {showFilters && (
+        {showFilters && (
             <div className="mt-4 pt-4 border-t border-border">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div>
@@ -391,22 +400,27 @@ export default function WardrobePage() {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+      </section>
 
-      <Suspense fallback={<WardrobeSkeleton />}>
-        <WardrobeGrid itemsPromise={itemsPromise} />
-      </Suspense>
+      {/* Wardrobe items */}
+      <section aria-label="Wardrobe items">
+        <Suspense fallback={<WardrobeSkeleton />}>
+          <WardrobeGrid itemsPromise={itemsPromise} />
+        </Suspense>
+      </section>
 
-      <Suspense
-        fallback={<div className="h-16 bg-muted rounded animate-pulse"></div>}
-      >
-        <PaginationWrapper
-          itemsPromise={itemsPromise}
-          onPageChange={handlePageChange}
-        />
-      </Suspense>
-    </div>
+      {/* Pagination */}
+      <nav aria-label="Pagination navigation">
+        <Suspense
+          fallback={<Skeleton className="h-16 w-full rounded" />}
+        >
+          <PaginationWrapper
+            itemsPromise={itemsPromise}
+            onPageChange={handlePageChange}
+          />
+        </Suspense>
+      </nav>
+    </main>
   );
 }
 
@@ -424,53 +438,51 @@ function WardrobeGrid({ itemsPromise }: { itemsPromise: Promise<any> }) {
 
   if (data.items.length === 0) {
     return (
-      <Card className="border">
-        <CardContent className="pt-12 pb-12 text-center">
-          <p className="text-muted-foreground mb-4">No items found</p>
-          <Button>
-            <Link to="/wardrobe/add">Add your first item</Link>
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="bg-muted/30 rounded-lg py-12 text-center">
+        <p className="text-muted-foreground mb-4">No items found</p>
+        <Button>
+          <Link to="/wardrobe/add">Add your first item</Link>
+        </Button>
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
       {data.items.map((item: any) => (
-        <Link key={item.id} to={`/wardrobe/${item.id}`}>
-          <Card className="border cursor-pointer h-full hover:bg-muted/50 transition-colors">
+        <article key={item.id} className="group">
+          <Link to={`/wardrobe/${item.id}`} className="block">
             <div className="relative">
               <ClothingImageCard
                 filePath={item.image_url}
                 alt={item.name}
-                className="w-full h-48 object-contain rounded-t-lg bg-muted/30"
-                fallbackClassName="w-full h-48 rounded-t-lg"
+                className="w-full h-48 object-contain rounded-lg bg-muted/30 group-hover:scale-105 transition-transform"
+                fallbackClassName="w-full h-48 rounded-lg"
               />
               <div className="absolute top-2 right-2 flex gap-2">
                 {item.is_favorite && (
-                  <Heart className="h-5 w-5 text-red-500 fill-red-500" />
+                  <Heart className="h-5 w-5 text-red-500 fill-red-500" aria-label="Favorite item" />
                 )}
               </div>
             </div>
-            <CardContent className="pt-4">
+            <header className="pt-3">
               <h3 className="font-semibold truncate">{item.name}</h3>
               <p className="text-sm text-muted-foreground capitalize">
                 {item.clothing_categories?.name || "Uncategorized"}
               </p>
-              <div className="mt-3 flex flex-wrap gap-1">
-                <Badge variant="secondary" className="text-xs">
-                  {item.primary_color}
+            </header>
+            <footer className="mt-2 flex flex-wrap gap-1">
+              <Badge variant="secondary" className="text-xs">
+                {item.primary_color}
+              </Badge>
+              {item.times_worn > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  Worn {item.times_worn}x
                 </Badge>
-                {item.times_worn > 0 && (
-                  <Badge variant="outline" className="text-xs">
-                    Worn {item.times_worn}x
-                  </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+              )}
+            </footer>
+          </Link>
+        </article>
       ))}
     </div>
   );
@@ -498,21 +510,19 @@ function PaginationWrapper({
 
 function WardrobeSkeleton() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
       {[...Array(12)].map((_, i) => (
-        <Card key={i} className="border">
-          <div className="animate-pulse">
-            <div className="h-48 bg-muted rounded-t-lg"></div>
-            <CardContent className="pt-4">
-              <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-              <div className="h-3 bg-muted rounded w-1/2 mb-3"></div>
-              <div className="flex gap-1">
-                <div className="h-5 bg-muted rounded w-12"></div>
-                <div className="h-5 bg-muted rounded w-16"></div>
-              </div>
-            </CardContent>
+        <article key={i} className="space-y-3">
+          <Skeleton className="h-48 w-full rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-3 w-1/2" />
+            <div className="flex gap-1">
+              <Skeleton className="h-5 w-12" />
+              <Skeleton className="h-5 w-16" />
+            </div>
           </div>
-        </Card>
+        </article>
       ))}
     </div>
   );

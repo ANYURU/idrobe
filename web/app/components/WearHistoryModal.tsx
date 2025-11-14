@@ -39,7 +39,7 @@ export function WearHistoryModal({ isOpen, onClose, itemId }: WearHistoryModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md h-[60vh] sm:h-[70vh] md:h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Complete Wear History</DialogTitle>
         </DialogHeader>

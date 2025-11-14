@@ -161,7 +161,6 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function ItemDetailPage({ loaderData }: Route.ComponentProps) {
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
@@ -172,10 +171,11 @@ export default function ItemDetailPage({ loaderData }: Route.ComponentProps) {
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => navigate(-1)}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            <Link to="/wardrobe" className='flex items-center'>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Link>
           </Button>
           <Breadcrumb className="hidden md:block">
             <BreadcrumbList>
