@@ -8,16 +8,12 @@ import { createClient } from './supabase.server'
 export async function requireAuth(request: Request) {
   const { supabase, headers } = createClient(request)
   
-  // Quick check: if no session, redirect immediately
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    throw redirect('/auth/login?error=session_expired')
-  }
-  
-  // Security check: verify session is authentic
+  // Verify session with server (catches expired sessions)
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error || !user) {
-    throw redirect('/auth/login?error=session_expired')
+    // Clear invalid session
+    await supabase.auth.signOut()
+    throw redirect('/auth/login?error=session_expired', { headers })
   }
   
   return { user, headers }
@@ -30,13 +26,7 @@ export async function requireAuth(request: Request) {
 export async function requireGuest(request: Request) {
   const { supabase, headers } = createClient(request)
   
-  // Quick check session first
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
-    return { headers }
-  }
-  
-  // Verify session is authentic
+  // Verify session with server
   const { data: { user } } = await supabase.auth.getUser()
   if (user) {
     throw redirect('/dashboard')

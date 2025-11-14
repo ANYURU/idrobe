@@ -55,6 +55,10 @@ export default [
   route("api/image-url", "routes/api/image-url.ts"),
   route("api/recommendations/interact", "routes/api/recommendations/interact.ts"),
   route("api/sync-trends", "routes/api/sync-trends.ts"),
+  route("api/items/:itemId/favorite", "routes/api/items/$itemId/favorite.ts"),
+  route("api/items/:itemId/worn", "routes/api/items/$itemId/worn.ts"),
+  route("api/items/:itemId/archive", "routes/api/items/$itemId/archive.ts"),
+  route("api/items/wear-history", "routes/api/items/wear-history.ts"),
 
   // Catch-all route for unmatched requests
   route("*", "routes/$.tsx"),

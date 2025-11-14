@@ -5,5 +5,5 @@ import type { Route } from './+types/signout';
 export async function action({ request }: Route.ActionArgs) {
   const { supabase } = createClient(request);
   await supabase.auth.signOut();
-  throw redirect('/guest');
+  throw redirect('/auth/login');
 }
