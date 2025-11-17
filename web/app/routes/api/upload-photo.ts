@@ -42,17 +42,13 @@ export async function action({ request }: { request: Request }) {
 
     // For tryon bucket (private), update database and return signed URL
     if (bucket === 'tryon') {
-      console.log('Tryon upload - fileName:', fileName)
-      
       const { error: updateError } = await supabase
         .from('user_profiles')
         .update({ virtual_tryon_image_url: fileName })
         .eq('user_id', user.id)
 
       if (updateError) {
-        console.error('Failed to update profile:', updateError)
-      } else {
-        console.log('Successfully updated profile with fileName:', fileName)
+        return { success: false, error: updateError.message }
       }
 
       const { data: signedUrlData, error: signedUrlError } = await supabase.storage
@@ -60,11 +56,8 @@ export async function action({ request }: { request: Request }) {
         .createSignedUrl(fileName, 3600)
       
       if (signedUrlError) {
-        console.error('Signed URL error:', signedUrlError)
         return { success: false, error: signedUrlError.message }
       }
-      
-      console.log('Generated signed URL:', signedUrlData.signedUrl)
       
       return { 
         success: true, 

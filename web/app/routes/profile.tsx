@@ -44,12 +44,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await requireAuth(request)
   const { supabase } = createClient(request)
   
-  console.log('[PROFILE-LOADER] User authenticated:', user.id)
   const profile = await loadUserProfile(user.id, request)
-  console.log('[PROFILE-LOADER] Profile loaded:', {
-    hasProfile: !!profile,
-    tryonImageUrl: profile?.virtual_tryon_image_url
-  })
   
   // TryonImageCard will generate signed URLs on-the-fly
   
