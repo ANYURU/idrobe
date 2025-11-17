@@ -16,6 +16,7 @@ import { useState } from 'react'
 import { PhotoUpload } from '@/components/shared/PhotoUpload'
 import { ProfilePictureUpload } from '@/components/shared/ProfilePictureUpload'
 import { toast } from 'sonner'
+import type { TablesUpdate } from '@/lib/database.types'
 
 const BODY_TYPES = [
   { value: 'hourglass', label: 'Hourglass' },
@@ -81,23 +82,32 @@ export async function action({ request }: Route.ActionArgs) {
   const profileImageUrl = formData.get('profileImageUrl') as string
   const tryonImageUrl = formData.get('tryonImageUrl') as string
 
+  // Build update object without image URLs initially
+  const updateData: TablesUpdate<'user_profiles'> = {
+    user_id: user.id,
+    display_name: displayName,
+    body_type_name: bodyType || null,
+    preferred_fit_name: preferredFit || null,
+    default_activity_level_name: activityLevel || null,
+    location_city: locationCity || null,
+    location_country: locationCountry || null,
+    height_cm: heightCm ? parseInt(heightCm) : null,
+    weight_kg: weightKg ? parseFloat(weightKg) : null,
+    sustainability_score: sustainabilityScore ? parseInt(sustainabilityScore) : 50,
+    style_preferences: stylePreferences.length > 0 ? stylePreferences : null,
+  }
+
+  // Only include image URLs if they're explicitly provided (not empty strings)
+  if (profileImageUrl) {
+    updateData.profile_image_url = profileImageUrl
+  }
+  if (tryonImageUrl) {
+    updateData.virtual_tryon_image_url = tryonImageUrl
+  }
+
   const { error: updateError } = await supabase
     .from('user_profiles')
-    .upsert({
-      user_id: user.id,
-      display_name: displayName,
-      body_type: bodyType || null,
-      preferred_fit_name: preferredFit || null,
-      default_activity_level: activityLevel || null,
-      location_city: locationCity || null,
-      location_country: locationCountry || null,
-      height_cm: heightCm ? parseInt(heightCm) : null,
-      weight_kg: weightKg ? parseFloat(weightKg) : null,
-      sustainability_score: sustainabilityScore ? parseInt(sustainabilityScore) : 50,
-      style_preferences: stylePreferences.length > 0 ? stylePreferences : null,
-      profile_image_url: profileImageUrl || null,
-      virtual_tryon_image_url: tryonImageUrl || null,
-    })
+    .upsert(updateData)
 
   if (updateError) {
     return { 
@@ -124,9 +134,9 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
   const formik = useFormik({
     initialValues: {
       displayName: profile?.display_name || '',
-      bodyType: profile?.body_type || '',
+      bodyType: profile?.body_type_name || '',
       preferredFit: profile?.preferred_fit_name || '',
-      activityLevel: profile?.default_activity_level || '',
+      activityLevel: profile?.default_activity_level_name || '',
       locationCity: profile?.location_city || '',
       locationCountry: profile?.location_country || '',
       heightCm: profile?.height_cm?.toString() || '',
@@ -149,26 +159,46 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
       </div>
 
       <Tabs defaultValue="basic" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
-          <TabsTrigger value="basic" className="flex-col gap-1 py-3">
-            <UserIcon className="w-4 h-4" />
-            <span className="text-xs">Profile</span>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto bg-muted/50 p-1 rounded-lg">
+          <TabsTrigger value="basic" className="flex-col gap-1.5 py-4 px-3 cursor-pointer data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <UserIcon className="w-5 h-5" />
+            <div className="text-center">
+              <div className="text-xs font-medium">Profile</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                {profileImageUrl && formik.values.displayName ? 'Complete' : 'Incomplete'}
+              </div>
+            </div>
           </TabsTrigger>
-          <TabsTrigger value="body" className="flex-col gap-1 py-3">
-            <Ruler className="w-4 h-4" />
-            <span className="text-xs">Body</span>
+          <TabsTrigger value="body" className="flex-col gap-1.5 py-4 px-3 cursor-pointer data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Ruler className="w-5 h-5" />
+            <div className="text-center">
+              <div className="text-xs font-medium">Body</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                {formik.values.heightCm && formik.values.bodyType ? 'Complete' : 'Optional'}
+              </div>
+            </div>
           </TabsTrigger>
-          <TabsTrigger value="style" className="flex-col gap-1 py-3">
-            <Sparkles className="w-4 h-4" />
-            <span className="text-xs">Style</span>
+          <TabsTrigger value="style" className="flex-col gap-1.5 py-4 px-3 cursor-pointer data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Sparkles className="w-5 h-5" />
+            <div className="text-center">
+              <div className="text-xs font-medium">Style</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                {selectedStyles.length > 0 ? `${selectedStyles.length} selected` : 'Optional'}
+              </div>
+            </div>
           </TabsTrigger>
-          <TabsTrigger value="tryon" className="flex-col gap-1 py-3">
-            <Scan className="w-4 h-4" />
-            <span className="text-xs">Try-On</span>
+          <TabsTrigger value="tryon" className="flex-col gap-1.5 py-4 px-3 cursor-pointer data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Scan className="w-5 h-5" />
+            <div className="text-center">
+              <div className="text-xs font-medium">Try-On</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                {tryonImageUrl ? 'Complete' : 'Optional'}
+              </div>
+            </div>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basic" className="mt-6">
+        <TabsContent value="basic" className="mt-8">
           <div className="space-y-8">
             <section>
               <header className="mb-6">
@@ -235,151 +265,172 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="body" className="mt-6">
-      <div className="space-y-6">
+        <TabsContent value="body" className="mt-8">
+          <div className="space-y-8">
+            <section>
+              <header className="mb-6">
+                <h2 className="text-sm font-medium">Physical Measurements</h2>
+                <p className="text-xs text-muted-foreground mt-1">Help us recommend the perfect fit</p>
+              </header>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="heightCm" className="text-sm font-medium">Height (cm)</Label>
+                  <Input
+                    id="heightCm"
+                    type="number"
+                    placeholder="170"
+                    className="mt-1.5"
+                    {...formik.getFieldProps('heightCm')}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="weightKg" className="text-sm font-medium">Weight (kg) <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                  <Input
+                    id="weightKg"
+                    type="number"
+                    step="0.1"
+                    placeholder="65"
+                    className="mt-1.5"
+                    {...formik.getFieldProps('weightKg')}
+                  />
+                </div>
+              </div>
+            </section>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div>
-              <Label htmlFor="heightCm" className="text-sm">Height (cm)</Label>
-              <Input
-                id="heightCm"
-                type="number"
-                placeholder="170"
-                className="mt-1"
-                {...formik.getFieldProps('heightCm')}
-              />
-            </div>
-            <div>
-              <Label htmlFor="weightKg" className="text-sm">Weight (kg)</Label>
-              <Input
-                id="weightKg"
-                type="number"
-                step="0.1"
-                placeholder="65"
-                className="mt-1"
-                {...formik.getFieldProps('weightKg')}
-              />
-            </div>
-            <div>
-              <Label htmlFor="bodyType" className="text-sm">Body Type</Label>
-              <Select
-                value={formik.values.bodyType}
-                onValueChange={(value) => formik.setFieldValue('bodyType', value)}
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  {BODY_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <section>
+              <header className="mb-6">
+                <h2 className="text-sm font-medium">Body Shape & Fit</h2>
+                <p className="text-xs text-muted-foreground mt-1">Personalize your clothing recommendations</p>
+              </header>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="bodyType" className="text-sm font-medium">Body Type</Label>
+                  <Select
+                    value={formik.values.bodyType}
+                    onValueChange={(value) => formik.setFieldValue('bodyType', value)}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select your body type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BODY_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="preferredFit" className="text-sm font-medium">Preferred Fit</Label>
+                  <Select
+                    value={formik.values.preferredFit}
+                    onValueChange={(value) => formik.setFieldValue('preferredFit', value)}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select your preferred fit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {fitPreferences.map((fit) => (
+                        <SelectItem key={fit.id} value={fit.name}>
+                          {fit.name.charAt(0).toUpperCase() + fit.name.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </section>
           </div>
+        </TabsContent>
 
-          <div>
-            <Label htmlFor="preferredFit" className="text-sm">Preferred Fit</Label>
-            <Select
-              value={formik.values.preferredFit}
-              onValueChange={(value) => formik.setFieldValue('preferredFit', value)}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select your preferred fit" />
-              </SelectTrigger>
-              <SelectContent>
-                {fitPreferences.map((fit) => (
-                  <SelectItem key={fit.id} value={fit.name}>
-                    {fit.name.charAt(0).toUpperCase() + fit.name.slice(1)}
-                  </SelectItem>
+        <TabsContent value="style" className="mt-8">
+          <div className="space-y-8">
+            <section>
+              <header className="mb-6">
+                <h2 className="text-sm font-medium">Style Preferences</h2>
+                <p className="text-xs text-muted-foreground mt-1">Choose styles that match your taste ({selectedStyles.length} selected)</p>
+              </header>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {styleTags.map((tag) => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => {
+                      const newStyles = selectedStyles.includes(tag.name)
+                        ? selectedStyles.filter(s => s !== tag.name)
+                        : [...selectedStyles, tag.name]
+                      setSelectedStyles(newStyles)
+                      formik.setFieldValue('stylePreferences', newStyles)
+                    }}
+                    className={`p-3 text-center border rounded-lg transition cursor-pointer text-sm hover:shadow-sm ${
+                      selectedStyles.includes(tag.name)
+                        ? 'border-primary bg-primary/5 text-primary font-medium'
+                        : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                    }`}
+                  >
+                    {tag.name.charAt(0).toUpperCase() + tag.name.slice(1)}
+                  </button>
                 ))}
-              </SelectContent>
-            </Select>
-          </div>
+              </div>
+            </section>
 
-      </div>
+            <section>
+              <header className="mb-6">
+                <h2 className="text-sm font-medium">Lifestyle & Values</h2>
+                <p className="text-xs text-muted-foreground mt-1">Tell us about your lifestyle preferences</p>
+              </header>
+              <div className="space-y-6">
+                <div>
+                  <Label htmlFor="activityLevel" className="text-sm font-medium">Activity Level</Label>
+                  <Select
+                    value={formik.values.activityLevel}
+                    onValueChange={(value) => formik.setFieldValue('activityLevel', value)}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue placeholder="Select your activity level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACTIVITY_LEVELS.map((level) => (
+                        <SelectItem key={level.value} value={level.value}>
+                          {level.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <div className="flex justify-between items-center mb-3">
+                    <Label className="text-sm font-medium">Sustainability Importance</Label>
+                    <span className="text-sm font-medium bg-primary/10 text-primary px-2 py-1 rounded">{sustainabilityValue[0]}%</span>
+                  </div>
+                  <Slider
+                    value={sustainabilityValue}
+                    onValueChange={(value) => {
+                      setSustainabilityValue(value)
+                      formik.setFieldValue('sustainabilityScore', value[0].toString())
+                    }}
+                    max={100}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                    <span>Not Important</span>
+                    <span>Very Important</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
         </TabsContent>
 
-        <TabsContent value="style" className="mt-6">
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-sm font-medium mb-2">Style Preferences</h2>
-          <p className="text-xs text-muted-foreground mb-4">Select all that apply</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-          {styleTags.map((tag) => (
-            <button
-              key={tag.id}
-              type="button"
-              onClick={() => {
-                const newStyles = selectedStyles.includes(tag.name)
-                  ? selectedStyles.filter(s => s !== tag.name)
-                  : [...selectedStyles, tag.name]
-                setSelectedStyles(newStyles)
-                formik.setFieldValue('stylePreferences', newStyles)
-              }}
-              className={`p-2 text-center border rounded-lg transition cursor-pointer text-sm ${
-                selectedStyles.includes(tag.name)
-                  ? 'border-primary bg-accent font-medium'
-                  : 'border-border hover:border-primary'
-              }`}
-            >
-              {tag.name.charAt(0).toUpperCase() + tag.name.slice(1)}
-            </button>
-          ))}
-        </div>
-        </div>
-
-        <div className="border-t pt-6">
-          <h3 className="text-sm font-medium mb-4">Activity Level</h3>
-          <Select
-            value={formik.values.activityLevel}
-            onValueChange={(value) => formik.setFieldValue('activityLevel', value)}
-          >
-            <SelectTrigger className="mt-1">
-              <SelectValue placeholder="Select your activity level" />
-            </SelectTrigger>
-            <SelectContent>
-              {ACTIVITY_LEVELS.map((level) => (
-                <SelectItem key={level.value} value={level.value}>
-                  {level.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="border-t pt-6">
-          <h3 className="text-sm font-medium mb-4">Sustainability</h3>
-          <div className="flex justify-between mb-2">
-            <Label className="text-sm">Eco-Friendly Importance</Label>
-            <span className="text-sm font-medium">{sustainabilityValue[0]}%</span>
-          </div>
-          <Slider
-            value={sustainabilityValue}
-            onValueChange={(value) => {
-              setSustainabilityValue(value)
-              formik.setFieldValue('sustainabilityScore', value[0].toString())
-            }}
-            max={100}
-            step={1}
-            className="w-full"
-          />
-          <div className="flex justify-between text-xs text-muted-foreground mt-1">
-            <span>Not Important</span>
-            <span>Very Important</span>
-          </div>
-        </div>
-      </div>
-        </TabsContent>
-
-        <TabsContent value="tryon" className="mt-6">
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-sm font-medium mb-2">Virtual Try-On Photo</h2>
-          <p className="text-xs text-muted-foreground mb-4">Upload a full-body photo for accurate results</p>
-        </div>
+        <TabsContent value="tryon" className="mt-8">
+          <div className="space-y-6">
+            <section>
+              <header className="mb-6">
+                <h2 className="text-sm font-medium">Virtual Try-On Photo</h2>
+                <p className="text-xs text-muted-foreground mt-1">Upload a full-body photo for personalized outfit recommendations</p>
+              </header>
         <div className="flex flex-col items-center gap-4">
           <div className="w-48 h-72 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
             {tryonImageUrl ? (
@@ -398,29 +449,30 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
             maxSize={5}
             className="w-full max-w-md"
           />
-          <div className="bg-muted/50 rounded-lg p-4 w-full">
-            <p className="text-xs font-medium mb-2">Tips for best results:</p>
-            <ul className="space-y-1.5 text-xs text-muted-foreground">
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-0.5">•</span>
-                <span>Stand straight with arms slightly away from body</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-0.5">•</span>
-                <span>Wear fitted clothing to show body shape</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-0.5">•</span>
-                <span>Use good lighting and plain background</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-primary mt-0.5">•</span>
-                <span>Full body visible from head to toe</span>
-              </li>
-            </ul>
-          </div>
+              <div className="bg-linear-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-lg p-4 w-full">
+                <p className="text-xs font-medium mb-3 text-primary">📸 Tips for best results:</p>
+                <ul className="space-y-2 text-xs text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5 font-medium">•</span>
+                    <span>Stand straight with arms slightly away from body</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5 font-medium">•</span>
+                    <span>Wear fitted clothing to show body shape</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5 font-medium">•</span>
+                    <span>Use good lighting and plain background</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-0.5 font-medium">•</span>
+                    <span>Full body visible from head to toe</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
         </div>
-      </div>
         </TabsContent>
       </Tabs>
 
