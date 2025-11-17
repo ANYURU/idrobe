@@ -1,4 +1,4 @@
-import { useNavigate, Link, useFetcher } from "react-router";
+import { useNavigate, Link, useFetcher, useLocation } from "react-router";
 import { Suspense, use, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/use-toast";
@@ -14,7 +14,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import {
-  Heart,
   Trash2,
   Archive,
   ArrowLeft,
@@ -22,14 +21,9 @@ import {
   TrendingUp,
   DollarSign,
   Clock,
-  CheckCheck,
 } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { WearTrackingButton } from "@/components/shared/WearTrackingButton";
+import { FavoriteButton } from "@/components/shared/FavoriteButton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -161,18 +155,16 @@ export async function action({ request, params }: Route.ActionArgs) {
 }
 
 export default function ItemDetailPage({ loaderData }: Route.ComponentProps) {
+  const location = useLocation();
+  const backTo = location.state?.from || "/wardrobe";
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-          >
-            <Link to="/wardrobe" className='flex items-center'>
+          <Button type="button" variant="ghost" size="sm">
+            <Link to={backTo} className="flex items-center">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Link>
@@ -324,48 +316,17 @@ function ItemDetailContent({
 
         {/* Floating Actions */}
         <div className="absolute top-4 right-4 flex gap-2">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="icon"
-                  onClick={handleMarkAsWorn}
-                  disabled={fetcher.state !== "idle"}
-                  className="shadow-lg"
-                >
-                  <CheckCheck className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Wore This Today</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={handleToggleFavorite}
-                  disabled={fetcher.state !== "idle"}
-                  className={`shadow-lg bg-background ${isFavorite ? "text-destructive" : ""}`}
-                >
-                  <Heart
-                    className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`}
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  {isFavorite ? "Remove from Favorites" : "Add to Favorites"}
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <WearTrackingButton
+            onMarkAsWorn={handleMarkAsWorn}
+            disabled={fetcher.state !== "idle"}
+            variant="mobile"
+          />
+          <FavoriteButton
+            onToggleFavorite={handleToggleFavorite}
+            isFavorite={isFavorite}
+            disabled={fetcher.state !== "idle"}
+            variant="mobile"
+          />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -378,14 +339,17 @@ function ItemDetailContent({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleArchive}>
+              <DropdownMenuItem
+                onClick={handleArchive}
+                className="cursor-pointer"
+              >
                 <Archive className="mr-2 h-4 w-4" />
                 Archive
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleDelete}
-                className="text-destructive"
+                className="text-destructive cursor-pointer"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -412,48 +376,17 @@ function ItemDetailContent({
               />
             </Suspense>
             <div className="absolute top-4 right-4 flex gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="default"
-                      size="icon"
-                      onClick={handleMarkAsWorn}
-                      disabled={fetcher.state !== "idle"}
-                      className="shadow-lg"
-                    >
-                      <CheckCheck className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Wore This Today</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handleToggleFavorite}
-                      disabled={fetcher.state !== "idle"}
-                      className={`shadow-lg bg-background ${isFavorite ? "text-destructive" : ""}`}
-                    >
-                      <Heart
-                        className={`h-4 w-4 ${isFavorite ? "fill-current" : ""}`}
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {isFavorite
-                        ? "Remove from Favorites"
-                        : "Add to Favorites"}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <WearTrackingButton
+                onMarkAsWorn={handleMarkAsWorn}
+                disabled={fetcher.state !== "idle"}
+                variant="mobile"
+              />
+              <FavoriteButton
+                onToggleFavorite={handleToggleFavorite}
+                isFavorite={isFavorite}
+                disabled={fetcher.state !== "idle"}
+                variant="mobile"
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -465,14 +398,17 @@ function ItemDetailContent({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleArchive}>
+                  <DropdownMenuItem
+                    onClick={handleArchive}
+                    className="cursor-pointer"
+                  >
                     <Archive className="mr-2 h-4 w-4" />
                     Archive
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={handleDelete}
-                    className="text-destructive"
+                    className="text-destructive cursor-pointer"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
@@ -496,43 +432,46 @@ function ItemDetailContent({
           </div>
 
           {/* Wear Stats */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <TrendingUp className="h-4 w-4" />
-                <p className="text-xs font-medium">Times Worn</p>
-              </div>
-              <p className="text-xl font-semibold">{item.times_worn || 0}</p>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <Clock className="h-4 w-4" />
-                <p className="text-xs font-medium">Last Worn</p>
-              </div>
-              <p className="text-xl font-semibold">
-                {daysSinceWorn !== null ? `${daysSinceWorn}d` : "Never"}
-              </p>
-              {daysSinceWorn !== null && (
-                <p className="text-xs text-muted-foreground mt-1">ago</p>
-              )}
-            </div>
-            {item.cost && (
+          <div className="bg-muted/30 rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Item Stats</h2>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                  <DollarSign className="h-4 w-4" />
-                  <p className="text-xs font-medium">Cost/Wear</p>
+                  <TrendingUp className="h-4 w-4" />
+                  <p className="text-xs font-medium">Times Worn</p>
+                </div>
+                <p className="text-xl font-semibold">{item.times_worn || 0}</p>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <Clock className="h-4 w-4" />
+                  <p className="text-xs font-medium">Last Worn</p>
                 </div>
                 <p className="text-xl font-semibold">
-                  {costPerWear ? `$${costPerWear}` : "$" + item.cost}
+                  {daysSinceWorn !== null ? `${daysSinceWorn}d` : "Never"}
                 </p>
+                {daysSinceWorn !== null && (
+                  <p className="text-xs text-muted-foreground mt-1">ago</p>
+                )}
               </div>
-            )}
+              {item.cost && (
+                <div>
+                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <DollarSign className="h-4 w-4" />
+                    <p className="text-xs font-medium">Cost/Wear</p>
+                  </div>
+                  <p className="text-xl font-semibold">
+                    {costPerWear ? `$${costPerWear}` : "$" + item.cost}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-          <Separator />
 
           {/* Style Tags */}
           {Array.isArray(item.style_tags) && item.style_tags.length > 0 && (
-            <>
+            <div className="bg-muted/30 rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-4">Style Tags</h2>
               <div className="flex flex-wrap gap-2">
                 {item.style_tags.map((tag: any) => (
                   <Badge key={tag.style_tag?.id || tag.id} variant="secondary">
@@ -540,25 +479,22 @@ function ItemDetailContent({
                   </Badge>
                 ))}
               </div>
-              <Separator />
-            </>
+            </div>
           )}
 
           {/* Notes */}
           {item.notes && (
-            <>
-              <div>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {item.notes}
-                </p>
-              </div>
-              <Separator />
-            </>
+            <div className="bg-muted/30 rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-4">Notes</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {item.notes}
+              </p>
+            </div>
           )}
 
           {/* Details Grid */}
-          <div>
-            <h2 className="text-base font-semibold mb-4">Details</h2>
+          <div className="bg-muted/30 rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Details</h2>
             <div className="grid grid-cols-2 gap-4">
               {item.size && (
                 <div>
@@ -598,50 +534,47 @@ function ItemDetailContent({
               )}
             </div>
           </div>
-          <Separator />
 
           {/* Wear History */}
-          <Suspense
-            fallback={<div className="h-32 bg-muted animate-pulse rounded" />}
-          >
-            <WearHistory
-              wearHistoryPromise={wearHistoryPromise}
-              itemId={item.id}
-            />
-          </Suspense>
-          <Separator />
+          <div className="bg-muted/30 rounded-lg p-6">
+            <Suspense
+              fallback={<div className="h-32 bg-muted animate-pulse rounded" />}
+            >
+              <WearHistory
+                wearHistoryPromise={wearHistoryPromise}
+                itemId={item.id}
+              />
+            </Suspense>
+          </div>
 
           {/* Outfits featuring this item */}
           {outfits.length > 0 && (
-            <>
-              <div>
-                <h2 className="text-base font-semibold mb-4">
-                  Featured in Outfits
-                </h2>
-                <div className="space-y-2">
-                  {outfits.map((outfit: any) => (
-                    <Link key={outfit.id} to={`/outfits/${outfit.id}`}>
-                      <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                        <div>
-                          <p className="font-medium">{outfit.name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {outfit.clothing_item_ids.length} items
-                          </p>
-                        </div>
-                        <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
+            <div className="bg-muted/30 rounded-lg p-6">
+              <h2 className="text-lg font-semibold mb-4">
+                Featured in Outfits
+              </h2>
+              <div className="space-y-2">
+                {outfits.map((outfit: any) => (
+                  <Link key={outfit.id} to={`/outfits/${outfit.id}`}>
+                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div>
+                        <p className="font-medium">{outfit.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {outfit.clothing_item_ids.length} items
+                        </p>
                       </div>
-                    </Link>
-                  ))}
-                </div>
+                      <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
+                    </div>
+                  </Link>
+                ))}
               </div>
-              <Separator />
-            </>
+            </div>
           )}
 
           {/* Related Items */}
           {relatedItems.length > 0 && (
             <div>
-              <h2 className="text-base font-semibold mb-4">Pairs Well With</h2>
+              <h2 className="text-lg font-semibold mb-4">Pairs Well With</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {relatedItems.map((related: any) => (
                   <Link key={related.id} to={`/wardrobe/${related.id}`}>
@@ -687,43 +620,46 @@ function ItemDetailContent({
         </div>
 
         {/* Wear Stats */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <TrendingUp className="h-4 w-4" />
-              <p className="text-xs font-medium">Times Worn</p>
-            </div>
-            <p className="text-xl font-semibold">{item.times_worn || 0}</p>
-          </div>
-          <div>
-            <div className="flex items-center gap-2 text-muted-foreground mb-2">
-              <Clock className="h-4 w-4" />
-              <p className="text-xs font-medium">Last Worn</p>
-            </div>
-            <p className="text-xl font-semibold">
-              {daysSinceWorn !== null ? `${daysSinceWorn}d` : "Never"}
-            </p>
-            {daysSinceWorn !== null && (
-              <p className="text-xs text-muted-foreground mt-1">ago</p>
-            )}
-          </div>
-          {item.cost && (
-            <div className="col-span-2">
+        <div className="bg-muted/30 rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Item Stats</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
               <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                <DollarSign className="h-4 w-4" />
-                <p className="text-xs font-medium">Cost/Wear</p>
+                <TrendingUp className="h-4 w-4" />
+                <p className="text-xs font-medium">Times Worn</p>
+              </div>
+              <p className="text-xl font-semibold">{item.times_worn || 0}</p>
+            </div>
+            <div>
+              <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                <Clock className="h-4 w-4" />
+                <p className="text-xs font-medium">Last Worn</p>
               </div>
               <p className="text-xl font-semibold">
-                {costPerWear ? `$${costPerWear}` : "$" + item.cost}
+                {daysSinceWorn !== null ? `${daysSinceWorn}d` : "Never"}
               </p>
+              {daysSinceWorn !== null && (
+                <p className="text-xs text-muted-foreground mt-1">ago</p>
+              )}
             </div>
-          )}
+            {item.cost && (
+              <div className="col-span-2">
+                <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                  <DollarSign className="h-4 w-4" />
+                  <p className="text-xs font-medium">Cost/Wear</p>
+                </div>
+                <p className="text-xl font-semibold">
+                  {costPerWear ? `$${costPerWear}` : "$" + item.cost}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-        <Separator />
 
         {/* Style Tags */}
         {Array.isArray(item.style_tags) && item.style_tags.length > 0 && (
-          <>
+          <div className="bg-muted/30 rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Style Tags</h2>
             <div className="flex flex-wrap gap-2">
               {item.style_tags.map((tag: any) => (
                 <Badge key={tag.style_tag?.id || tag.id} variant="secondary">
@@ -731,25 +667,22 @@ function ItemDetailContent({
                 </Badge>
               ))}
             </div>
-            <Separator />
-          </>
+          </div>
         )}
 
         {/* Notes */}
         {item.notes && (
-          <>
-            <div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {item.notes}
-              </p>
-            </div>
-            <Separator />
-          </>
+          <div className="bg-muted/30 rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Notes</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {item.notes}
+            </p>
+          </div>
         )}
 
         {/* Details Grid */}
-        <div>
-          <h2 className="text-base font-semibold mb-4">Details</h2>
+        <div className="bg-muted/30 rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">Details</h2>
           <div className="grid grid-cols-2 gap-4">
             {item.size && (
               <div>
@@ -789,50 +722,45 @@ function ItemDetailContent({
             )}
           </div>
         </div>
-        <Separator />
 
         {/* Wear History */}
-        <Suspense
-          fallback={<div className="h-32 bg-muted animate-pulse rounded" />}
-        >
-          <WearHistory
-            wearHistoryPromise={wearHistoryPromise}
-            itemId={item.id}
-          />
-        </Suspense>
-        <Separator />
+        <div className="bg-muted/30 rounded-lg p-6">
+          <Suspense
+            fallback={<div className="h-32 bg-muted animate-pulse rounded" />}
+          >
+            <WearHistory
+              wearHistoryPromise={wearHistoryPromise}
+              itemId={item.id}
+            />
+          </Suspense>
+        </div>
 
         {/* Outfits featuring this item */}
         {outfits.length > 0 && (
-          <>
-            <div>
-              <h2 className="text-base font-semibold mb-4">
-                Featured in Outfits
-              </h2>
-              <div className="space-y-2">
-                {outfits.map((outfit: any) => (
-                  <Link key={outfit.id} to={`/outfits/${outfit.id}`}>
-                    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div>
-                        <p className="font-medium">{outfit.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {outfit.clothing_item_ids.length} items
-                        </p>
-                      </div>
-                      <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
+          <div className="bg-muted/30 rounded-lg p-6">
+            <h2 className="text-lg font-semibold mb-4">Featured in Outfits</h2>
+            <div className="space-y-2">
+              {outfits.map((outfit: any) => (
+                <Link key={outfit.id} to={`/outfits/${outfit.id}`}>
+                  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                    <div>
+                      <p className="font-medium">{outfit.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {outfit.clothing_item_ids.length} items
+                      </p>
                     </div>
-                  </Link>
-                ))}
-              </div>
+                    <ArrowLeft className="h-4 w-4 rotate-180 text-muted-foreground" />
+                  </div>
+                </Link>
+              ))}
             </div>
-            <Separator />
-          </>
+          </div>
         )}
 
         {/* Related Items */}
         {relatedItems.length > 0 && (
           <div>
-            <h2 className="text-base font-semibold mb-4">Pairs Well With</h2>
+            <h2 className="text-lg font-semibold mb-4">Pairs Well With</h2>
             <div className="grid grid-cols-2 gap-4">
               {relatedItems.map((related: any) => (
                 <Link key={related.id} to={`/wardrobe/${related.id}`}>
@@ -844,7 +772,7 @@ function ItemDetailContent({
                         }
                       >
                         <ClothingImage
-                          imageUrlPromise={related.imageUrlPromise}
+                          imageUrlPromise={Promise.resolve(related.imageUrl)}
                           alt={related.name}
                           className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                         />

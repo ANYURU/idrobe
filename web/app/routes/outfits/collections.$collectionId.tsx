@@ -1,11 +1,11 @@
-import { Link, useSubmit, redirect, useNavigate } from 'react-router'
-import type { Route } from './+types/collections.$collectionId'
-import { Suspense, use, useState } from 'react'
-import { createClient } from '@/lib/supabase.server'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
+import { Link, useSubmit, redirect, useNavigate } from "react-router";
+import type { Route } from "./+types/collections.$collectionId";
+import { Suspense, use, useState } from "react";
+import { createClient } from "@/lib/supabase.server";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,94 +13,101 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb'
-import { OutfitPreview } from '@/components/OutfitPreview'
-import { ClothingImage } from '@/components/ClothingImage'
-import { ArrowLeft, Edit, Trash2, Heart, AlertCircle } from 'lucide-react'
+} from "@/components/ui/breadcrumb";
+import { OutfitPreview } from "@/components/OutfitPreview";
+import { ClothingImage, getImageUrl } from "@/components/ClothingImage";
+import { ArrowLeft, Edit, Trash2, Heart, AlertCircle } from "lucide-react";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const { requireAuth } = await import('@/lib/protected-route')
-  const { user } = await requireAuth(request)
-  const { supabase } = createClient(request)
+  const { requireAuth } = await import("@/lib/protected-route");
+  const { user } = await requireAuth(request);
+  const { supabase } = createClient(request);
 
   const collectionPromise = (async () => {
     const { data: collection, error } = await supabase
-      .from('outfit_collections')
-      .select('*')
-      .eq('id', params.collectionId)
-      .eq('user_id', user.id)
-      .single()
-    
-    if (error || !collection) throw new Error('Collection not found')
-    
-    const { data: items } = await supabase
-      .from('clothing_items')
-      .select('id, name, image_url, primary_color')
-      .in('id', collection.clothing_item_ids)
-      .eq('user_id', user.id)
-    
-    return { ...collection, clothing_items: items || [] }
-  })()
+      .from("outfit_collections")
+      .select("*")
+      .eq("id", params.collectionId)
+      .eq("user_id", user.id)
+      .single();
 
-  return { collectionPromise }
+    if (error || !collection) throw new Error("Collection not found");
+
+    const { data: items } = await supabase
+      .from("clothing_items")
+      .select("id, name, image_url, primary_color")
+      .in("id", collection.clothing_item_ids)
+      .eq("user_id", user.id);
+
+    return { ...collection, clothing_items: items || [] };
+  })();
+
+  return { collectionPromise };
 }
 
-function CollectionBreadcrumbName({ collectionPromise }: { collectionPromise: Promise<any> }) {
-  const collection = use(collectionPromise)
-  return <BreadcrumbPage>{collection.name}</BreadcrumbPage>
+function CollectionBreadcrumbName({
+  collectionPromise,
+}: {
+  collectionPromise: Promise<any>;
+}) {
+  const collection = use(collectionPromise);
+  return <BreadcrumbPage>{collection.name}</BreadcrumbPage>;
 }
 
 export async function action({ request, params }: Route.ActionArgs) {
-  const { requireAuth } = await import('@/lib/protected-route')
-  const { user } = await requireAuth(request)
-  const { supabase } = createClient(request)
-  
-  const formData = await request.formData()
-  const actionType = formData.get('action')
-  
-  if (actionType === 'delete') {
+  const { requireAuth } = await import("@/lib/protected-route");
+  const { user } = await requireAuth(request);
+  const { supabase } = createClient(request);
+
+  const formData = await request.formData();
+  const actionType = formData.get("action");
+
+  if (actionType === "delete") {
     const { error } = await supabase
-      .from('outfit_collections')
+      .from("outfit_collections")
       .delete()
-      .eq('id', params.collectionId)
-      .eq('user_id', user.id)
-    
-    if (error) return { error: error.message }
-    return redirect('/outfits?tab=collections')
+      .eq("id", params.collectionId)
+      .eq("user_id", user.id);
+
+    if (error) return { error: error.message };
+    return redirect("/outfits?tab=collections");
   }
-  
-  if (actionType === 'toggle_favorite') {
-    const isFavorite = formData.get('is_favorite') === 'true'
+
+  if (actionType === "toggle_favorite") {
+    const isFavorite = formData.get("is_favorite") === "true";
     const { error } = await supabase
-      .from('outfit_collections')
+      .from("outfit_collections")
       .update({ is_favorite: !isFavorite })
-      .eq('id', params.collectionId)
-      .eq('user_id', user.id)
-    
-    if (error) return { error: error.message }
-    return { success: true }
+      .eq("id", params.collectionId)
+      .eq("user_id", user.id);
+
+    if (error) return { error: error.message };
+    return { success: true };
   }
-  
-  return null
+
+  return null;
 }
 
-export default function CollectionDetailPage({ loaderData, actionData }: Route.ComponentProps) {
-  const submit = useSubmit()
-  const navigate = useNavigate()
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+export default function CollectionDetailPage({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
+  const submit = useSubmit();
+  const navigate = useNavigate();
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleDelete = () => {
-    const formData = new FormData()
-    formData.append('action', 'delete')
-    submit(formData, { method: 'post' })
-  }
+    const formData = new FormData();
+    formData.append("action", "delete");
+    submit(formData, { method: "post" });
+  };
 
   const handleToggleFavorite = (isFavorite: boolean) => {
-    const formData = new FormData()
-    formData.append('action', 'toggle_favorite')
-    formData.append('is_favorite', isFavorite.toString())
-    submit(formData, { method: 'post' })
-  }
+    const formData = new FormData();
+    formData.append("action", "toggle_favorite");
+    formData.append("is_favorite", isFavorite.toString());
+    submit(formData, { method: "post" });
+  };
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
@@ -114,7 +121,7 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        
+
         {/* Desktop: Breadcrumb only */}
         <Breadcrumb className="hidden md:block">
           <BreadcrumbList>
@@ -132,7 +139,9 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <Suspense fallback={<BreadcrumbPage>Loading...</BreadcrumbPage>}>
-                <CollectionBreadcrumbName collectionPromise={loaderData.collectionPromise} />
+                <CollectionBreadcrumbName
+                  collectionPromise={loaderData.collectionPromise}
+                />
               </Suspense>
             </BreadcrumbItem>
           </BreadcrumbList>
@@ -147,7 +156,7 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
       )}
 
       <Suspense fallback={<CollectionDetailSkeleton />}>
-        <CollectionDetail 
+        <CollectionDetail
           collectionPromise={loaderData.collectionPromise}
           onToggleFavorite={handleToggleFavorite}
           onDelete={() => setShowDeleteConfirm(true)}
@@ -162,13 +171,22 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                Are you sure you want to delete this collection? This action cannot be undone.
+                Are you sure you want to delete this collection? This action
+                cannot be undone.
               </p>
               <div className="flex gap-2">
-                <Button variant="destructive" onClick={handleDelete} className="flex-1">
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  className="flex-1"
+                >
                   Delete
                 </Button>
-                <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="flex-1">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1"
+                >
                   Cancel
                 </Button>
               </div>
@@ -177,15 +195,19 @@ export default function CollectionDetailPage({ loaderData, actionData }: Route.C
         </div>
       )}
     </div>
-  )
+  );
 }
 
-function CollectionDetail({ collectionPromise, onToggleFavorite, onDelete }: {
-  collectionPromise: Promise<any>
-  onToggleFavorite: (isFavorite: boolean) => void
-  onDelete: () => void
+function CollectionDetail({
+  collectionPromise,
+  onToggleFavorite,
+  onDelete,
+}: {
+  collectionPromise: Promise<any>;
+  onToggleFavorite: (isFavorite: boolean) => void;
+  onDelete: () => void;
 }) {
-  const collection = use(collectionPromise)
+  const collection = use(collectionPromise);
 
   return (
     <>
@@ -208,17 +230,21 @@ function CollectionDetail({ collectionPromise, onToggleFavorite, onDelete }: {
             {collection.times_worn > 0 && (
               <span>Worn {collection.times_worn} times</span>
             )}
-            <span>Created {new Date(collection.created_at).toLocaleDateString()}</span>
+            <span>
+              Created {new Date(collection.created_at).toLocaleDateString()}
+            </span>
           </div>
         </div>
-        
+
         <div className="flex gap-2">
           <Button
-            variant={collection.is_favorite ? 'default' : 'outline'}
+            variant={collection.is_favorite ? "default" : "outline"}
             size="sm"
             onClick={() => onToggleFavorite(collection.is_favorite)}
           >
-            <Heart className={`h-4 w-4 ${collection.is_favorite ? 'fill-current' : ''}`} />
+            <Heart
+              className={`h-4 w-4 ${collection.is_favorite ? "fill-current" : ""}`}
+            />
           </Button>
           <Link to={`/outfits/collections/${collection.id}/edit`}>
             <Button variant="outline" size="sm">
@@ -237,7 +263,11 @@ function CollectionDetail({ collectionPromise, onToggleFavorite, onDelete }: {
             <CardTitle>Outfit Preview</CardTitle>
           </CardHeader>
           <CardContent>
-            <OutfitPreview items={collection.clothing_items} maxItems={6} size="lg" />
+            <OutfitPreview
+              items={collection.clothing_items}
+              maxItems={6}
+              size="lg"
+            />
           </CardContent>
         </Card>
 
@@ -250,11 +280,17 @@ function CollectionDetail({ collectionPromise, onToggleFavorite, onDelete }: {
               {collection.clothing_items.map((item: any) => (
                 <div key={item.id} className="space-y-2">
                   <div className="aspect-square rounded-lg overflow-hidden bg-slate-100">
-                    <ClothingImage
-                      filePath={item.image_url}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {item.image_url ? (
+                      <ClothingImage
+                        imageUrlPromise={getImageUrl(item.image_url)}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        No image
+                      </div>
+                    )}
                   </div>
                   <p className="text-sm font-medium truncate">{item.name}</p>
                   <Badge variant="outline" className="text-xs">
@@ -267,7 +303,7 @@ function CollectionDetail({ collectionPromise, onToggleFavorite, onDelete }: {
         </Card>
       </div>
     </>
-  )
+  );
 }
 
 function CollectionDetailSkeleton() {
@@ -294,7 +330,10 @@ function CollectionDetailSkeleton() {
           <CardContent>
             <div className="flex gap-2">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="w-16 h-16 bg-slate-200 rounded animate-pulse" />
+                <div
+                  key={i}
+                  className="w-16 h-16 bg-slate-200 rounded animate-pulse"
+                />
               ))}
             </div>
           </CardContent>
@@ -318,5 +357,5 @@ function CollectionDetailSkeleton() {
         </Card>
       </div>
     </>
-  )
+  );
 }

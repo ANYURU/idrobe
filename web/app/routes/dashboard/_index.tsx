@@ -1,20 +1,15 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardAction,
-  CardFooter,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Shirt,
-  Palette,
   TrendingUp,
   Sparkles,
-  Heart,
+  Star,
+  AlertCircle,
+  DollarSign,
+  Activity,
+  ArrowRight,
+  TrendingDown,
+  CheckCircle,
 } from "lucide-react";
 import { Link, redirect, useSearchParams } from "react-router";
 import { loadDashboardData } from "@/lib/loaders";
@@ -189,47 +184,41 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
   }, [searchParams, toast]);
 
   return (
-    <div className="@container/main space-y-4">
+    <main className="@container/main space-y-4">
       <DashboardContent promises={loaderData} />
-    </div>
+    </main>
   );
 }
 
 function DashboardContent({ promises }: { promises: DashboardPromises }) {
   return (
     <>
-      <div className="mb-2">
-        <h2 className="text-xl font-semibold">Welcome back!</h2>
+      <header className="mb-2">
+        <h1 className="text-xl font-semibold">Welcome back!</h1>
         <p className="text-muted-foreground text-sm mt-0.5">
           Here's what's happening with your wardrobe
         </p>
-      </div>
+      </header>
 
-      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" aria-label="Wardrobe statistics">
         <Suspense fallback={<StatCardSkeleton />}>
-          <ItemsStatCard
-            p={promises.itemsPromise}
-            ap={promises.analyticsPromise}
-          />
+          <TopPerformerCard p={promises.itemsPromise} />
         </Suspense>
 
         <Suspense fallback={<StatCardSkeleton />}>
-          <FavoriteItemsCard p={promises.itemsPromise} />
+          <UnderutilizedCard p={promises.itemsPromise} />
         </Suspense>
 
         <Suspense fallback={<StatCardSkeleton />}>
-          <RecommendationsStatCard
-            rp={promises.recommendationsPromise}
-            ip={promises.interactionsPromise}
-          />
+          <BestValueCard p={promises.itemsPromise} />
         </Suspense>
 
         <Suspense fallback={<StatCardSkeleton />}>
-          <WardrobeScoreCard p={promises.analyticsPromise} />
+          <WardrobeHealthCard p={promises.itemsPromise} />
         </Suspense>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2" aria-label="Recent activity">
         <Suspense fallback={<RecentItemsSkeleton />}>
           <RecentItemsCard p={promises.itemsPromise} />
         </Suspense>
@@ -237,183 +226,226 @@ function DashboardContent({ promises }: { promises: DashboardPromises }) {
         <Suspense fallback={<WeatherOutfitSkeleton />}>
           <WeatherOutfitCard p={promises.dailyOutfitPromise} />
         </Suspense>
-      </div>
+      </section>
     </>
   );
 }
 
-function ItemsStatCard({
-  p,
-  ap,
-}: {
-  p: Promise<ClothingItem[]>;
-  ap: Promise<WardrobeAnalytics | null>;
-}) {
+function TopPerformerCard({ p }: { p: Promise<ClothingItem[]> }) {
   const items = use(p);
-  const analytics = use(ap);
+  const topItem = items
+    ?.filter(item => (item.times_worn || 0) > 0)
+    .sort((a, b) => (b.times_worn || 0) - (a.times_worn || 0))[0];
 
+  return (
+    <article className="bg-linear-to-br from-muted/20 to-muted/40 border border-border/50 rounded-lg p-4 relative">
+      <div className="absolute top-2 right-2">
+        <Star className="h-4 w-4 text-primary fill-current" />
+      </div>
+      <header className="flex items-center gap-2 text-muted-foreground mb-3">
+        <TrendingUp className="h-4 w-4" />
+        <h3 className="text-xs font-medium uppercase tracking-wide">Top Performer</h3>
+      </header>
+      <div className="space-y-3">
+        <p className="text-lg font-bold truncate">
+          {topItem?.name || 'No items worn yet'}
+        </p>
+        <div className="flex items-center justify-between">
+          <p className="text-2xl font-bold">
+            {topItem ? topItem.times_worn : '0'}
+          </p>
+          <p className="text-xs text-muted-foreground font-medium">
+            {topItem ? 'wears' : 'start tracking'}
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function UnderutilizedCard({ p }: { p: Promise<ClothingItem[]> }) {
+  const items = use(p);
+  const underutilized = items?.filter(item => 
+    (item.times_worn || 0) === 0 && 
+    new Date(item.created_at || '').getTime() < Date.now() - (30 * 24 * 60 * 60 * 1000)
+  ).length || 0;
+
+  const hasIssues = underutilized > 0;
+
+  return (
+    <article className={`bg-linear-to-br from-muted/20 to-muted/40 border rounded-lg p-4 relative ${
+      hasIssues ? 'border-destructive/30' : 'border-border/50'
+    }`}>
+      <div className="absolute top-2 right-2">
+        {hasIssues ? (
+          <AlertCircle className="h-4 w-4 text-destructive" />
+        ) : (
+          <Activity className="h-4 w-4 text-primary" />
+        )}
+      </div>
+      <header className="flex items-center gap-2 text-muted-foreground mb-3">
+        <Shirt className="h-4 w-4" />
+        <h3 className="text-xs font-medium uppercase tracking-wide">Underutilized</h3>
+      </header>
+      <div className="space-y-3">
+        <p className="text-3xl font-bold">
+          {underutilized}
+        </p>
+        <p className="text-sm font-medium">
+          {hasIssues ? 'Items never worn' : 'All items used!'}
+        </p>
+        {hasIssues && (
+          <Button size="sm" className="text-xs h-7" asChild>
+            <Link to="/wardrobe/analytics" className="flex items-center gap-1">
+              View details <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function BestValueCard({ p }: { p: Promise<ClothingItem[]> }) {
+  const items = use(p);
+  const bestValue = items
+    ?.filter(item => (item.times_worn || 0) > 0 && item.cost)
+    .map(item => ({ ...item, costPerWear: item.cost! / item.times_worn! }))
+    .sort((a, b) => a.costPerWear - b.costPerWear)[0];
+
+  return (
+    <article className="bg-linear-to-br from-muted/20 to-muted/40 border border-border/50 rounded-lg p-4 relative">
+      <div className="absolute top-2 right-2">
+        <DollarSign className="h-4 w-4 text-primary" />
+      </div>
+      <header className="flex items-center gap-2 text-muted-foreground mb-3">
+        <TrendingUp className="h-4 w-4" />
+        <h3 className="text-xs font-medium uppercase tracking-wide">Best Value</h3>
+      </header>
+      <div className="space-y-3">
+        <p className="text-sm font-bold truncate">
+          {bestValue?.name || 'Add item costs'}
+        </p>
+        <div className="flex items-baseline gap-1">
+          <p className="text-2xl font-bold">
+            {bestValue ? `$${bestValue.costPerWear.toFixed(2)}` : '—'}
+          </p>
+          {bestValue && (
+            <p className="text-xs text-muted-foreground font-medium">
+              per wear
+            </p>
+          )}
+        </div>
+        {!bestValue && (
+          <Button size="sm" className="text-xs h-7" asChild>
+            <Link to="/wardrobe" className="flex items-center gap-1">
+              Add costs <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function WardrobeHealthCard({ p }: { p: Promise<ClothingItem[]> }) {
+  const items = use(p);
   const totalItems = items?.length || 0;
-  const categoryDiversity =
-    analytics?.category_diversity ||
-    new Set(
-      items?.map((item: ClothingItem) => item.category_id).filter(Boolean)
-    ).size;
+  const wornItems = items?.filter(item => (item.times_worn || 0) > 0).length || 0;
+  const healthScore = totalItems > 0 ? Math.round((wornItems / totalItems) * 100) : 0;
+
+  const getHealthStatus = (score: number) => {
+    if (score >= 80) return { icon: CheckCircle, color: 'text-primary', status: 'Excellent' };
+    if (score >= 60) return { icon: Activity, color: 'text-primary', status: 'Good' };
+    if (score >= 40) return { icon: TrendingDown, color: 'text-destructive', status: 'Needs attention' };
+    return { icon: AlertCircle, color: 'text-destructive', status: 'Poor' };
+  };
+
+  const { icon: StatusIcon, color } = getHealthStatus(healthScore);
+  const needsImprovement = healthScore < 70;
 
   return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardDescription>Total Items</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {totalItems}
-        </CardTitle>
-        <CardAction>
-          <Badge variant="outline">
-            <Shirt className="size-4" />
-          </Badge>
-        </CardAction>
-      </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="line-clamp-1 flex gap-2 font-medium">
-          {categoryDiversity} categories
+    <article className="bg-linear-to-br from-muted/20 to-muted/40 border border-border/50 rounded-lg p-4 relative">
+      <div className="absolute top-2 right-2">
+        <StatusIcon className={`h-4 w-4 ${color} ${healthScore >= 80 ? 'fill-current' : ''}`} />
+      </div>
+      <header className="flex items-center gap-2 text-muted-foreground mb-3">
+        <Activity className="h-4 w-4" />
+        <h3 className="text-xs font-medium uppercase tracking-wide">Wardrobe Health</h3>
+      </header>
+      <div className="space-y-3">
+        <div className="flex items-baseline gap-1">
+          <p className="text-3xl font-bold">
+            {healthScore}
+          </p>
+          <p className="text-lg font-semibold text-muted-foreground">%</p>
         </div>
-        <div className="text-muted-foreground">Across your wardrobe</div>
-      </CardFooter>
-    </Card>
-  );
-}
-
-function FavoriteItemsCard({ p }: { p: Promise<ClothingItem[]> }) {
-  const items = use(p);
-  const favoriteCount = items?.filter((item) => item.is_favorite).length || 0;
-
-  return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardDescription>Favorite Items</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {favoriteCount}
-        </CardTitle>
-        <CardAction>
-          <Badge variant="outline">
-            <Heart className="size-4" />
-          </Badge>
-        </CardAction>
-      </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="line-clamp-1 flex gap-2 font-medium">
-          Your favorites
-        </div>
-        <div className="text-muted-foreground">Most loved pieces</div>
-      </CardFooter>
-    </Card>
-  );
-}
-
-function RecommendationsStatCard({
-  rp,
-  ip,
-}: {
-  rp: Promise<OutfitRecommendation[]>;
-  ip: Promise<UserInteraction[]>;
-}) {
-  const recommendations = use(rp);
-  const interactions = use(ip);
-
-  const totalOutfits = recommendations?.length || 0;
-  const likedRecommendations =
-    interactions?.filter(
-      (interaction) => interaction.interaction_type_name === "liked"
-    ).length || 0;
-
-  return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardDescription>AI Recommendations</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {totalOutfits}
-        </CardTitle>
-        <CardAction>
-          <Badge variant="outline">
-            <Palette className="size-4" />
-          </Badge>
-        </CardAction>
-      </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="line-clamp-1 flex gap-2 font-medium">
-          {likedRecommendations} liked
-        </div>
-        <div className="text-muted-foreground">AI-curated outfits for you</div>
-      </CardFooter>
-    </Card>
-  );
-}
-
-function WardrobeScoreCard({ p }: { p: Promise<WardrobeAnalytics | null> }) {
-  const analytics = use(p);
-  // Calculate wardrobe score from available analytics data
-  const wardrobeScore = analytics?.avg_sustainability
-    ? Math.round(analytics.avg_sustainability * 100)
-    : 0;
-
-  return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardDescription>Wardrobe Score</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {Math.round(wardrobeScore)}%
-        </CardTitle>
-        <CardAction>
-          <Badge variant="outline">
-            <TrendingUp className="size-4" />
-          </Badge>
-        </CardAction>
-      </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="line-clamp-1 flex gap-2 font-medium">
-          Acceptance rate
-        </div>
-        <div className="text-muted-foreground">Based on your interactions</div>
-      </CardFooter>
-    </Card>
+        <p className="text-sm font-medium">
+          {wornItems} of {totalItems} items worn
+        </p>
+        {needsImprovement && (
+          <Button size="sm" className="text-xs h-7" asChild>
+            <Link to="/wardrobe/analytics" className="flex items-center gap-1">
+              Improve <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
+        )}
+      </div>
+    </article>
   );
 }
 
 function RecentItemsCard({ p }: { p: Promise<ClothingItem[]> }) {
   const items = use(p);
+  const recentItems = items?.slice(0, 3) || [];
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Recent Items</CardTitle>
-        <CardDescription>Your latest wardrobe additions</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {items?.slice(0, 3).map((item: ClothingItem) => (
-          <div key={item.id} className="flex items-center space-x-4">
+    <div className="bg-muted/30 rounded-lg p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-semibold mb-1">Recent Items</h2>
+          <p className="text-sm text-muted-foreground">Your latest wardrobe additions</p>
+        </div>
+        {recentItems.length > 0 && (
+          <Button size="sm" asChild>
+            <Link to="/wardrobe" className="flex items-center gap-1 text-xs">
+              View all <ArrowRight className="h-3 w-3" />
+            </Link>
+          </Button>
+        )}
+      </div>
+      <div className="space-y-3">
+        {recentItems.map((item: ClothingItem) => (
+          <Link 
+            key={item.id} 
+            to={`/wardrobe/${item.id}`}
+            className="flex items-center space-x-4 p-2 rounded-lg hover:bg-background/50 transition-colors group"
+          >
             <ClothingThumbnail
               filePath={item.image_url}
               alt={item.name}
-              className="w-12 h-12 bg-muted rounded-lg"
+              className="w-12 h-12 bg-background rounded-lg ring-1 ring-border"
             />
-            <div className="space-y-1">
-              <p className="text-sm font-medium leading-none">{item.name}</p>
-              <p className="text-sm text-muted-foreground">
-                Added{" "}
-                {item.created_at
-                  ? new Date(item.created_at).toLocaleDateString()
-                  : "Unknown"}
+            <div className="flex-1 space-y-1">
+              <p className="text-sm font-medium leading-none group-hover:text-primary transition-colors">{item.name}</p>
+              <p className="text-xs text-muted-foreground">
+                Added {item.created_at ? new Date(item.created_at).toLocaleDateString() : "Unknown"}
               </p>
             </div>
-          </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </Link>
         ))}
-        {(!items || items.length === 0) && (
-          <p className="text-sm text-muted-foreground">No items yet</p>
+        {recentItems.length === 0 && (
+          <div className="text-center py-8">
+            <Shirt className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+            <p className="text-sm text-muted-foreground mb-4">No items yet</p>
+            <Button size="sm" asChild>
+              <Link to="/wardrobe/add">Add Your First Item</Link>
+            </Button>
+          </div>
         )}
-        <Button className="w-full" asChild>
-          <Link to="/wardrobe">View All Items</Link>
-        </Button>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
@@ -422,19 +454,15 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
   const recommendation = dailyOutfitData?.recommendations?.[0];
   const hasError = dailyOutfitData?.error;
 
-
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Today's Outfit</CardTitle>
-        <CardDescription>
-          {dailyOutfitData?.weather
-            ? `Perfect for ${dailyOutfitData.weather.description}, ${dailyOutfitData.weather.temperature}°C`
-            : "AI-curated for your day"}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <div className="bg-muted/30 rounded-lg p-6">
+      <h2 className="text-lg font-semibold mb-1">Today's Outfit</h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        {dailyOutfitData?.weather
+          ? `Perfect for ${dailyOutfitData.weather.description}, ${dailyOutfitData.weather.temperature}°C`
+          : "AI-curated for your day"}
+      </p>
+      <div>
         {recommendation ? (
           <OutfitRecommendation
             recommendation={mapRecommendationToComponent(recommendation)}
@@ -458,7 +486,7 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
                 </div>
                 <div className="flex gap-2 justify-center">
                   <Button size="sm">
-                    <Link to="/recommendations">Generate Outfit</Link>
+                    <Link to="/outfits">Generate Outfit</Link>
                   </Button>
                   <Button variant="outline" size="sm">
                     <Link to="/wardrobe/add">Add Items</Link>
@@ -477,40 +505,37 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
                   </p>
                 </div>
                 <Button>
-                  <Link to="/recommendations">Create Today's Look</Link>
+                  <Link to="/outfits">Create Today's Look</Link>
                 </Button>
               </>
             )}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 function StatCardSkeleton() {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <div className="h-4 w-20 bg-muted animate-pulse rounded" />
+    <div className="bg-muted/30 rounded-lg p-4">
+      <div className="flex items-center gap-2 mb-2">
         <div className="h-4 w-4 bg-muted animate-pulse rounded" />
-      </CardHeader>
-      <CardContent>
-        <div className="h-8 w-16 bg-muted animate-pulse rounded mb-2" />
-        <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-      </CardContent>
-    </Card>
+        <div className="h-3 w-16 bg-muted animate-pulse rounded" />
+      </div>
+      <div className="h-6 w-20 bg-muted animate-pulse rounded mb-1" />
+      <div className="h-4 w-16 bg-muted animate-pulse rounded mb-1" />
+      <div className="h-3 w-24 bg-muted animate-pulse rounded" />
+    </div>
   );
 }
 
 function RecentItemsSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <div className="h-6 w-32 bg-muted animate-pulse rounded mb-2" />
-        <div className="h-4 w-48 bg-muted animate-pulse rounded" />
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="bg-muted/30 rounded-lg p-6">
+      <div className="h-6 w-32 bg-muted animate-pulse rounded mb-2" />
+      <div className="h-4 w-48 bg-muted animate-pulse rounded mb-4" />
+      <div className="space-y-4">
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex items-center space-x-4">
             <div className="w-12 h-12 bg-muted animate-pulse rounded-lg" />
@@ -520,24 +545,20 @@ function RecentItemsSkeleton() {
             </div>
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
 function WeatherOutfitSkeleton() {
   return (
-    <Card>
-      <CardHeader>
-        <div className="h-6 w-32 bg-muted animate-pulse rounded mb-2" />
-        <div className="h-4 w-48 bg-muted animate-pulse rounded" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="h-32 w-full bg-muted animate-pulse rounded" />
-          <div className="h-4 w-full bg-muted animate-pulse rounded" />
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-muted/30 rounded-lg p-6">
+      <div className="h-6 w-32 bg-muted animate-pulse rounded mb-2" />
+      <div className="h-4 w-48 bg-muted animate-pulse rounded mb-4" />
+      <div className="space-y-4">
+        <div className="h-32 w-full bg-muted animate-pulse rounded" />
+        <div className="h-4 w-full bg-muted animate-pulse rounded" />
+      </div>
+    </div>
   );
 }

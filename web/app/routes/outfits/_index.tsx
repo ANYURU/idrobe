@@ -1,15 +1,36 @@
 import { Link, useSearchParams, useFetcher } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Sparkles, Search, Filter, X, RotateCcw, RefreshCw, MessageCircle } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Plus,
+  Sparkles,
+  Search,
+  Filter,
+  X,
+  RotateCcw,
+  RefreshCw,
+  MessageCircle,
+} from "lucide-react";
 import { OutfitPreview } from "@/components/OutfitPreview";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchableSelect } from "@/components/ui/searchable-select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Suspense, use, useState, useEffect } from "react";
@@ -61,9 +82,9 @@ interface OutfitCollection {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { requireAuth } = await import('@/lib/protected-route');
+  const { requireAuth } = await import("@/lib/protected-route");
   const { user } = await requireAuth(request);
-  const { createClient } = await import('@/lib/supabase.server');
+  const { createClient } = await import("@/lib/supabase.server");
   const { supabase } = createClient(request);
 
   const url = new URL(request.url);
@@ -110,38 +131,54 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // Fetch unique occasions and moods
   const [occasionsRes, moodsRes] = await Promise.all([
-    supabase.from("outfit_recommendations").select("occasion_name").eq("user_id", user.id).not("occasion_name", "is", null),
-    supabase.from("outfit_recommendations").select("mood_name").eq("user_id", user.id).not("mood_name", "is", null)
+    supabase
+      .from("outfit_recommendations")
+      .select("occasion_name")
+      .eq("user_id", user.id)
+      .not("occasion_name", "is", null),
+    supabase
+      .from("outfit_recommendations")
+      .select("mood_name")
+      .eq("user_id", user.id)
+      .not("mood_name", "is", null),
   ]);
 
-  const occasions = [...new Set(occasionsRes.data?.map(item => item.occasion_name) || [])].filter(Boolean).sort();
-  const moods = [...new Set(moodsRes.data?.map(item => item.mood_name) || [])].filter(Boolean).sort();
+  const occasions = [
+    ...new Set(occasionsRes.data?.map((item) => item.occasion_name) || []),
+  ]
+    .filter(Boolean)
+    .sort();
+  const moods = [...new Set(moodsRes.data?.map((item) => item.mood_name) || [])]
+    .filter(Boolean)
+    .sort();
 
   const { loadOutfitCollections } = await import("@/lib/loaders");
 
-  const recommendationsPromise: Promise<RecommendationsData> = Promise.resolve(recQuery.then(async ({ data: recs, error, count }) => {
-    if (error) throw new Error("Failed to load recommendations");
-    
-    const recsWithItems = await Promise.all(
-      (recs || []).map(async (rec) => {
-        const { data: items } = await supabase
-          .from('clothing_items')
-          .select('id, name, image_url, primary_color')
-          .in('id', rec.clothing_item_ids)
-          .eq('user_id', user.id);
-        
-        return { ...rec, clothing_items: items || [] };
-      })
-    );
-    
-    return {
-      items: recsWithItems,
-      total: count || 0,
-      page: filters.page,
-      totalPages: Math.ceil((count || 0) / filters.limit),
-      limit: filters.limit,
-    };
-  }));
+  const recommendationsPromise: Promise<RecommendationsData> = Promise.resolve(
+    recQuery.then(async ({ data: recs, error, count }) => {
+      if (error) throw new Error("Failed to load recommendations");
+
+      const recsWithItems = await Promise.all(
+        (recs || []).map(async (rec) => {
+          const { data: items } = await supabase
+            .from("clothing_items")
+            .select("id, name, image_url, primary_color")
+            .in("id", rec.clothing_item_ids)
+            .eq("user_id", user.id);
+
+          return { ...rec, clothing_items: items || [] };
+        })
+      );
+
+      return {
+        items: recsWithItems,
+        total: count || 0,
+        page: filters.page,
+        totalPages: Math.ceil((count || 0) / filters.limit),
+        limit: filters.limit,
+      };
+    })
+  );
 
   return {
     recommendationsPromise,
@@ -153,95 +190,106 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const { requireAuth } = await import('@/lib/protected-route');
+  const { requireAuth } = await import("@/lib/protected-route");
   const { user } = await requireAuth(request);
-  
+
   const formData = await request.formData();
-  const actionType = formData.get('action');
-  
-  if (actionType === 'generate_recommendations') {
-    const { generateOutfitRecommendations } = await import('@/lib/outfit-recommendations');
-    
-    const context = formData.get('context')?.toString();
-    const isRefresh = formData.get('refresh') === 'true';
-    const isSurprise = formData.get('surprise') === 'true';
-    
+  const actionType = formData.get("action");
+
+  if (actionType === "generate_recommendations") {
+    const { generateOutfitRecommendations } = await import(
+      "@/lib/outfit-recommendations"
+    );
+
+    const context = formData.get("context")?.toString();
+    const isRefresh = formData.get("refresh") === "true";
+    const isSurprise = formData.get("surprise") === "true";
+
     const result = await generateOutfitRecommendations(user.id, request, {
-      weather: 'current',
+      weather: "current",
       season: getCurrentSeason(),
       context: context || undefined,
       refresh: isRefresh,
-      surprise: isSurprise
+      surprise: isSurprise,
     });
-    
-    return { 
-      success: true, 
-      type: 'recommendations_generated',
+
+    return {
+      success: true,
+      type: "recommendations_generated",
       generatedIds: result.generatedIds || [],
-      count: result.generatedIds?.length || 0
+      count: result.generatedIds?.length || 0,
     };
   }
-  
+
   return null;
 }
 
 function getCurrentSeason(): string {
   const month = new Date().getMonth() + 1;
-  if (month >= 3 && month <= 5) return 'spring';
-  if (month >= 6 && month <= 8) return 'summer';
-  if (month >= 9 && month <= 11) return 'fall';
-  return 'winter';
+  if (month >= 3 && month <= 5) return "spring";
+  if (month >= 6 && month <= 8) return "summer";
+  if (month >= 9 && month <= 11) return "fall";
+  return "winter";
 }
 
 export default function OutfitsPage({ loaderData }: Route.ComponentProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'recommendations';
+  const activeTab = searchParams.get("tab") || "recommendations";
   const sharedGenerateFetcher = useFetcher();
-  
+
   const setActiveTab = (tab: string) => {
     const params = new URLSearchParams(searchParams);
-    if (tab === 'recommendations') {
-      params.delete('tab');
+    if (tab === "recommendations") {
+      params.delete("tab");
     } else {
-      params.set('tab', tab);
+      params.set("tab", tab);
     }
     setSearchParams(params);
   };
-  
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Outfits</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Manage your outfit recommendations and collections
-          </p>
-        </div>
-        {activeTab === "recommendations" ? (
-          <GenerateOutfitDialog generateFetcher={sharedGenerateFetcher} />
-        ) : (
-          <Button className="whitespace-nowrap">
-            <Link to="/outfits/create" className="flex items-center">
-              <Plus className="mr-2 h-4 w-4 shrink-0" />
-              Create Collection
-            </Link>
-          </Button>
-        )}
-      </div>
 
-      <Suspense fallback={<OutfitsSkeleton />}>
-        <OutfitsContent 
-          recommendationsPromise={loaderData.recommendationsPromise} 
-          collectionsPromise={loaderData.collectionsPromise}
-          occasions={loaderData.occasions}
-          moods={loaderData.moods}
-          filters={loaderData.filters}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          generateFetcher={sharedGenerateFetcher}
-        />
-      </Suspense>
-    </div>
+  return (
+    <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
+      <header className="space-y-4 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-semibold truncate">
+              Outfits
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Manage your outfit recommendations and collections
+            </p>
+          </div>
+          <div className="flex gap-2 shrink-0">
+            {activeTab === "recommendations" ? (
+              <GenerateOutfitDialog generateFetcher={sharedGenerateFetcher} />
+            ) : (
+              <Button className="w-full sm:w-auto whitespace-nowrap">
+                <Link to="/outfits/create" className="flex items-center">
+                  <Plus className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="sm:hidden">Create</span>
+                  <span className="hidden sm:inline">Create Collection</span>
+                </Link>
+              </Button>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <section aria-label="Outfit management">
+        <Suspense fallback={<OutfitsSkeleton />}>
+          <OutfitsContent
+            recommendationsPromise={loaderData.recommendationsPromise}
+            collectionsPromise={loaderData.collectionsPromise}
+            occasions={loaderData.occasions}
+            moods={loaderData.moods}
+            filters={loaderData.filters}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            generateFetcher={sharedGenerateFetcher}
+          />
+        </Suspense>
+      </section>
+    </main>
   );
 }
 
@@ -249,10 +297,10 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
   const [open, setOpen] = useState(false);
   const [context, setContext] = useState("");
   const [showMore, setShowMore] = useState(false);
-  
+
   const quickSuggestions = [
     "I have a job interview tomorrow",
-    "Going on a casual date this weekend", 
+    "Going on a casual date this weekend",
     "Need something for a work presentation",
     "Attending a wedding as a guest",
     "Casual day out with friends",
@@ -263,32 +311,37 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
     "Date night but might go dancing after",
     "Corporate networking event",
     "Brunch with the girls - cute and comfortable",
-    "Art gallery opening - creative and sophisticated"
+    "Art gallery opening - creative and sophisticated",
   ];
-  
-  const visibleSuggestions = showMore ? quickSuggestions : quickSuggestions.slice(0, 5);
-  
+
+  const visibleSuggestions = showMore
+    ? quickSuggestions
+    : quickSuggestions.slice(0, 5);
+
   const handleGenerate = () => {
     const formData = new FormData();
-    formData.append('action', 'generate_recommendations');
-    formData.append('context', context);
-    generateFetcher.submit(formData, { method: 'POST' });
+    formData.append("action", "generate_recommendations");
+    formData.append("context", context);
+    generateFetcher.submit(formData, { method: "POST" });
   };
-  
+
   const handleSurpriseMe = () => {
     const formData = new FormData();
-    formData.append('action', 'generate_recommendations');
-    formData.append('context', 'Create personalized outfit recommendations based on my style preferences and wardrobe');
-    formData.append('surprise', 'true');
-    generateFetcher.submit(formData, { method: 'POST' });
+    formData.append("action", "generate_recommendations");
+    formData.append(
+      "context",
+      "Create personalized outfit recommendations based on my style preferences and wardrobe"
+    );
+    formData.append("surprise", "true");
+    generateFetcher.submit(formData, { method: "POST" });
   };
-  
+
   const handleClose = () => {
     setOpen(false);
     setContext("");
     setShowMore(false);
   };
-  
+
   // Reset dialog state when it closes
   useEffect(() => {
     if (!open) {
@@ -298,7 +351,7 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
       }
     }
   }, [open]);
-  
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -322,7 +375,9 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
                 <p className="font-medium">
                   {generateFetcher.data?.count || 0} New Outfits Generated!
                 </p>
-                <p className="text-sm text-muted-foreground">Check the highlighted recommendations below</p>
+                <p className="text-sm text-muted-foreground">
+                  Check the highlighted recommendations below
+                </p>
               </div>
             </div>
           ) : (
@@ -331,41 +386,46 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
               value={context}
               onChange={(e) => setContext(e.target.value)}
               className="min-h-24"
-              disabled={generateFetcher.state === 'submitting'}
+              disabled={generateFetcher.state === "submitting"}
             />
           )}
-          
-          {!generateFetcher.data?.success && generateFetcher.state !== 'submitting' && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Quick suggestions:</p>
-                {quickSuggestions.length > 5 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowMore(!showMore)}
-                    className="text-xs text-muted-foreground cursor-pointer"
-                  >
-                    {showMore ? 'Show less' : `+${quickSuggestions.length - 5} more`}
-                  </Button>
-                )}
+
+          {!generateFetcher.data?.success &&
+            generateFetcher.state !== "submitting" && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Quick suggestions:
+                  </p>
+                  {quickSuggestions.length > 5 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowMore(!showMore)}
+                      className="text-xs text-muted-foreground cursor-pointer"
+                    >
+                      {showMore
+                        ? "Show less"
+                        : `+${quickSuggestions.length - 5} more`}
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {visibleSuggestions.map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setContext(suggestion)}
+                      className="text-xs cursor-pointer"
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {visibleSuggestions.map((suggestion) => (
-                  <Button
-                    key={suggestion}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setContext(suggestion)}
-                    className="text-xs cursor-pointer"
-                  >
-                    {suggestion}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-          
+            )}
+
           <div className="flex gap-2 pt-4">
             {generateFetcher.data?.success ? (
               <Button onClick={handleClose} className="flex-1">
@@ -373,22 +433,24 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
               </Button>
             ) : (
               <>
-                <Button 
+                <Button
                   onClick={handleGenerate}
-                  disabled={!context.trim() || generateFetcher.state !== 'idle'}
+                  disabled={!context.trim() || generateFetcher.state !== "idle"}
                   className="flex-1"
                 >
-                  {generateFetcher.state === 'submitting' ? (
+                  {generateFetcher.state === "submitting" ? (
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Sparkles className="mr-2 h-4 w-4" />
                   )}
-                  {generateFetcher.state === 'submitting' ? 'Generating...' : 'Generate Outfits'}
+                  {generateFetcher.state === "submitting"
+                    ? "Generating..."
+                    : "Generate Outfits"}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={handleSurpriseMe}
-                  disabled={generateFetcher.state !== 'idle'}
+                  disabled={generateFetcher.state !== "idle"}
                   className="whitespace-nowrap"
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
@@ -417,7 +479,16 @@ interface OutfitsContentProps {
   generateFetcher: any;
 }
 
-function OutfitsContent({ recommendationsPromise, collectionsPromise, occasions, moods, filters, activeTab, onTabChange, generateFetcher }: OutfitsContentProps) {
+function OutfitsContent({
+  recommendationsPromise,
+  collectionsPromise,
+  occasions,
+  moods,
+  filters,
+  activeTab,
+  onTabChange,
+  generateFetcher,
+}: OutfitsContentProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState("");
@@ -446,7 +517,7 @@ function OutfitsContent({ recommendationsPromise, collectionsPromise, occasions,
       setNewlyGeneratedIds(generateFetcher.data.generatedIds);
     }
   }, [generateFetcher.data?.generatedIds]);
-  
+
   // Clear highlighting when user interacts (searches, filters, or navigates)
   useEffect(() => {
     if (newlyGeneratedIds.length > 0 && (searchInput || showFilters)) {
@@ -467,22 +538,30 @@ function OutfitsContent({ recommendationsPromise, collectionsPromise, occasions,
   };
 
   const resetFilters = () => {
-    setSearchInput('');
+    setSearchInput("");
     setSearchParams({});
   };
 
   const handleGenerateRecommendations = () => {
     const formData = new FormData();
-    formData.append('action', 'generate_recommendations');
-    formData.append('context', 'Generate fresh outfit suggestions with different combinations');
-    formData.append('refresh', 'true');
-    generateFetcher.submit(formData, { method: 'POST' });
+    formData.append("action", "generate_recommendations");
+    formData.append(
+      "context",
+      "Generate fresh outfit suggestions with different combinations"
+    );
+    formData.append("refresh", "true");
+    generateFetcher.submit(formData, { method: "POST" });
   };
 
-  const hasActiveFilters = Boolean(filters.search) || Boolean(filters.occasion) || Boolean(filters.mood) || filters.sortBy !== 'recent' || filters.limit !== 12;
+  const hasActiveFilters =
+    Boolean(filters.search) ||
+    Boolean(filters.occasion) ||
+    Boolean(filters.mood) ||
+    filters.sortBy !== "recent" ||
+    filters.limit !== 12;
   const currentOccasions = fetcher.data?.occasions || occasions;
   const currentMoods = fetcher.data?.moods || moods;
-  
+
   return (
     <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
       <TabsList>
@@ -490,12 +569,14 @@ function OutfitsContent({ recommendationsPromise, collectionsPromise, occasions,
           <Sparkles className="mr-2 h-4 w-4" />
           Recommendations
         </TabsTrigger>
-        <TabsTrigger value="collections" className="cursor-pointer">Collections</TabsTrigger>
+        <TabsTrigger value="collections" className="cursor-pointer">
+          Collections
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="recommendations" className="space-y-4">
         <Suspense fallback={<RecommendationsSkeleton />}>
-          <RecommendationsContent 
+          <RecommendationsContent
             recommendationsPromise={recommendationsPromise}
             currentOccasions={currentOccasions}
             currentMoods={currentMoods}
@@ -517,9 +598,11 @@ function OutfitsContent({ recommendationsPromise, collectionsPromise, occasions,
       <TabsContent value="collections" className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold">My Collections</h3>
-          <p className="text-sm text-muted-foreground">Your saved outfit combinations</p>
+          <p className="text-sm text-muted-foreground">
+            Your saved outfit combinations
+          </p>
         </div>
-        
+
         <Suspense fallback={<CollectionsSkeleton />}>
           <CollectionsContent collectionsPromise={collectionsPromise} />
         </Suspense>
@@ -545,13 +628,31 @@ interface RecommendationsContentProps {
   newlyGeneratedIds: string[];
 }
 
-function RecommendationsContent({ recommendationsPromise, currentOccasions, currentMoods, filters, hasActiveFilters, searchInput, setSearchInput, showFilters, setShowFilters, updateFilters, resetFilters, handleGenerateRecommendations, generateFetcher, newlyGeneratedIds }: RecommendationsContentProps) {
+function RecommendationsContent({
+  recommendationsPromise,
+  currentOccasions,
+  currentMoods,
+  filters,
+  hasActiveFilters,
+  searchInput,
+  setSearchInput,
+  showFilters,
+  setShowFilters,
+  updateFilters,
+  resetFilters,
+  handleGenerateRecommendations,
+  generateFetcher,
+  newlyGeneratedIds,
+}: RecommendationsContentProps) {
   const currentData = use(recommendationsPromise) as RecommendationsData;
-  
+
   return (
     <>
-      <Card className="border">
-        <CardContent className="p-4">
+      <section
+        className="bg-muted/30 rounded-lg p-4"
+        aria-label="Search and filter options"
+      >
+        <form role="search">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -559,13 +660,13 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                 placeholder="Search recommendations..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className={`pl-10 ${searchInput ? 'pr-10' : ''}`}
+                className={`pl-10 ${searchInput ? "pr-10" : ""}`}
               />
               {searchInput && (
                 <button
                   type="button"
-                  onClick={() => setSearchInput('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-muted-foreground w-4 h-4 cursor-pointer"
+                  onClick={() => setSearchInput("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground w-4 h-4"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -573,6 +674,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
             </div>
             <div className="flex gap-2">
               <Button
+                type="button"
                 variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center gap-2"
@@ -582,6 +684,7 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
               </Button>
               {hasActiveFilters && (
                 <Button
+                  type="button"
                   variant="outline"
                   onClick={resetFilters}
                   className="flex items-center gap-2"
@@ -592,168 +695,185 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
               )}
             </div>
           </div>
+        </form>
 
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-border">
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Occasion
-                  </label>
-                  <SearchableSelect
-                    value={filters.occasion || ""}
-                    onChange={(value) => updateFilters({ occasion: value, page: 1 })}
-                    options={[
-                      { value: "", label: "All occasions" },
-                      ...currentOccasions.map((occasion: string) => ({
-                        value: occasion,
-                        label: occasion.charAt(0).toUpperCase() + occasion.slice(1)
-                      }))
-                    ]}
-                    placeholder="Search occasions..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Mood
-                  </label>
-                  <SearchableSelect
-                    value={filters.mood || ""}
-                    onChange={(value) => updateFilters({ mood: value, page: 1 })}
-                    options={[
-                      { value: "", label: "All moods" },
-                      ...currentMoods.map((mood: string) => ({
-                        value: mood,
-                        label: mood.charAt(0).toUpperCase() + mood.slice(1)
-                      }))
-                    ]}
-                    placeholder="Search moods..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Sort By
-                  </label>
-                  <Select
-                    value={filters.sortBy}
-                    onValueChange={(value) =>
-                      updateFilters({ sortBy: value, page: 1 })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recent">Most recent</SelectItem>
-                      <SelectItem value="score">Highest score</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Items per page
-                  </label>
-                  <Select
-                    value={filters.limit.toString()}
-                    onValueChange={(value) =>
-                      updateFilters({ limit: parseInt(value), page: 1 })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="12">12 items</SelectItem>
-                      <SelectItem value="24">24 items</SelectItem>
-                      <SelectItem value="48">48 items</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        {showFilters && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Occasion
+                </label>
+                <SearchableSelect
+                  value={filters.occasion || ""}
+                  onChange={(value) =>
+                    updateFilters({ occasion: value, page: 1 })
+                  }
+                  options={[
+                    { value: "", label: "All occasions" },
+                    ...currentOccasions.map((occasion: string) => ({
+                      value: occasion,
+                      label:
+                        occasion.charAt(0).toUpperCase() + occasion.slice(1),
+                    })),
+                  ]}
+                  placeholder="Search occasions..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Mood</label>
+                <SearchableSelect
+                  value={filters.mood || ""}
+                  onChange={(value) => updateFilters({ mood: value, page: 1 })}
+                  options={[
+                    { value: "", label: "All moods" },
+                    ...currentMoods.map((mood: string) => ({
+                      value: mood,
+                      label: mood.charAt(0).toUpperCase() + mood.slice(1),
+                    })),
+                  ]}
+                  placeholder="Search moods..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Sort By
+                </label>
+                <Select
+                  value={filters.sortBy}
+                  onValueChange={(value) =>
+                    updateFilters({ sortBy: value, page: 1 })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recent">Most recent</SelectItem>
+                    <SelectItem value="score">Highest score</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Items per page
+                </label>
+                <Select
+                  value={filters.limit.toString()}
+                  onValueChange={(value) =>
+                    updateFilters({ limit: parseInt(value), page: 1 })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="12">12 items</SelectItem>
+                    <SelectItem value="24">24 items</SelectItem>
+                    <SelectItem value="48">48 items</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        )}
+      </section>
 
       {currentData.items.length === 0 ? (
-          <Card>
-            <CardContent className="pt-12 pb-12 text-center">
-              <p className="text-muted-foreground mb-4">No recommendations found</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                Try adjusting your filters or add items to your wardrobe
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button
-                  onClick={handleGenerateRecommendations}
-                  disabled={generateFetcher.state !== 'idle'}
+        <div className="bg-muted/30 rounded-lg py-12 text-center">
+          <p className="text-muted-foreground mb-4">No recommendations found</p>
+          <p className="text-sm text-muted-foreground mb-4">
+            Try adjusting your filters or add items to your wardrobe
+          </p>
+          <div className="flex gap-2 justify-center">
+            <Button
+              onClick={handleGenerateRecommendations}
+              disabled={generateFetcher.state !== "idle"}
+            >
+              <RefreshCw
+                className={`mr-2 w-4 h-4 ${generateFetcher.state === "submitting" ? "animate-spin" : ""}`}
+              />
+              {generateFetcher.state === "submitting"
+                ? "Generating..."
+                : "Get Fresh Suggestions"}
+            </Button>
+            <Button variant="outline">
+              <Link to="/wardrobe/add">Add items</Link>
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex justify-between items-center mb-4">
+            <p className="text-sm text-muted-foreground">
+              {currentData.total} recommendations found
+            </p>
+            <Button
+              onClick={handleGenerateRecommendations}
+              disabled={generateFetcher.state !== "idle"}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw
+                className={`mr-2 w-4 h-4 ${generateFetcher.state === "submitting" ? "animate-spin" : ""}`}
+              />
+              {generateFetcher.state === "submitting"
+                ? "Generating..."
+                : "Get Fresh Suggestions"}
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+            {currentData.items.map((rec: any) => {
+              const isNew = newlyGeneratedIds.includes(rec.id);
+              return (
+                <article
+                  key={rec.id}
+                  className={`group ${
+                    isNew
+                      ? "ring-2 ring-primary/50 bg-primary/5 rounded-lg p-1"
+                      : ""
+                  }`}
                 >
-                  <RefreshCw className={`mr-2 w-4 h-4 hover:cursor-pointer ${generateFetcher.state === 'submitting' ? 'animate-spin' : ''}`} />
-                  {generateFetcher.state === 'submitting' ? 'Generating...' : 'Get Fresh Suggestions'}
-                </Button>
-                <Button variant="outline">
-                  <Link to="/wardrobe/add">Add items</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-muted-foreground">
-                {currentData.total} recommendations found
-              </p>
-              <Button
-                onClick={handleGenerateRecommendations}
-                disabled={generateFetcher.state !== 'idle'}
-                variant="outline"
-                size="sm"
-              >
-                <RefreshCw className={`mr-2 w-4 h-4 ${generateFetcher.state === 'submitting' ? 'animate-spin' : ''}`} />
-                {generateFetcher.state === 'submitting' ? 'Generating...' : 'Get Fresh Suggestions'}
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {currentData.items.map((rec: any) => {
-                const isNew = newlyGeneratedIds.includes(rec.id);
-                return (
-                  <Link key={rec.id} to={`/outfits/${rec.id}`} className="cursor-pointer">
-                    <Card className={`cursor-pointer h-full ${
-                      isNew ? 'ring-2 ring-primary/50 bg-primary/5' : ''
-                    }`}>
-                    <CardHeader>
+                  <Link
+                    to={`/outfits/${rec.id}`}
+                    state={{ from: "/outfits" }}
+                    className="block bg-muted/30 rounded-lg p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <header className="mb-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <CardTitle className="capitalize flex items-center gap-2">
-                            {rec.occasion_name || 'Outfit'}
+                          <h3 className="font-semibold capitalize flex items-center gap-2">
+                            {rec.occasion_name || "Outfit"}
                             {isNew && (
                               <Badge variant="secondary" className="text-xs">
                                 New
                               </Badge>
                             )}
-                          </CardTitle>
+                          </h3>
                           {rec.mood_name && (
-                            <CardDescription className="capitalize">
-                              Mood: {rec.mood_name}
-                            </CardDescription>
+                            <p className="text-sm text-muted-foreground capitalize mt-1">
+                              Mood: {rec.mood_name.replace(/_/g, ' ')}
+                            </p>
                           )}
                         </div>
                       </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
+                    </header>
+                    <div className="space-y-3">
                       {rec.recommendation_reason && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground h-10 line-clamp-2">
                           {rec.recommendation_reason}
                         </p>
                       )}
                       <OutfitPreview items={rec.clothing_items || []} />
-                    </CardContent>
-                  </Card>
-                </Link>
-                );
-              })}
-            </div>
-            
-            <Suspense fallback={<div className="h-16 bg-muted rounded animate-pulse" />}>
+                    </div>
+                  </Link>
+                </article>
+              );
+            })}
+          </div>
+
+          <nav aria-label="Pagination navigation">
+            <Suspense fallback={<Skeleton className="h-16 w-full rounded" />}>
               <Pagination
                 currentPage={currentData.page}
                 totalPages={currentData.totalPages}
@@ -762,53 +882,62 @@ function RecommendationsContent({ recommendationsPromise, currentOccasions, curr
                 onPageChange={(page) => updateFilters({ page })}
               />
             </Suspense>
+          </nav>
         </>
       )}
     </>
   );
 }
 
-function CollectionsContent({ collectionsPromise }: { collectionsPromise: Promise<OutfitCollection[]> }) {
+function CollectionsContent({
+  collectionsPromise,
+}: {
+  collectionsPromise: Promise<OutfitCollection[]>;
+}) {
   const collections = use(collectionsPromise) as OutfitCollection[];
-  
+
   return (
     <>
       {collections.length === 0 ? (
-        <Card>
-          <CardContent className="pt-12 pb-12 text-center">
-            <p className="text-muted-foreground mb-4">No collections yet</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create a collection to save your favorite outfit combinations
-            </p>
-            <Button>
-              <Link to="/outfits/create">Create collection</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="bg-muted/30 rounded-lg py-12 text-center">
+          <p className="text-muted-foreground mb-4">No collections yet</p>
+          <p className="text-sm text-muted-foreground mb-4">
+            Create a collection to save your favorite outfit combinations
+          </p>
+          <Button>
+            <Link to="/outfits/create">Create collection</Link>
+          </Button>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {collections.map((collection: any) => (
-            <Link key={collection.id} to={`/outfits/collections/${collection.id}`}>
-              <Card className="cursor-pointer h-full">
-                <CardHeader>
-                  <CardTitle>{collection.name}</CardTitle>
+            <article key={collection.id}>
+              <Link
+                to={`/outfits/collections/${collection.id}`}
+                state={{ from: "/outfits" }}
+                className="block bg-muted/30 rounded-lg p-4 hover:bg-muted/50 transition-colors"
+              >
+                <header className="mb-3">
+                  <h3 className="font-semibold">{collection.name}</h3>
                   {collection.description && (
-                    <CardDescription>
+                    <p className="text-sm text-muted-foreground mt-1">
                       {collection.description}
-                    </CardDescription>
+                    </p>
                   )}
-                </CardHeader>
-                <CardContent className="space-y-3">
+                </header>
+                <div className="space-y-3">
                   <OutfitPreview items={collection.clothing_items || []} />
-                  <div className="flex gap-2 text-sm text-muted-foreground">
-                    <span>{collection.clothing_item_ids?.length || 0} items</span>
+                  <footer className="flex gap-2 text-sm text-muted-foreground">
+                    <span>
+                      {collection.clothing_item_ids?.length || 0} items
+                    </span>
                     {(collection.times_worn ?? 0) > 0 && (
                       <span>• Worn {collection.times_worn}x</span>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                  </footer>
+                </div>
+              </Link>
+            </article>
           ))}
         </div>
       )}
@@ -819,33 +948,29 @@ function CollectionsContent({ collectionsPromise }: { collectionsPromise: Promis
 function RecommendationsSkeleton() {
   return (
     <div className="space-y-4">
-      <Card className="border">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1 h-10 bg-muted rounded animate-pulse" />
-            <div className="flex gap-2">
-              <div className="w-20 h-10 bg-muted rounded animate-pulse" />
-            </div>
+      <div className="bg-muted/30 rounded-lg p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Skeleton className="flex-1 h-10" />
+          <div className="flex gap-2">
+            <Skeleton className="w-20 h-10" />
           </div>
-        </CardContent>
-      </Card>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <div className="h-6 bg-muted rounded w-32 mb-2 animate-pulse" />
-              <div className="h-4 bg-muted rounded w-24 animate-pulse" />
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="h-4 bg-muted rounded w-full animate-pulse" />
-              <div className="flex gap-2">
-                {[...Array(4)].map((_, j) => (
-                  <div key={j} className="w-12 h-12 bg-muted rounded animate-pulse" />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <article key={i} className="bg-muted/30 rounded-lg p-4 space-y-3">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <div className="flex gap-2">
+              {[...Array(4)].map((_, j) => (
+                <Skeleton key={j} className="w-12 h-12 rounded" />
+              ))}
+            </div>
+          </article>
         ))}
       </div>
     </div>
@@ -854,22 +979,20 @@ function RecommendationsSkeleton() {
 
 function CollectionsSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
       {[...Array(4)].map((_, i) => (
-        <Card key={i}>
-          <CardHeader>
-            <div className="h-6 bg-muted rounded w-32 mb-2 animate-pulse" />
-            <div className="h-4 bg-muted rounded w-24 animate-pulse" />
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-2">
-              {[...Array(3)].map((_, j) => (
-                <div key={j} className="w-12 h-12 bg-muted rounded animate-pulse" />
-              ))}
-            </div>
-            <div className="h-4 bg-muted rounded w-20 animate-pulse" />
-          </CardContent>
-        </Card>
+        <article key={i} className="bg-muted/30 rounded-lg p-4 space-y-3">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <div className="flex gap-2">
+            {[...Array(3)].map((_, j) => (
+              <Skeleton key={j} className="w-12 h-12 rounded" />
+            ))}
+          </div>
+          <Skeleton className="h-4 w-20" />
+        </article>
       ))}
     </div>
   );
@@ -889,7 +1012,7 @@ function OutfitsSkeleton() {
       <TabsContent value="recommendations" className="space-y-4">
         <RecommendationsSkeleton />
       </TabsContent>
-      
+
       <TabsContent value="collections" className="space-y-4">
         <CollectionsSkeleton />
       </TabsContent>

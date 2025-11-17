@@ -451,7 +451,7 @@ function WardrobeGrid({ itemsPromise }: { itemsPromise: Promise<any> }) {
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
       {data.items.map((item: any) => (
         <article key={item.id} className="group">
-          <Link to={`/wardrobe/${item.id}`} className="block">
+          <Link to={`/wardrobe/${item.id}`} state={{ from: "/wardrobe" }} className="block">
             <div className="relative">
               <ClothingImageCard
                 filePath={item.image_url}
