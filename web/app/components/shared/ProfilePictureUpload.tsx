@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Camera, X, Upload, Save } from "lucide-react";
+import { Camera, Edit, X, Upload, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFetcher } from "react-router";
@@ -219,6 +219,19 @@ export function ProfilePictureUpload({
           {hasImage && !disabled && !isSubmitting && (
             <div className="absolute inset-0 z-10 bg-transparent group-hover:bg-black/40 transition-colors duration-200 rounded-full flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-2">
+                {(originalImage || editedImage) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-white hover:bg-white/20 border-0 shadow-none"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEditor(true);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
