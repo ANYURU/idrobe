@@ -100,6 +100,12 @@ type Pages = {
   "/api/image-url": {
     params: {};
   };
+  "/api/upload-photo": {
+    params: {};
+  };
+  "/api/remove-avatar": {
+    params: {};
+  };
   "/api/recommendations/interact": {
     params: {};
   };
@@ -134,7 +140,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/auth/login" | "/auth/signup" | "/auth/forgot-password" | "/auth/reset-password" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/*";
+    page: "/" | "/auth/login" | "/auth/signup" | "/auth/forgot-password" | "/auth/reset-password" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/*";
   };
   "routes/guest._layout.tsx": {
     id: "routes/guest._layout";
@@ -260,6 +266,14 @@ type RouteFiles = {
     id: "routes/api/image-url";
     page: "/api/image-url";
   };
+  "routes/api/upload-photo.ts": {
+    id: "routes/api/upload-photo";
+    page: "/api/upload-photo";
+  };
+  "routes/api/remove-avatar.ts": {
+    id: "routes/api/remove-avatar";
+    page: "/api/remove-avatar";
+  };
   "routes/api/recommendations/interact.ts": {
     id: "routes/api/recommendations/interact";
     page: "/api/recommendations/interact";
@@ -323,6 +337,8 @@ type RouteModules = {
   "routes/profile": typeof import("./app/routes/profile.tsx");
   "routes/settings": typeof import("./app/routes/settings.tsx");
   "routes/api/image-url": typeof import("./app/routes/api/image-url.ts");
+  "routes/api/upload-photo": typeof import("./app/routes/api/upload-photo.ts");
+  "routes/api/remove-avatar": typeof import("./app/routes/api/remove-avatar.ts");
   "routes/api/recommendations/interact": typeof import("./app/routes/api/recommendations/interact.ts");
   "routes/api/sync-trends": typeof import("./app/routes/api/sync-trends.ts");
   "routes/api/items/$itemId/favorite": typeof import("./app/routes/api/items/$itemId/favorite.ts");
