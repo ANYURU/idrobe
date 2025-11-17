@@ -38,9 +38,14 @@ export function useActionWithToast<TData = unknown>(actionUrl?: string) {
     method?: 'post' | 'put' | 'patch' | 'delete'
     action?: string
   }) => {
-    const formData = data instanceof FormData ? data : new FormData()
+    let formData: FormData
     
-    if (!(data instanceof FormData)) {
+    if (data instanceof FormData) {
+      // Use the existing FormData directly
+      formData = data
+    } else {
+      // Create new FormData from object
+      formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
           const stringValue = typeof value === 'string' ? value : String(value)

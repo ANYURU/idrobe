@@ -29,6 +29,9 @@ export const ClothingImage = memo(function ClothingImage({
 const imageUrlCache = new Map<string, Promise<string>>();
 
 export function getImageUrl(filePath: string): Promise<string> {
+  if (!filePath) {
+    return Promise.reject(new Error("No file path provided"));
+  }
   if (!imageUrlCache.has(filePath)) {
     imageUrlCache.set(
       filePath,

@@ -1,4 +1,4 @@
-import { ChevronsUpDown, LogOut } from "lucide-react"
+import { ChevronsUpDown, LogOut, User } from "lucide-react"
 import { Form } from "react-router"
 
 import {
@@ -37,7 +37,7 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarFallback className="rounded-lg">{initials}</AvatarFallback>
@@ -69,6 +69,12 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <a href="/profile" className="cursor-pointer">
+                <User />
+                Profile
+              </a>
+            </DropdownMenuItem>
             <Form method="post" action="/auth/signout">
               <DropdownMenuItem asChild>
                 <button type="submit" className="w-full cursor-pointer text-red-600">
