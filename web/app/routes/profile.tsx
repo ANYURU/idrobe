@@ -11,10 +11,10 @@ import { useActionWithToast } from '@/hooks/use-action-with-toast'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Camera, User as UserIcon, Ruler, Sparkles, Scan } from 'lucide-react'
+import { User as UserIcon, Ruler, Sparkles, Scan } from 'lucide-react'
 import { useState } from 'react'
-import { PhotoUpload } from '@/components/shared/PhotoUpload'
 import { ProfilePictureUpload } from '@/components/shared/ProfilePictureUpload'
+import { TryonPictureUpload } from '@/components/shared/TryonPictureUpload'
 import { toast } from 'sonner'
 import type { TablesUpdate } from '@/lib/database.types'
 
@@ -44,7 +44,14 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await requireAuth(request)
   const { supabase } = createClient(request)
   
+  console.log('[PROFILE-LOADER] User authenticated:', user.id)
   const profile = await loadUserProfile(user.id, request)
+  console.log('[PROFILE-LOADER] Profile loaded:', {
+    hasProfile: !!profile,
+    tryonImageUrl: profile?.virtual_tryon_image_url
+  })
+  
+  // TryonImageCard will generate signed URLs on-the-fly
   
   const { data: styleTags } = await supabase
     .from('style_tags')
@@ -80,7 +87,7 @@ export async function action({ request }: Route.ActionArgs) {
   const sustainabilityScore = formData.get('sustainabilityScore') as string
   const stylePreferences = formData.getAll('stylePreferences') as string[]
   const profileImageUrl = formData.get('profileImageUrl') as string
-  const tryonImageUrl = formData.get('tryonImageUrl') as string
+
 
   // Build update object without image URLs initially
   const updateData: TablesUpdate<'user_profiles'> = {
@@ -101,9 +108,7 @@ export async function action({ request }: Route.ActionArgs) {
   if (profileImageUrl) {
     updateData.profile_image_url = profileImageUrl
   }
-  if (tryonImageUrl) {
-    updateData.virtual_tryon_image_url = tryonImageUrl
-  }
+  // tryonImageUrl is handled by upload API directly
 
   const { error: updateError } = await supabase
     .from('user_profiles')
@@ -129,7 +134,8 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
   const [sustainabilityValue, setSustainabilityValue] = useState([profile?.sustainability_score || 50])
   const [selectedStyles, setSelectedStyles] = useState<string[]>(profile?.style_preferences || [])
   const [profileImageUrl, setProfileImageUrl] = useState(profile?.profile_image_url || '')
-  const [tryonImageUrl, setTryonImageUrl] = useState(profile?.virtual_tryon_image_url || '')
+  const [activeTab, setActiveTab] = useState('basic')
+
 
   const formik = useFormik({
     initialValues: {
@@ -158,7 +164,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
         <p className="text-muted-foreground text-sm mt-1">Manage your account and preferences</p>
       </div>
 
-      <Tabs defaultValue="basic" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto bg-muted/50 p-1 rounded-lg">
           <TabsTrigger value="basic" className="flex-col gap-1.5 py-4 px-3 cursor-pointer data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <UserIcon className="w-5 h-5" />
@@ -192,7 +198,7 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
             <div className="text-center">
               <div className="text-xs font-medium">Try-On</div>
               <div className="text-[10px] text-muted-foreground mt-0.5">
-                {tryonImageUrl ? 'Complete' : 'Optional'}
+                {profile?.virtual_tryon_image_url ? 'Complete' : 'Optional'}
               </div>
             </div>
           </TabsTrigger>
@@ -425,66 +431,64 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
         </TabsContent>
 
         <TabsContent value="tryon" className="mt-8">
-          <div className="space-y-6">
+          <div className="space-y-8">
             <section>
               <header className="mb-6">
                 <h2 className="text-sm font-medium">Virtual Try-On Photo</h2>
                 <p className="text-xs text-muted-foreground mt-1">Upload a full-body photo for personalized outfit recommendations</p>
               </header>
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-48 h-72 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
-            {tryonImageUrl ? (
-              <img src={tryonImageUrl} alt="Try-on" className="w-full h-full object-cover" />
-            ) : (
-              <Camera className="w-16 h-16 text-muted-foreground" />
-            )}
-          </div>
-          <PhotoUpload
-            onUpload={(url) => {
-              setTryonImageUrl(url)
-              toast.success('Try-on photo uploaded!')
-            }}
-            onError={(error) => toast.error(error)}
-            bucket="tryon"
-            maxSize={5}
-            className="w-full max-w-md"
-          />
-              <div className="bg-linear-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-lg p-4 w-full">
-                <p className="text-xs font-medium mb-3 text-primary">📸 Tips for best results:</p>
-                <ul className="space-y-2 text-xs text-muted-foreground">
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5 font-medium">•</span>
-                    <span>Stand straight with arms slightly away from body</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5 font-medium">•</span>
-                    <span>Wear fitted clothing to show body shape</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5 font-medium">•</span>
-                    <span>Use good lighting and plain background</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-primary mt-0.5 font-medium">•</span>
-                    <span>Full body visible from head to toe</span>
-                  </li>
-                </ul>
+              <div className="space-y-6">
+                <div className="flex justify-start">
+                  <TryonPictureUpload
+                    currentImageUrl={profile?.virtual_tryon_image_url || ''}
+                    onUpload={() => {
+                      // Handled by upload API
+                    }}
+                    onRemove={() => {
+                      // Handled by remove API
+                    }}
+                    onError={(error) => toast.error(error)}
+                    disabled={isSubmitting}
+                  />
+                </div>
+                <div className="bg-linear-to-r from-primary/5 to-accent/5 border border-primary/10 rounded-lg p-4 w-full">
+                  <p className="text-xs font-medium mb-3 text-primary">📸 Tips for best results:</p>
+                  <ul className="space-y-2 text-xs text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5 font-medium">•</span>
+                      <span>Stand straight with arms slightly away from body</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5 font-medium">•</span>
+                      <span>Wear fitted clothing to show body shape</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5 font-medium">•</span>
+                      <span>Use good lighting and plain background</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-primary mt-0.5 font-medium">•</span>
+                      <span>Full body visible from head to toe</span>
+                    </li>
+                  </ul>
+                </div>
               </div>
-            </div>
-          </section>
-        </div>
+            </section>
+          </div>
         </TabsContent>
       </Tabs>
 
-      <form onSubmit={formik.handleSubmit} className="mt-6">
-        <input type="hidden" name="stylePreferences" value={selectedStyles.join(',')} />
-        <input type="hidden" name="sustainabilityScore" value={sustainabilityValue[0]} />
-        <input type="hidden" name="profileImageUrl" value={profileImageUrl} />
-        <input type="hidden" name="tryonImageUrl" value={tryonImageUrl} />
-        <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
-          {isSubmitting ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </form>
+      {activeTab !== 'tryon' && (
+        <form onSubmit={formik.handleSubmit} className="mt-6">
+          <input type="hidden" name="stylePreferences" value={selectedStyles.join(',')} />
+          <input type="hidden" name="sustainabilityScore" value={sustainabilityValue[0]} />
+          <input type="hidden" name="profileImageUrl" value={profileImageUrl} />
+
+          <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
+            {isSubmitting ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </form>
+      )}
     </div>
   )
 }

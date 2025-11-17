@@ -55,6 +55,7 @@ export default [
   route("api/image-url", "routes/api/image-url.ts"),
   route("api/upload-photo", "routes/api/upload-photo.ts"),
   route("api/remove-avatar", "routes/api/remove-avatar.ts"),
+  route("api/remove-tryon", "routes/api/remove-tryon.ts"),
   route("api/recommendations/interact", "routes/api/recommendations/interact.ts"),
   route("api/sync-trends", "routes/api/sync-trends.ts"),
   route("api/items/:itemId/favorite", "routes/api/items/$itemId/favorite.ts"),
