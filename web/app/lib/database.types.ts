@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -1811,6 +1816,7 @@ export type Database = {
           updated_at: string | null
           usage_reset_date: string | null
           user_id: string
+          virtual_tryon_image_url: string | null
           weight_kg: number | null
         }
         Insert: {
@@ -1840,6 +1846,7 @@ export type Database = {
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id: string
+          virtual_tryon_image_url?: string | null
           weight_kg?: number | null
         }
         Update: {
@@ -1869,6 +1876,7 @@ export type Database = {
           updated_at?: string | null
           usage_reset_date?: string | null
           user_id?: string
+          virtual_tryon_image_url?: string | null
           weight_kg?: number | null
         }
         Relationships: [
@@ -1967,6 +1975,62 @@ export type Database = {
           },
         ]
       }
+      wear_history: {
+        Row: {
+          comfort_rating: number | null
+          confidence_rating: number | null
+          created_at: string | null
+          event_id: string | null
+          id: string
+          item_id: string | null
+          location: string | null
+          notes: string | null
+          occasion_name: string | null
+          outfit_id: string | null
+          user_id: string
+          weather: Json | null
+          worn_date: string
+        }
+        Insert: {
+          comfort_rating?: number | null
+          confidence_rating?: number | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          item_id?: string | null
+          location?: string | null
+          notes?: string | null
+          occasion_name?: string | null
+          outfit_id?: string | null
+          user_id: string
+          weather?: Json | null
+          worn_date?: string
+        }
+        Update: {
+          comfort_rating?: number | null
+          confidence_rating?: number | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          item_id?: string | null
+          location?: string | null
+          notes?: string | null
+          occasion_name?: string | null
+          outfit_id?: string | null
+          user_id?: string
+          weather?: Json | null
+          worn_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wear_history_outfit_id_fkey"
+            columns: ["outfit_id"]
+            isOneToOne: false
+            referencedRelation: "outfit_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       user_wardrobe_analytics: {
@@ -1982,6 +2046,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_style_tags_to_item: {
+        Args: { item_id: string; tag_names: string[] }
+        Returns: undefined
+      }
       add_trending_categories_to_trend: {
         Args: { category_names: string[]; trend_id: string }
         Returns: undefined
@@ -2013,9 +2081,6 @@ export type Database = {
         Args: { amount: number; from_currency: string; to_currency: string }
         Returns: number
       }
-      daitch_mokotoff: { Args: { "": string }; Returns: string[] }
-      dmetaphone: { Args: { "": string }; Returns: string }
-      dmetaphone_alt: { Args: { "": string }; Returns: string }
       find_or_create_category: {
         Args: { category_name: string }
         Returns: string
@@ -2038,6 +2103,7 @@ export type Database = {
           similarity_score: number
         }[]
       }
+      get_active_categories_for_prompt: { Args: never; Returns: Json }
       get_converted_amount: {
         Args: {
           amount: number
@@ -2046,6 +2112,16 @@ export type Database = {
           to_currency: string
         }
         Returns: Json
+      }
+      get_item_wear_history: {
+        Args: { p_item_id: string; p_limit?: number }
+        Returns: {
+          id: string
+          notes: string
+          occasion_name: string
+          weather: Json
+          worn_date: string
+        }[]
       }
       get_trending_categories_for_season: {
         Args: { target_season: string; target_year: number }
@@ -2080,13 +2156,29 @@ export type Database = {
         }
         Returns: undefined
       }
+      mark_item_worn: {
+        Args: {
+          p_item_id: string
+          p_notes?: string
+          p_occasion?: string
+          p_worn_date?: string
+        }
+        Returns: string
+      }
+      mark_outfit_worn: {
+        Args: {
+          p_event_id?: string
+          p_notes?: string
+          p_occasion?: string
+          p_outfit_id: string
+          p_worn_date?: string
+        }
+        Returns: string
+      }
       normalize_enum_value: { Args: { input_value: string }; Returns: string }
       refresh_all_materialized_views: { Args: never; Returns: number }
       refresh_wardrobe_analytics: { Args: never; Returns: undefined }
       schedule_analytics_refresh: { Args: never; Returns: undefined }
-      soundex: { Args: { "": string }; Returns: string }
-      text_soundex: { Args: { "": string }; Returns: string }
-      update_trend_scores: { Args: never; Returns: undefined }
       validate_ai_clothing_analysis: {
         Args: { analysis_json: Json }
         Returns: boolean
@@ -2226,4 +2318,3 @@ export const Constants = {
     Enums: {},
   },
 } as const
-
