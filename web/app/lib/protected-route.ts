@@ -16,6 +16,31 @@ export async function requireAuth(request: Request) {
     throw redirect('/auth/login?error=session_expired', { headers })
   }
   
+  // Check if user account is soft deleted (unless already on recovery page)
+  const url = new URL(request.url)
+  if (url.pathname !== '/recover-account') {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('deleted_at, deletion_scheduled_at')
+      .eq('user_id', user.id)
+      .single()
+    
+    if (profile?.deleted_at) {
+      // Check if recovery period has expired
+      const isExpired = profile.deletion_scheduled_at && 
+        new Date(profile.deletion_scheduled_at) < new Date()
+      
+      if (isExpired) {
+        // Account expired, sign out and redirect to login
+        await supabase.auth.signOut()
+        throw redirect('/auth/login?error=account_expired', { headers })
+      } else {
+        // Account can be recovered
+        throw redirect('/recover-account', { headers })
+      }
+    }
+  }
+  
   return { user, headers }
 }
 
