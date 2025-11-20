@@ -10,6 +10,7 @@ export default [
   layout("routes/auth._layout.tsx", [
     route("auth/login", "routes/auth/login.tsx"),
     route("auth/signup", "routes/auth/signup.tsx"),
+    route("auth/verify-email", "routes/auth/verify-email.tsx"),
     route("auth/forgot-password", "routes/auth/forgot-password.tsx"),
     route("auth/reset-password", "routes/auth/reset-password.tsx"),
     route("auth/confirm", "routes/auth/confirm.tsx"),
@@ -24,6 +25,9 @@ export default [
     route("onboarding/first-recommendation", "routes/onboarding/first-recommendation.tsx"),
     route("onboarding/complete", "routes/onboarding/complete.tsx"),
   ]),
+
+  // Account recovery (special case - authenticated but soft deleted)
+  route("recover-account", "routes/recover-account.tsx"),
 
   // Protected layout (requires authentication)
   layout("routes/_layout.tsx", [

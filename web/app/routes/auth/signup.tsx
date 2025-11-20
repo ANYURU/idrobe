@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 import type { Route } from "./+types/signup";
 import { createClient } from "@/lib/supabase.server";
 import { signupSchema } from "@/lib/schemas";
@@ -7,14 +7,6 @@ import { toFormikValidationSchema } from "zod-formik-adapter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { CheckCircle } from "lucide-react";
 import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -24,7 +16,7 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const { supabase } = createClient(request);
+  const { supabase, headers } = createClient(request);
   const formData = await request.formData();
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -48,11 +40,7 @@ export async function action({ request }: Route.ActionArgs) {
       };
     }
 
-    return {
-      success: true,
-      message:
-        "Account created successfully! Please check your email to verify your account.",
-    };
+    return redirect(`/auth/verify-email?email=${encodeURIComponent(email)}`, { headers });
   } catch (error) {
     return {
       error: "An unexpected error occurred during signup",
@@ -61,7 +49,7 @@ export async function action({ request }: Route.ActionArgs) {
 }
 
 export default function Signup({}: Route.ComponentProps) {
-  const { submit, isSubmitting, success } = useActionWithToast();
+  const { submit, isSubmitting } = useActionWithToast();
 
   const formik = useFormik({
     initialValues: {
@@ -75,40 +63,16 @@ export default function Signup({}: Route.ComponentProps) {
     },
   });
 
-  if (success) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
-        <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border shadow-xl">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
-              <h2 className="text-xl font-semibold">Account created!</h2>
-              <p className="text-muted-foreground">
-                Check your email to verify your account before signing in.
-              </p>
-              <Link
-                to="/auth/login"
-                className="inline-block mt-4 text-blue-600 hover:underline"
-              >
-                Go to Sign In
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
-      <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-border shadow-xl">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">Create account</CardTitle>
-          <CardDescription>
+    <main className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-6 sm:p-6">
+      <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
+        <header className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-semibold">Create account</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Join iDrobe and start building your perfect wardrobe
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </header>
+        <div>
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -159,12 +123,12 @@ export default function Signup({}: Route.ComponentProps) {
 
           <p className="mt-4 text-sm text-center text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/auth/login" className="text-blue-600 hover:underline">
+            <Link to="/auth/login" className="text-primary hover:underline cursor-pointer">
               Sign in
             </Link>
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </main>
   );
 }
