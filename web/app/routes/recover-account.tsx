@@ -23,15 +23,23 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   // Check if recovery period has expired
-  const isExpired = profile.deletion_scheduled_at && 
+  const isExpired =
+    profile.deletion_scheduled_at &&
     new Date(profile.deletion_scheduled_at) < new Date();
 
   return {
     user,
     profile,
     isExpired,
-    daysRemaining: profile.deletion_scheduled_at ? 
-      Math.max(0, Math.ceil((new Date(profile.deletion_scheduled_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 0
+    daysRemaining: profile.deletion_scheduled_at
+      ? Math.max(
+          0,
+          Math.ceil(
+            (new Date(profile.deletion_scheduled_at).getTime() - Date.now()) /
+              (1000 * 60 * 60 * 24)
+          )
+        )
+      : 0,
   };
 }
 
@@ -45,8 +53,8 @@ export async function action({ request }: Route.ActionArgs) {
   const action = formData.get("action");
 
   if (action === "recover_account") {
-    const { data, error } = await supabase.rpc('recover_deleted_account', {
-      target_user_id: user.id
+    const { data, error } = await supabase.rpc("recover_deleted_account", {
+      target_user_id: user.id,
     });
 
     if (error) {
@@ -56,7 +64,10 @@ export async function action({ request }: Route.ActionArgs) {
     if (data) {
       throw replace("/dashboard?recovery=success", { headers });
     } else {
-      return { success: false, error: "Recovery period has expired or account was not found." };
+      return {
+        success: false,
+        error: "Recovery period has expired or account was not found.",
+      };
     }
   }
 
@@ -74,13 +85,18 @@ export default function RecoverAccountPage() {
           <div className="text-center space-y-4">
             <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
             <header>
-              <h1 className="text-xl sm:text-2xl font-semibold">Recovery Period Expired</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold">
+                Recovery Period Expired
+              </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Your account recovery period has expired. Your account and data have been permanently deleted.
+                Your account recovery period has expired. Your account and data
+                have been permanently deleted.
               </p>
             </header>
             <Link to="/auth/signup" className="block">
-              <Button className="w-full cursor-pointer">Create New Account</Button>
+              <Button className="w-full cursor-pointer">
+                Create New Account
+              </Button>
             </Link>
           </div>
         </div>
@@ -93,33 +109,51 @@ export default function RecoverAccountPage() {
       <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
         <div className="text-center space-y-6">
           <header>
-            <h1 className="text-xl sm:text-2xl font-semibold">Recover Your Account</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold">
+              Recover Your Account
+            </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
               Your account was scheduled for deletion on{" "}
-              {profile.deletion_scheduled_at && 
-                new Date(profile.deletion_scheduled_at).toLocaleDateString()
-              }
+              {profile.deletion_scheduled_at &&
+                new Date(profile.deletion_scheduled_at).toLocaleDateString()}
             </p>
           </header>
 
-          <section className="bg-background rounded-lg p-4 border border-border" aria-label="Recovery status">
+          <section
+            className="bg-background rounded-lg p-4 border border-border"
+            aria-label="Recovery status"
+          >
             <p className="text-sm text-muted-foreground">
-              You have <span className="font-semibold text-foreground">{daysRemaining} {daysRemaining === 1 ? 'day' : 'days'}</span> remaining to recover your account.
+              You have{" "}
+              <span className="font-semibold text-foreground">
+                {daysRemaining} {daysRemaining === 1 ? "day" : "days"}
+              </span>{" "}
+              remaining to recover your account.
             </p>
             {profile.deletion_reason && (
               <p className="text-xs text-muted-foreground mt-2">
-                Reason: {profile.deletion_reason.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                Reason:{" "}
+                {profile.deletion_reason
+                  .split("_")
+                  .map(
+                    (word: string) =>
+                      word.charAt(0).toUpperCase() + word.slice(1)
+                  )
+                  .join(" ")}
               </p>
             )}
           </section>
 
-          <form method="post" onSubmit={(e) => {
-            e.preventDefault();
-            const formData = new FormData(e.currentTarget);
-            submit(formData);
-          }}>
+          <form
+            method="post"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              submit(formData);
+            }}
+          >
             <input type="hidden" name="action" value="recover_account" />
-            <Button 
+            <Button
               type="submit"
               className="w-full cursor-pointer"
               disabled={isSubmitting}
