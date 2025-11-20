@@ -2,13 +2,6 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useSubmit, useActionData } from "react-router";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, AlertCircle, Camera } from "lucide-react";
 import { UploadedItem, type Analysis } from "@/components/UploadedItem";
@@ -419,25 +412,22 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
   }, [actionData, navigate]);
 
   return (
-    <div className="p-4">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="text-center space-y-6">
-          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+    <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <header>
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto mb-4">
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-muted rounded"></div>
             <div className="flex-1 h-1 bg-muted rounded"></div>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">
-              Show us your style
-            </h1>
-            <p className="text-muted-foreground">
-              Upload 3-5 of your favorite pieces. Our AI will analyze them
-              instantly!
-            </p>
-          </div>
-        </div>
+          <h1 className="text-xl sm:text-2xl font-semibold text-center">
+            Show us your style
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5 text-center">
+            Upload 3-5 of your favorite pieces. Our AI will analyze them instantly!
+          </p>
+        </header>
 
         {error && (
           <Alert variant="destructive">
@@ -446,18 +436,18 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
           </Alert>
         )}
 
-        <Card className="bg-card border-border shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-foreground">
-              <Camera className="h-5 w-5" />
-              Take or upload photos
-            </CardTitle>
-            <CardDescription>
+        <section className="bg-muted/30 rounded-lg p-4 border border-border" aria-label="Upload photos">
+          <div className="mb-3">
+            <div className="flex items-center gap-2 mb-1">
+              <Camera className="h-4 w-4" />
+              <h2 className="font-semibold">Take or upload photos</h2>
+            </div>
+            <p className="text-sm text-muted-foreground">
               Good lighting and clear photos work best. We'll do the rest!
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-slate-400 transition cursor-pointer">
+            </p>
+          </div>
+          <div className="space-y-4">
+            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-ring transition cursor-pointer">
               <input
                 type="file"
                 multiple
@@ -510,7 +500,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
               <Button
                 onClick={handleContinue}
                 disabled={saving || (analyzedCount === 0 && !hasExistingItems)}
-                className="flex-1"
+                className="flex-1 cursor-pointer"
               >
                 {saving
                   ? "Saving..."
@@ -521,50 +511,49 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
               <Button
                 variant="outline"
                 onClick={() => navigate("/onboarding/first-recommendation")}
+                className="cursor-pointer"
               >
                 Skip for now
               </Button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
 
         {hasExistingItems && (
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-card-foreground">Your Existing Items</CardTitle>
-              <CardDescription>
+          <section className="bg-muted/30 rounded-lg p-4 border border-border" aria-label="Existing items">
+            <div className="mb-3">
+              <h2 className="font-semibold">Your Existing Items</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
                 You already have {existingItems.length} item(s) in your wardrobe
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {existingItems.map((item) => (
-                  <div key={item.id} className="space-y-2">
-                    {item.signed_url && (
-                      <img
-                        src={item.signed_url}
-                        alt={item.name}
-                        className="w-full h-24 object-cover rounded-lg border"
-                      />
-                    )}
-                    <div className="text-xs">
-                      <p className="font-medium truncate">{item.name}</p>
-                      <p className="text-muted-foreground capitalize">
-                        {item.category?.name} • {item.primary_color}
-                      </p>
-                    </div>
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+              {existingItems.map((item) => (
+                <div key={item.id} className="space-y-2">
+                  {item.signed_url && (
+                    <img
+                      src={item.signed_url}
+                      alt={item.name}
+                      className="w-full h-24 object-cover rounded-lg border border-border"
+                    />
+                  )}
+                  <div className="text-xs">
+                    <p className="font-medium truncate">{item.name}</p>
+                    <p className="text-muted-foreground capitalize">
+                      {item.category?.name} • {item.primary_color}
+                    </p>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
         
-        <div className="text-center text-sm text-muted-foreground">
+        <footer className="text-center text-sm text-muted-foreground">
           <p>Don't worry, you can add more items anytime!</p>
-        </div>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
 

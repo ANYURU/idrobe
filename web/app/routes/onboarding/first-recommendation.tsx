@@ -4,11 +4,15 @@ import type { Route } from "./+types/first-recommendation";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/lib/use-toast";
 import type { Tables } from "@/lib/database.types";
+import { Heart, X, Sparkles } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { createClient } from "@/lib/supabase.server";
+import { generateOnboardingRecommendations } from "@/lib/outfit-recommendations";
+import { ClothingImageCard } from "@/components/ClothingImageCard";
 
-// Proper types for recommendations
-type ClothingItem = Tables<'clothing_items'>;
-type UserInteraction = Tables<'user_interactions'>;
-type OutfitRecommendation = Tables<'outfit_recommendations'>;
+type ClothingItem = Tables<"clothing_items">;
+type UserInteraction = Tables<"user_interactions">;
+type OutfitRecommendation = Tables<"outfit_recommendations">;
 
 interface RecommendationWithItems extends OutfitRecommendation {
   name: string;
@@ -17,17 +21,6 @@ interface RecommendationWithItems extends OutfitRecommendation {
   items: ClothingItem[];
   userInteraction: UserInteraction | null;
 }
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Heart, X, Sparkles } from "lucide-react";
-import { createClient } from "@/lib/supabase.server";
-import { generateOnboardingRecommendations } from "@/lib/outfit-recommendations";
-import { ClothingImage } from "@/components/ClothingImage";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
@@ -37,7 +30,6 @@ export async function loader({ request }: Route.LoaderArgs) {
     recommendationsPromise: (async () => {
       const { supabase } = createClient(request);
 
-      // Get user's uploaded items
       const { data: items } = await supabase
         .from("clothing_items")
         .select("*")
@@ -49,7 +41,6 @@ export async function loader({ request }: Route.LoaderArgs) {
       let recommendations: any[] = [];
       let error = null;
 
-      // First check for existing recommendations
       const { data: existingRecs } = await supabase
         .from("outfit_recommendations")
         .select("*")
@@ -57,12 +48,7 @@ export async function loader({ request }: Route.LoaderArgs) {
         .order("created_at", { ascending: false })
         .limit(5);
 
-      console.log("🔍 Found existing recommendations:", existingRecs?.length || 0);
-
       if (existingRecs && existingRecs.length > 0) {
-        console.log("✅ Using existing recommendations:", existingRecs.length);
-
-        // Get interactions separately (more reliable than joins)
         const { data: interactions } = await supabase
           .from("user_interactions")
           .select("recommendation_id, interaction_type_name, interacted_at")
@@ -72,7 +58,6 @@ export async function loader({ request }: Route.LoaderArgs) {
             existingRecs.map((r) => r.id)
           );
 
-        // Use existing recommendations with items
         recommendations = await Promise.all(
           existingRecs.map(async (rec) => {
             const { data: items } = await supabase
@@ -87,8 +72,8 @@ export async function loader({ request }: Route.LoaderArgs) {
 
             return {
               ...rec,
-              name: rec.recommendation_reason || "AI Outfit",
-              description: rec.recommendation_reason || "AI-curated combination",
+              name: `${rec.occasion_name || "Daily"} Outfit`,
+              description: `Perfect for ${rec.occasion_name?.toLowerCase() || "everyday wear"}${rec.mood_name ? ` with a ${rec.mood_name} vibe` : ""}`,
               styling_reason: rec.recommendation_reason,
               items: items || [],
               userInteraction: userInteraction || null,
@@ -96,35 +81,27 @@ export async function loader({ request }: Route.LoaderArgs) {
           })
         );
       } else if (items && items.length >= 2) {
-        console.log(
-          "🤖 Generating new recommendations (found:",
-          existingRecs?.length || 0,
-          "existing)"
-        );
         try {
-          const result = await generateOnboardingRecommendations(user.id, request);
+          const result = await generateOnboardingRecommendations(
+            user.id,
+            request
+          );
           if (result.error) {
             error = result.error;
           } else {
             recommendations = result.recommendations || [];
           }
         } catch (err) {
-          console.error("❌ Recommendation generation failed:", err);
           error = "Failed to generate recommendations";
         }
       }
-
-      const hasInteractions = recommendations?.some((r) => r.userInteraction);
-      console.log(
-        `📊 Loader: ${recommendations?.length || 0} recs, ${hasInteractions ? "with" : "no"} interactions`
-      );
 
       return {
         items: items || [],
         recommendations: recommendations || [],
         error,
       };
-    })()
+    })(),
   };
 }
 
@@ -138,13 +115,10 @@ export async function action({ request }: Route.ActionArgs) {
   const liked = formData.get("liked") === "true";
   const recommendationId = formData.get("recommendation_id") as string;
 
-  console.log(`💾 Saving interaction: ${liked ? "LIKED" : "DISLIKED"}`);
-
   if (!recommendationId) {
     throw new Error("Missing recommendation ID");
   }
 
-  // Save interaction
   const { error } = await supabase.from("user_interactions").insert({
     user_id: user.id,
     recommendation_id: recommendationId,
@@ -152,15 +126,12 @@ export async function action({ request }: Route.ActionArgs) {
   });
 
   if (error) {
-    console.error("❌ Failed to save interaction:", error);
     throw new Error("Failed to save interaction");
   }
 
-  console.log("✅ Interaction saved successfully");
-
-  return { 
-    success: true, 
-    message: liked ? "Thanks for the feedback! 💚" : "Feedback saved! 👍" 
+  return {
+    success: true,
+    message: liked ? "Thanks for the feedback! 💚" : "Feedback saved! 👍",
   };
 }
 
@@ -173,7 +144,7 @@ export default function OnboardingFirstRecommendation({
 
   return (
     <Suspense fallback={<RecommendationsSkeleton />}>
-      <RecommendationsContent 
+      <RecommendationsContent
         recommendationsPromise={loaderData.recommendationsPromise}
         actionData={actionData}
         navigate={navigate}
@@ -183,12 +154,12 @@ export default function OnboardingFirstRecommendation({
   );
 }
 
-function RecommendationsContent({ 
-  recommendationsPromise, 
-  actionData, 
-  navigate, 
-  toast 
-}: { 
+function RecommendationsContent({
+  recommendationsPromise,
+  actionData,
+  navigate,
+  toast,
+}: {
   recommendationsPromise: Promise<any>;
   actionData: any;
   navigate: any;
@@ -202,24 +173,22 @@ function RecommendationsContent({
 
   const [currentRecommendation, setCurrentRecommendation] = useState(0);
 
-  // Show error toast if there's an error
   useEffect(() => {
     if (error) {
       toast.error(error, {
         action: {
-          label: 'Retry',
-          onClick: () => window.location.reload()
-        }
-      })
+          label: "Retry",
+          onClick: () => window.location.reload(),
+        },
+      });
     }
-  }, [error, toast])
+  }, [error, toast]);
 
-  // Show success toast when interaction is saved
   useEffect(() => {
     if (actionData?.success && actionData?.message) {
-      toast.success(actionData.message)
+      toast.success(actionData.message);
     }
-  }, [actionData, toast])
+  }, [actionData, toast]);
 
   const recommendation = recommendations?.[currentRecommendation];
   const currentInteraction =
@@ -231,135 +200,133 @@ function RecommendationsContent({
 
   if (!recommendations || recommendations.length === 0) {
     return (
-      <div className="min-h-screen bg-background p-4">
-        <div className="max-w-2xl mx-auto space-y-8">
-          <div className="text-center space-y-6">
-            <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+      <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+          <header>
+            <div className="flex items-center justify-center gap-3 max-w-md mx-auto mb-6">
               <div className="flex-1 h-1 bg-primary rounded"></div>
               <div className="flex-1 h-1 bg-primary rounded"></div>
               <div className="flex-1 h-1 bg-primary rounded"></div>
               <div className="flex-1 h-1 bg-muted rounded"></div>
             </div>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-foreground">Almost there!</h1>
-              <p className="text-muted-foreground">
-                Upload a few more items to see your first AI recommendation
-              </p>
-            </div>
-          </div>
+            <h1 className="text-2xl font-semibold text-center">
+              Almost there!
+            </h1>
+            <p className="text-muted-foreground mt-1 text-center">
+              Upload a few more items to see your first AI recommendation
+            </p>
+          </header>
 
-          <Card className="bg-card border-border shadow-sm">
-            <CardContent className="pt-6 text-center space-y-4">
-              <Sparkles className="h-12 w-12 text-muted-foreground mx-auto" />
-              <p className="text-muted-foreground">
-                We need at least 2 clothing items to create your first outfit
-                recommendation.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  onClick={() => navigate("/onboarding/upload")}
-                  className="flex-1"
-                >
-                  Upload more items
-                </Button>
-                <Button variant="outline" onClick={handleContinue}>
-                  Skip to dashboard
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <section
+            className="bg-muted/50 rounded-lg p-4 text-center space-y-4 border border-border"
+            aria-label="Upload prompt"
+          >
+            <Sparkles className="h-12 w-12 text-muted-foreground mx-auto" />
+            <p className="text-sm text-muted-foreground">
+              We need at least 2 clothing items to create your first outfit
+              recommendation.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => navigate("/onboarding/upload")}
+                className="flex-1 cursor-pointer"
+              >
+                Upload more items
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleContinue}
+                className="cursor-pointer"
+              >
+                Skip to dashboard
+              </Button>
+            </div>
+          </section>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="text-center space-y-6">
-          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+    <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <header>
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto mb-6">
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-muted rounded"></div>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">Your first AI recommendation!</h1>
-            <p className="text-muted-foreground">
-              Here's what you could wear using your uploaded pieces
-            </p>
-          </div>
-        </div>
+          <h1 className="text-2xl font-semibold text-center">
+            Your first AI recommendation!
+          </h1>
+          <p className="text-muted-foreground mt-1 text-center">
+            Here's what you could wear using your uploaded pieces
+          </p>
+        </header>
 
-        <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="text-center">
-            <CardTitle className="flex items-center justify-center gap-2 text-card-foreground">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Your AI Outfit Recommendations
-            </CardTitle>
-            <CardDescription>
-              {recommendations.length > 1 ? (
-                <span>
-                  Recommendation {currentRecommendation + 1} of{" "}
-                  {recommendations.length}
-                </span>
-              ) : (
-                "Your personalized outfit suggestion"
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Current Recommendation */}
+        <section
+          className="bg-muted/50 rounded-lg p-4 border border-border"
+          aria-label="Outfit recommendations"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h2 className="font-semibold">Your AI Outfit Recommendations</h2>
+            </div>
+            {recommendations.length > 1 && (
+              <p className="text-sm text-muted-foreground">
+                {currentRecommendation + 1} of {recommendations.length}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-6">
             <div className="space-y-4">
-              <div className="text-center">
-                <h3 className="text-xl font-semibold">
+              <header className="bg-background rounded-lg p-4">
+                <h3 className="font-semibold capitalize">
                   {recommendation?.name}
                 </h3>
-                <p className="text-muted-foreground mt-1">
+                <p className="text-sm text-muted-foreground mt-0.5">
                   {recommendation?.description}
                 </p>
-              </div>
+              </header>
 
-              {/* Clothing Items Grid */}
-              <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto">
                 {recommendation?.items?.map((item: any) => (
-                  <Card
-                    key={item.id}
-                    className="overflow-hidden hover:shadow-md transition-shadow"
-                  >
-                    <div className="aspect-square relative">
-                      <ClothingImage
+                  <article key={item.id} className="group cursor-pointer">
+                    <div className="relative">
+                      <ClothingImageCard
                         filePath={item.image_url}
                         alt={item.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-48 object-contain rounded-lg bg-muted/30 group-hover:scale-105 transition-transform"
+                        fallbackClassName="w-full h-48 rounded-lg"
                       />
                     </div>
-                    <div className="p-3">
-                      <p className="font-medium text-sm truncate">
+                    <header className="pt-3">
+                      <h4 className="font-semibold truncate group-hover:text-primary transition-colors">
                         {item.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground capitalize">
+                      </h4>
+                      <p className="text-sm text-muted-foreground capitalize">
                         {item.primary_color}
                       </p>
-                    </div>
-                  </Card>
+                    </header>
+                  </article>
                 )) || []}
               </div>
 
-              {/* Styling Reason */}
-              {recommendation?.styling_reason && (
-                <div className="p-4 bg-accent rounded-lg border border-border">
-                  <p className="text-sm text-accent-foreground">
-                    <span className="font-medium text-primary">
-                      Why this works:
-                    </span>{" "}
-                    {recommendation.styling_reason}
-                  </p>
-                </div>
-              )}
+              {recommendation?.styling_reason &&
+                recommendation.styling_reason !==
+                  recommendation.description && (
+                  <div className="bg-background rounded-lg p-4">
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-2">
+                      Why this works
+                    </p>
+                    <p className="text-sm">{recommendation.styling_reason}</p>
+                  </div>
+                )}
             </div>
 
-            {/* Navigation */}
             <div className="flex items-center justify-between">
               <Button
                 variant="outline"
@@ -368,7 +335,6 @@ function RecommendationsContent({
                   setCurrentRecommendation((prev) => Math.max(0, prev - 1))
                 }
                 disabled={currentRecommendation === 0}
-                className="flex items-center gap-2"
               >
                 ← Previous
               </Button>
@@ -382,7 +348,7 @@ function RecommendationsContent({
                     <button
                       key={index}
                       onClick={() => setCurrentRecommendation(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                      className={`w-3 h-3 rounded-full transition-all cursor-pointer ${
                         index === currentRecommendation
                           ? "bg-primary scale-110"
                           : hasInteraction
@@ -405,20 +371,20 @@ function RecommendationsContent({
                   )
                 }
                 disabled={currentRecommendation === recommendations.length - 1}
-                className="flex items-center gap-2"
               >
                 Next →
               </Button>
             </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-4 pt-4 border-t">
-              <p className="text-center font-medium">
-                What do you think of this outfit?
-              </p>
-              <p className="text-center text-sm text-muted-foreground">
-                Your feedback helps us learn your style (optional)
-              </p>
+            <footer className="space-y-4 pt-4 border-t border-border">
+              <header className="bg-background rounded-lg p-4 text-center">
+                <p className="font-semibold">
+                  What do you think of this outfit?
+                </p>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Your feedback helps us learn your style (optional)
+                </p>
+              </header>
 
               <div className="flex gap-4 justify-center">
                 <Form method="post" className="contents">
@@ -435,19 +401,9 @@ function RecommendationsContent({
                       currentInteraction === "liked" ? "default" : "outline"
                     }
                     size="lg"
-                    data-testid="love-button"
-                    className={`flex items-center gap-2 transition-all ${
-                      currentInteraction === "liked"
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                        : currentInteraction === "disliked"
-                          ? "opacity-50"
-                          : "hover:border-primary hover:text-primary"
-                    }`}
                   >
                     <Heart
-                      className={`h-5 w-5 ${
-                        currentInteraction === "liked" ? "fill-white" : ""
-                      }`}
+                      className={`h-5 w-5 mr-2 ${currentInteraction === "liked" ? "fill-white" : ""}`}
                     />
                     {currentInteraction === "liked" ? "Loved!" : "Love it"}
                   </Button>
@@ -467,30 +423,16 @@ function RecommendationsContent({
                       currentInteraction === "disliked" ? "default" : "outline"
                     }
                     size="lg"
-                    className={`flex items-center gap-2 transition-all ${
-                      currentInteraction === "disliked"
-                        ? "bg-muted text-muted-foreground hover:bg-muted/80"
-                        : currentInteraction === "liked"
-                          ? "opacity-50"
-                          : "hover:border-muted-foreground hover:text-muted-foreground"
-                    }`}
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-5 w-5 mr-2" />
                     {currentInteraction === "disliked" ? "Not for me" : "Pass"}
                   </Button>
                 </Form>
               </div>
 
-              {/* Feedback Message */}
               {currentInteraction && (
-                <div
-                  className={`text-center p-3 rounded-lg transition-all duration-300 ${
-                    currentInteraction === "liked"
-                      ? "bg-accent text-accent-foreground"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                >
-                  <p className="text-sm font-medium">
+                <div className="text-center p-3 bg-background rounded-lg">
+                  <p className="text-sm">
                     {currentInteraction === "liked"
                       ? "💚 We'll remember you love this style combination!"
                       : "👍 Thanks for the feedback - we'll learn from this!"}
@@ -498,15 +440,14 @@ function RecommendationsContent({
                 </div>
               )}
 
-              {/* Feedback Encouragement */}
               {(() => {
                 const ratedCount = recommendations.filter(
                   (r) => r.userInteraction
                 ).length;
                 if (ratedCount >= 1) {
                   return (
-                    <div className="text-center p-3 bg-accent rounded-lg border border-border">
-                      <p className="text-accent-foreground text-sm">
+                    <div className="text-center p-3 bg-background rounded-lg">
+                      <p className="text-sm text-muted-foreground">
                         💡 Thanks for the feedback! This helps us learn your
                         style preferences.
                       </p>
@@ -516,10 +457,9 @@ function RecommendationsContent({
                 return null;
               })()}
 
-              {/* Always visible Continue button */}
               <Button
                 onClick={handleContinue}
-                className="w-full"
+                className="w-full cursor-pointer"
                 variant={
                   recommendations.filter((r) => r.userInteraction).length >= 1
                     ? "default"
@@ -530,67 +470,67 @@ function RecommendationsContent({
                   ? "Continue to Dashboard"
                   : "Skip for now"}
               </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </footer>
+          </div>
+        </section>
 
-
-
-        <div className="text-center text-sm text-muted-foreground">
+        <footer className="text-center text-sm text-muted-foreground">
           <p>
             This is just the beginning - your recommendations will get better as
             we learn your style!
           </p>
-        </div>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }
 
 function RecommendationsSkeleton() {
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="text-center space-y-6">
-          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+    <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto mb-6">
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-primary rounded"></div>
-            <div className="flex-1 h-1 bg-muted rounded animate-pulse"></div>
+            <Skeleton className="flex-1 h-1 rounded" />
           </div>
-          <div className="space-y-2">
-            <div className="h-8 bg-muted rounded w-64 mx-auto animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-48 mx-auto animate-pulse"></div>
-          </div>
+          <Skeleton className="h-8 w-64 mx-auto mb-2" />
+          <Skeleton className="h-4 w-48 mx-auto" />
         </div>
 
-        <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="text-center">
-            <div className="h-6 bg-muted rounded w-48 mx-auto animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-32 mx-auto animate-pulse mt-2"></div>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <section
+          className="bg-muted/50 rounded-lg p-4 border border-border"
+          aria-label="Loading recommendations"
+        >
+          <div className="text-center mb-6">
+            <Skeleton className="h-6 w-48 mx-auto mb-2" />
+            <Skeleton className="h-4 w-32 mx-auto" />
+          </div>
+
+          <div className="space-y-6">
             <div className="space-y-4">
               <div className="text-center space-y-2">
-                <div className="h-6 bg-muted rounded w-40 mx-auto animate-pulse"></div>
-                <div className="h-4 bg-muted rounded w-56 mx-auto animate-pulse"></div>
+                <Skeleton className="h-6 w-40 mx-auto" />
+                <Skeleton className="h-4 w-56 mx-auto" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md mx-auto">
                 {[1, 2].map((i) => (
-                  <Card key={i} className="overflow-hidden">
-                    <div className="aspect-square bg-muted animate-pulse"></div>
-                    <div className="p-3 space-y-2">
-                      <div className="h-4 bg-muted rounded animate-pulse"></div>
-                      <div className="h-3 bg-muted rounded w-16 animate-pulse"></div>
+                  <article key={i} className="space-y-3">
+                    <Skeleton className="h-48 w-full rounded-lg" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
                     </div>
-                  </Card>
+                  </article>
                 ))}
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

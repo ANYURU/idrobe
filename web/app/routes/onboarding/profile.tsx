@@ -4,13 +4,6 @@ import type { Route } from "./+types/profile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, MapPin, User, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase.server";
@@ -135,24 +128,22 @@ export default function OnboardingProfile({
   });
 
   return (
-    <div className="p-4">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="text-center space-y-6">
-          <div className="flex items-center justify-center gap-3 max-w-md mx-auto">
+    <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <header>
+          <div className="flex items-center justify-center gap-3 max-w-md mx-auto mb-4">
             <div className="flex-1 h-1 bg-primary rounded"></div>
             <div className="flex-1 h-1 bg-muted rounded"></div>
             <div className="flex-1 h-1 bg-muted rounded"></div>
             <div className="flex-1 h-1 bg-muted rounded"></div>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-foreground">
-              Let's get to know you
-            </h1>
-            <p className="text-muted-foreground">
-              Just a few quick questions to personalize your experience
-            </p>
-          </div>
-        </div>
+          <h1 className="text-xl sm:text-2xl font-semibold text-center">
+            Let's get to know you
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5 text-center">
+            Just a few quick questions to personalize your experience
+          </p>
+        </header>
 
         {actionData?.error && (
           <Alert variant="destructive">
@@ -161,39 +152,35 @@ export default function OnboardingProfile({
           </Alert>
         )}
 
-        <form onSubmit={formik.handleSubmit} className="space-y-6">
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <User className="h-5 w-5" />
-                What should we call you?
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Input
-                placeholder="Your name"
-                {...formik.getFieldProps("display_name")}
-              />
-              {formik.touched.display_name && formik.errors.display_name && (
-                <p className="text-sm text-red-500 mt-1">
-                  {formik.errors.display_name as string}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+        <form onSubmit={formik.handleSubmit} className="space-y-4">
+          <section className="bg-muted/30 rounded-lg p-4 border border-border" aria-label="Name">
+            <div className="flex items-center gap-2 mb-3">
+              <User className="h-4 w-4" />
+              <h2 className="font-semibold">What should we call you?</h2>
+            </div>
+            <Input
+              placeholder="Your name"
+              {...formik.getFieldProps("display_name")}
+            />
+            {formik.touched.display_name && formik.errors.display_name && (
+              <p className="text-sm text-red-500 mt-1">
+                {formik.errors.display_name as string}
+              </p>
+            )}
+          </section>
 
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <MapPin className="h-5 w-5" />
-                Where are you located?
-              </CardTitle>
-              <CardDescription>
+          <section className="bg-muted/30 rounded-lg p-4 border border-border" aria-label="Location">
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <MapPin className="h-4 w-4" />
+                <h2 className="font-semibold">Where are you located?</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
                 This helps us give you weather-appropriate recommendations
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
+              </p>
+            </div>
+            <div className="space-y-3">
+              <div className="space-y-2">
                 <Label htmlFor="location_city">City</Label>
                 <Input
                   id="location_city"
@@ -207,7 +194,7 @@ export default function OnboardingProfile({
                     </p>
                   )}
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="location_country">Country</Label>
                 <Input
                   id="location_country"
@@ -221,87 +208,81 @@ export default function OnboardingProfile({
                     </p>
                   )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-card-foreground">
-                <Sparkles className="h-5 w-5" />
-                What's your style vibe?
-              </CardTitle>
-              <CardDescription>
+          <section className="bg-muted/30 rounded-lg p-4 border border-border" aria-label="Style vibe">
+            <div className="mb-3">
+              <div className="flex items-center gap-2 mb-1">
+                <Sparkles className="h-4 w-4" />
+                <h2 className="font-semibold">What's your style vibe?</h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
                 Pick the one that speaks to you most
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                {STYLE_VIBES.map((vibe) => (
-                  <button
-                    key={vibe.value}
-                    type="button"
-                    onClick={() =>
-                      formik.setFieldValue("style_vibe", vibe.value)
-                    }
-                    className={`p-4 text-left border rounded-lg transition text-foreground cursor-pointer ${
-                      formik.values.style_vibe === vibe.value
-                        ? "border-ring bg-accent"
-                        : "border-border hover:border-ring"
-                    }`}
-                  >
-                    <div className="font-medium">{vibe.label}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {vibe.description}
-                    </div>
-                  </button>
-                ))}
-              </div>
-              {formik.touched.style_vibe && formik.errors.style_vibe && (
-                <p className="text-sm text-red-500 mt-2">
-                  {formik.errors.style_vibe as string}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {STYLE_VIBES.map((vibe) => (
+                <button
+                  key={vibe.value}
+                  type="button"
+                  onClick={() =>
+                    formik.setFieldValue("style_vibe", vibe.value)
+                  }
+                  className={`p-3 text-left border rounded-lg transition cursor-pointer ${
+                    formik.values.style_vibe === vibe.value
+                      ? "border-ring bg-background"
+                      : "border-border hover:border-ring"
+                  }`}
+                >
+                  <div className="font-medium">{vibe.label}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {vibe.description}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {formik.touched.style_vibe && formik.errors.style_vibe && (
+              <p className="text-sm text-red-500 mt-2">
+                {formik.errors.style_vibe as string}
+              </p>
+            )}
+          </section>
 
-          <Card className="bg-card border-border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-card-foreground">How do you like your clothes to fit?</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 gap-2">
-                {FIT_PREFERENCES.map((fit) => (
-                  <button
-                    key={fit.value}
-                    type="button"
-                    onClick={() =>
-                      formik.setFieldValue("preferred_fit", fit.value)
-                    }
-                    className={`p-3 text-left border rounded-lg transition cursor-pointer ${
-                      formik.values.preferred_fit === fit.value
-                        ? "border-ring bg-accent"
-                        : "border-border hover:border-ring"
-                    }`}
-                  >
-                    <span className="font-medium text-foreground">{fit.label}</span>
-                    <span className="text-muted-foreground ml-2">
-                      - {fit.description}
-                    </span>
-                  </button>
-                ))}
-              </div>
-              {formik.touched.preferred_fit && formik.errors.preferred_fit && (
-                <p className="text-sm text-red-500 mt-2">
-                  {formik.errors.preferred_fit as string}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <section className="bg-muted/30 rounded-lg p-4 border border-border" aria-label="Fit preference">
+            <h2 className="font-semibold mb-3">How do you like your clothes to fit?</h2>
+            <div className="grid grid-cols-1 gap-2">
+              {FIT_PREFERENCES.map((fit) => (
+                <button
+                  key={fit.value}
+                  type="button"
+                  onClick={() =>
+                    formik.setFieldValue("preferred_fit", fit.value)
+                  }
+                  className={`p-3 text-left border rounded-lg transition cursor-pointer ${
+                    formik.values.preferred_fit === fit.value
+                      ? "border-ring bg-background"
+                      : "border-border hover:border-ring"
+                  }`}
+                >
+                  <span className="font-medium">{fit.label}</span>
+                  <span className="text-muted-foreground ml-2">
+                    - {fit.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {formik.touched.preferred_fit && formik.errors.preferred_fit && (
+              <p className="text-sm text-red-500 mt-2">
+                {formik.errors.preferred_fit as string}
+              </p>
+            )}
+          </section>
 
           <Button
             type="submit"
             size="lg"
-            className="w-full"
+            className="w-full cursor-pointer"
             disabled={formik.isSubmitting}
           >
             {formik.isSubmitting ? "Saving..." : (
@@ -315,6 +296,6 @@ export default function OnboardingProfile({
           </Button>
         </form>
       </div>
-    </div>
+    </main>
   );
 }
