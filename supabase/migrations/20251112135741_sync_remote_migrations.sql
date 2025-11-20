@@ -7,7 +7,7 @@ create extension if not exists "pg_trgm" with schema "extensions";
 
 drop trigger if exists "trigger_update_wear_counts" on "public"."wear_history";
 
-drop policy "Service role can manage trends" on "public"."seasonal_trends";
+drop policy if exists "Service role can manage trends" on "public"."seasonal_trends";
 
 drop policy "Users can delete own wear history" on "public"."wear_history";
 

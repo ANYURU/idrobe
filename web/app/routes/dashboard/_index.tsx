@@ -184,7 +184,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
   }, [searchParams, toast]);
 
   return (
-    <main className="@container/main space-y-4">
+    <main className="@container/main px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
       <DashboardContent promises={loaderData} />
     </main>
   );

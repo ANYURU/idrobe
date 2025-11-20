@@ -180,32 +180,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION get_active_categories_for_prompt()
-RETURNS JSON AS $$
-BEGIN
-    RETURN json_build_object(
-        'categories', (
-            SELECT json_agg(json_build_object('id', id, 'name', name))
-            FROM public.clothing_categories 
-            WHERE is_active = TRUE 
-            ORDER BY display_order
-        ),
-        'subcategories', (
-            SELECT json_agg(json_build_object('id', cs.id, 'name', cs.name, 'category_id', cs.category_id))
-            FROM public.clothing_subcategories cs
-            JOIN public.clothing_categories cc ON cs.category_id = cc.id
-            WHERE cs.is_active = TRUE AND cc.is_active = TRUE
-            ORDER BY cc.display_order, cs.name
-        ),
-        'style_tags', (
-            SELECT json_agg(json_build_object('id', id, 'name', name))
-            FROM public.style_tags 
-            WHERE is_active = TRUE 
-            ORDER BY popularity_score DESC
-        )
-    );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Function get_active_categories_for_prompt() is defined in sync migration
 
 -- 11. REFRESH MATERIALIZED VIEW (only if it exists)
 DO $$
