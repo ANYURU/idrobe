@@ -1,7 +1,6 @@
-import { useLoaderData, useFetcher, redirect } from "react-router";
+import { useLoaderData, useFetcher, redirect, Link } from "react-router";
 import type { Route } from "./+types/recover-account";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -69,83 +68,89 @@ export default function RecoverAccountPage() {
 
   if (isExpired) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-            <CardTitle>Recovery Period Expired</CardTitle>
-            <CardDescription>
-              Your account recovery period has expired. Your account and data have been permanently deleted.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild className="w-full">
-              <a href="/signup">Create New Account</a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <main className="min-h-screen flex items-center justify-center px-4 py-6 sm:p-6">
+        <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
+          <div className="text-center space-y-4">
+            <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+            <header>
+              <h1 className="text-xl sm:text-2xl font-semibold">Recovery Period Expired</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Your account recovery period has expired. Your account and data have been permanently deleted.
+              </p>
+            </header>
+            <Link to="/auth/signup" className="block">
+              <Button className="w-full cursor-pointer">Create New Account</Button>
+            </Link>
+          </div>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <RefreshCw className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-          <CardTitle>Recover Your Account</CardTitle>
-          <CardDescription>
-            Your account was scheduled for deletion on{" "}
-            {profile.deletion_scheduled_at && 
-              new Date(profile.deletion_scheduled_at).toLocaleDateString()
-            }
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="text-center">
+    <main className="min-h-screen flex items-center justify-center px-4 py-6 sm:p-6">
+      <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
+        <div className="text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="bg-blue-50 dark:bg-blue-950/20 rounded-full p-3">
+              <RefreshCw className="w-10 h-10 text-blue-600" />
+            </div>
+          </div>
+
+          <header>
+            <h1 className="text-xl sm:text-2xl font-semibold">Recover Your Account</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Your account was scheduled for deletion on{" "}
+              {profile.deletion_scheduled_at && 
+                new Date(profile.deletion_scheduled_at).toLocaleDateString()
+              }
+            </p>
+          </header>
+
+          <section className="bg-background rounded-lg p-4 border border-border" aria-label="Recovery status">
             <p className="text-sm text-muted-foreground">
-              You have <span className="font-semibold text-foreground">{daysRemaining} days</span> remaining to recover your account.
+              You have <span className="font-semibold text-foreground">{daysRemaining} {daysRemaining === 1 ? 'day' : 'days'}</span> remaining to recover your account.
             </p>
             {profile.deletion_reason && (
               <p className="text-xs text-muted-foreground mt-2">
                 Reason: {profile.deletion_reason}
               </p>
             )}
-          </div>
+          </section>
 
           {fetcher.data?.success && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-md">
-              <CheckCircle className="w-4 h-4" />
+            <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-900">
+              <CheckCircle className="w-4 h-4 shrink-0" />
               <span className="text-sm">{fetcher.data.message}</span>
             </div>
           )}
 
           {fetcher.data?.error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-md">
-              <AlertCircle className="w-4 h-4" />
+            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-900">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span className="text-sm">{fetcher.data.error}</span>
             </div>
           )}
 
-          <fetcher.Form method="post" className="space-y-4">
+          <fetcher.Form method="post">
             <Button 
               type="submit" 
               name="action" 
               value="recover_account"
-              className="w-full"
+              className="w-full cursor-pointer"
               disabled={fetcher.state === "submitting"}
             >
               {fetcher.state === "submitting" ? "Recovering..." : "Recover My Account"}
             </Button>
           </fetcher.Form>
 
-          <div className="text-center">
-            <Button variant="ghost" size="sm" asChild>
-              <a href="/">Continue to Homepage</a>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          <footer className="text-center">
+            <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
+              Continue to Dashboard
+            </Link>
+          </footer>
+        </div>
+      </div>
+    </main>
   );
 }
