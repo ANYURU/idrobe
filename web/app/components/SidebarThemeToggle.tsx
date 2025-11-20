@@ -34,15 +34,15 @@ export function SidebarThemeToggle() {
           </SidebarMenuButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent side="top" align="start" className="w-[--radix-popper-anchor-width]">
-          <DropdownMenuItem onClick={() => setTheme('light')}>
+          <DropdownMenuItem onClick={() => setTheme('light')} className="cursor-pointer">
             <Sun className="mr-2 h-4 w-4" />
             Light
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme('warm')}>
+          <DropdownMenuItem onClick={() => setTheme('warm')} className="cursor-pointer">
             <Palette className="mr-2 h-4 w-4" />
             Warm
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme('dark')}>
+          <DropdownMenuItem onClick={() => setTheme('dark')} className="cursor-pointer">
             <Moon className="mr-2 h-4 w-4" />
             Dark
           </DropdownMenuItem>

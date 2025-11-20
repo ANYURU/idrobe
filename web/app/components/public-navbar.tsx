@@ -14,10 +14,10 @@ export function PublicNavbar() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost">
+            <Button variant="ghost" className="cursor-pointer">
               <Link to="/auth/login">Sign In</Link>
             </Button>
-            <Button>
+            <Button className="cursor-pointer">
               <Link to="/auth/signup">Get Started</Link>
             </Button>
           </div>
