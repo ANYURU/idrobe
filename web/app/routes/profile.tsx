@@ -46,7 +46,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   
   const profile = await loadUserProfile(user.id, request)
   
-  // TryonImageCard will generate signed URLs on-the-fly
+
   
   const { data: styleTags } = await supabase
     .from('style_tags')
@@ -80,8 +80,10 @@ export async function action({ request }: Route.ActionArgs) {
   const heightCm = formData.get('heightCm') as string
   const weightKg = formData.get('weightKg') as string
   const sustainabilityScore = formData.get('sustainabilityScore') as string
-  const stylePreferences = formData.getAll('stylePreferences') as string[]
+  const rawStylePreferences = formData.getAll('stylePreferences') as string[]
+  const stylePreferences = [...new Set(rawStylePreferences.filter(Boolean))]
   const profileImageUrl = formData.get('profileImageUrl') as string
+
 
 
   // Build update object without image URLs initially
@@ -103,7 +105,8 @@ export async function action({ request }: Route.ActionArgs) {
   if (profileImageUrl) {
     updateData.profile_image_url = profileImageUrl
   }
-  // tryonImageUrl is handled by upload API directly
+
+
 
   const { error: updateError } = await supabase
     .from('user_profiles')
@@ -127,9 +130,10 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
   const { user, profile, styleTags, fitPreferences } = loaderData
 
   const [sustainabilityValue, setSustainabilityValue] = useState([profile?.sustainability_score || 50])
-  const [selectedStyles, setSelectedStyles] = useState<string[]>(profile?.style_preferences || [])
   const [profileImageUrl, setProfileImageUrl] = useState(profile?.profile_image_url || '')
   const [activeTab, setActiveTab] = useState('basic')
+
+
 
 
   const formik = useFormik({
@@ -148,12 +152,23 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
     enableReinitialize: true,
     validationSchema: toFormikValidationSchema(userProfileSchema.partial()),
     onSubmit: (values) => {
-      submit(values)
+      const submitData = {
+        ...values,
+        sustainabilityScore: String(sustainabilityValue[0]),
+        ...(profileImageUrl && { profileImageUrl })
+      }
+      
+      submit(submitData)
     },
   })
 
+  // Use formik's stylePreferences as the source of truth
+  const selectedStyles = formik.values.stylePreferences
+
+
+
   return (
-    <div className="p-6 max-w-2xl mx-auto">
+    <div className="px-4 py-6 sm:p-6 max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-medium">Profile Settings</h1>
         <p className="text-muted-foreground text-sm mt-1">Manage your account and preferences</p>
@@ -350,29 +365,32 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
             <section>
               <header className="mb-6">
                 <h2 className="text-sm font-medium">Style Preferences</h2>
-                <p className="text-xs text-muted-foreground mt-1">Choose styles that match your taste ({selectedStyles.length} selected)</p>
+                <p className="text-xs text-muted-foreground mt-1">Choose styles that match your taste ({selectedStyles?.length || 0} selected)</p>
               </header>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {styleTags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    type="button"
-                    onClick={() => {
-                      const newStyles = selectedStyles.includes(tag.name)
-                        ? selectedStyles.filter(s => s !== tag.name)
-                        : [...selectedStyles, tag.name]
-                      setSelectedStyles(newStyles)
-                      formik.setFieldValue('stylePreferences', newStyles)
-                    }}
-                    className={`p-3 text-center border rounded-lg transition cursor-pointer text-sm hover:shadow-sm ${
-                      selectedStyles.includes(tag.name)
-                        ? 'border-primary bg-primary/5 text-primary font-medium'
-                        : 'border-border hover:border-primary/50 hover:bg-accent/50'
-                    }`}
-                  >
-                    {tag.name.charAt(0).toUpperCase() + tag.name.slice(1)}
-                  </button>
-                ))}
+                {styleTags.map((tag) => {
+                  const isSelected = (selectedStyles || []).includes(tag.name)
+                  return (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => {
+                        const currentStyles = selectedStyles || []
+                        const newStyles = currentStyles.includes(tag.name)
+                          ? currentStyles.filter((s: string) => s !== tag.name)
+                          : [...currentStyles, tag.name]
+                        formik.setFieldValue('stylePreferences', newStyles)
+                      }}
+                      className={`p-3 text-center border rounded-lg transition cursor-pointer text-sm hover:shadow-sm ${
+                        isSelected
+                          ? 'border-primary bg-primary/5 text-primary font-medium'
+                          : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                      }`}
+                    >
+                      {tag.name.charAt(0).toUpperCase() + tag.name.slice(1)}
+                    </button>
+                  )
+                })}
               </div>
             </section>
 
@@ -475,10 +493,6 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
 
       {activeTab !== 'tryon' && (
         <form onSubmit={formik.handleSubmit} className="mt-6">
-          <input type="hidden" name="stylePreferences" value={selectedStyles.join(',')} />
-          <input type="hidden" name="sustainabilityScore" value={sustainabilityValue[0]} />
-          <input type="hidden" name="profileImageUrl" value={profileImageUrl} />
-
           <Button type="submit" disabled={isSubmitting} className="w-full cursor-pointer">
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </Button>
