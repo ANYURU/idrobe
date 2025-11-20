@@ -1,14 +1,32 @@
-import { Link } from "react-router";
+import { Link, useSearchParams, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import type { Route } from "./+types/_index";
+import { useToast } from "@/lib/use-toast";
+import { useEffect, useRef } from "react";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { requireGuest } = await import('@/lib/protected-route');
+  const { requireGuest } = await import("@/lib/protected-route");
   await requireGuest(request);
   return null;
 }
 
 export default function LandingPage() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const hasShownToast = useRef(false);
+
+  useEffect(() => {
+    const toastType = searchParams.get("toast");
+    if (toastType === "account_deleted" && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success(
+        "Account deletion initiated. You have 30 days to recover your account."
+      );
+      navigate("/", { replace: true });
+    }
+  }, [searchParams, navigate, toast]);
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="text-center">

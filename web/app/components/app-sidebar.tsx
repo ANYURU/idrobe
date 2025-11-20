@@ -34,6 +34,11 @@ const navMain = [
     icon: Palette,
   },
   {
+    title: "Profile",
+    url: "/profile",
+    icon: User,
+  },
+  {
     title: "Trends",
     url: "/trends",
     icon: TrendingUp,
@@ -41,11 +46,6 @@ const navMain = [
 ]
 
 const navSecondary = [
-  {
-    title: "Profile",
-    url: "/profile",
-    icon: User,
-  },
   {
     title: "Settings",
     url: "/settings",

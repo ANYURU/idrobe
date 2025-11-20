@@ -84,6 +84,7 @@ DROP POLICY IF EXISTS "Users can manage own sustainability data" ON public.susta
 -- ============================================================================
 
 -- User Profiles - Single comprehensive policy per operation
+DROP POLICY IF EXISTS "user_profiles_select" ON public.user_profiles;
 CREATE POLICY "user_profiles_select" ON public.user_profiles 
 FOR SELECT USING (user_id = (SELECT auth.uid()));
 

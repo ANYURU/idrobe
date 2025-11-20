@@ -34,7 +34,7 @@ export function useActionWithToast<TData = unknown>(actionUrl?: string) {
     }
   }, [fetcher.data, fetcher.formData, showError, showSuccess])
 
-  const submit = (data: FormData | Record<string, string | number | boolean>, options?: {
+  const submit = (data: FormData | Record<string, string | number | boolean | string[]>, options?: {
     method?: 'post' | 'put' | 'patch' | 'delete'
     action?: string
   }) => {
@@ -48,8 +48,13 @@ export function useActionWithToast<TData = unknown>(actionUrl?: string) {
       formData = new FormData()
       Object.entries(data).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          const stringValue = typeof value === 'string' ? value : String(value)
-          formData.append(key, stringValue)
+          if (Array.isArray(value)) {
+            // Handle arrays by adding multiple entries with the same key
+            value.forEach(item => formData.append(key, String(item)))
+          } else {
+            const stringValue = typeof value === 'string' ? value : String(value)
+            formData.append(key, stringValue)
+          }
         }
       })
     }
