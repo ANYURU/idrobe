@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { Link, redirect, useSearchParams } from "react-router";
+import { Link, replace, useSearchParams } from "react-router";
 import { createClient } from "@/lib/supabase.server";
 import type { Route } from "./+types/login";
 import { loginSchema } from "@/lib/schemas";
@@ -36,7 +36,7 @@ export async function action({ request }: Route.ActionArgs) {
     };
   }
 
-  throw redirect("/dashboard?login=success", { headers });
+  throw replace("/dashboard?login=success", { headers });
 }
 
 export default function Login({}: Route.ComponentProps) {

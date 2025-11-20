@@ -1,7 +1,8 @@
-import { useLoaderData, useFetcher, redirect, Link } from "react-router";
+import { useLoaderData, redirect, replace, Link } from "react-router";
 import type { Route } from "./+types/recover-account";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
+import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
@@ -38,7 +39,7 @@ export async function action({ request }: Route.ActionArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
   const { user } = await requireAuth(request);
   const { createClient } = await import("@/lib/supabase.server");
-  const { supabase } = createClient(request);
+  const { supabase, headers } = createClient(request);
 
   const formData = await request.formData();
   const action = formData.get("action");
@@ -49,12 +50,11 @@ export async function action({ request }: Route.ActionArgs) {
     });
 
     if (error) {
-      console.log("Error: ", error)
       return { success: false, error: error.message };
     }
 
     if (data) {
-      return { success: true, message: "Account recovered successfully!", redirect: "/dashboard" };
+      throw replace("/dashboard?recovery=success", { headers });
     } else {
       return { success: false, error: "Recovery period has expired or account was not found." };
     }
@@ -65,7 +65,7 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function RecoverAccountPage() {
   const { profile, isExpired, daysRemaining } = useLoaderData<typeof loader>();
-  const fetcher = useFetcher();
+  const { submit, isSubmitting } = useActionWithToast();
 
   if (isExpired) {
     return (
@@ -113,31 +113,20 @@ export default function RecoverAccountPage() {
             )}
           </section>
 
-          {fetcher.data?.success && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-300 rounded-lg border border-green-200 dark:border-green-900">
-              <CheckCircle className="w-4 h-4 shrink-0" />
-              <span className="text-sm">{fetcher.data.message}</span>
-            </div>
-          )}
-
-          {fetcher.data?.error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-300 rounded-lg border border-red-200 dark:border-red-900">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span className="text-sm">{fetcher.data.error}</span>
-            </div>
-          )}
-
-          <fetcher.Form method="post">
+          <form method="post" onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            submit(formData);
+          }}>
+            <input type="hidden" name="action" value="recover_account" />
             <Button 
-              type="submit" 
-              name="action" 
-              value="recover_account"
+              type="submit"
               className="w-full cursor-pointer"
-              disabled={fetcher.state === "submitting"}
+              disabled={isSubmitting}
             >
-              {fetcher.state === "submitting" ? "Recovering..." : "Recover My Account"}
+              {isSubmitting ? "Recovering..." : "Recover My Account"}
             </Button>
-          </fetcher.Form>
+          </form>
         </div>
       </div>
     </main>

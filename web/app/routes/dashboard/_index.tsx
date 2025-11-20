@@ -11,7 +11,7 @@ import {
   TrendingDown,
   CheckCircle,
 } from "lucide-react";
-import { Link, redirect, useSearchParams } from "react-router";
+import { Link, redirect, useSearchParams, useNavigate } from "react-router";
 import { loadDashboardData } from "@/lib/loaders";
 import { ClothingThumbnail } from "@/components/ClothingThumbnail";
 import { OutfitRecommendation } from "@/components/OutfitRecommendation";
@@ -171,17 +171,22 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const toast = useToast();
   const hasShownToast = useRef(false);
 
   useEffect(() => {
     if (searchParams.get("login") === "success" && !hasShownToast.current) {
-      toast.success("Welcome back!");
       hasShownToast.current = true;
-      // Clean URL without reload
-      window.history.replaceState({}, "", "/");
+      toast.success("Welcome back!");
+      navigate("/", { replace: true });
     }
-  }, [searchParams, toast]);
+    if (searchParams.get("recovery") === "success" && !hasShownToast.current) {
+      hasShownToast.current = true;
+      toast.success("Account recovered successfully!");
+      navigate("/", { replace: true });
+    }
+  }, [searchParams, navigate, toast]);
 
   return (
     <main className="@container/main px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
