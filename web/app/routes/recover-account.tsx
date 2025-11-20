@@ -1,7 +1,7 @@
 import { useLoaderData, useFetcher, redirect, Link } from "react-router";
 import type { Route } from "./+types/recover-account";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
@@ -49,6 +49,7 @@ export async function action({ request }: Route.ActionArgs) {
     });
 
     if (error) {
+      console.log("Error: ", error)
       return { success: false, error: error.message };
     }
 
@@ -91,15 +92,9 @@ export default function RecoverAccountPage() {
     <main className="min-h-screen flex items-center justify-center px-4 py-6 sm:p-6">
       <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
         <div className="text-center space-y-6">
-          <div className="flex justify-center">
-            <div className="bg-blue-50 dark:bg-blue-950/20 rounded-full p-3">
-              <RefreshCw className="w-10 h-10 text-blue-600" />
-            </div>
-          </div>
-
           <header>
             <h1 className="text-xl sm:text-2xl font-semibold">Recover Your Account</h1>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-0.5">
               Your account was scheduled for deletion on{" "}
               {profile.deletion_scheduled_at && 
                 new Date(profile.deletion_scheduled_at).toLocaleDateString()
@@ -113,7 +108,7 @@ export default function RecoverAccountPage() {
             </p>
             {profile.deletion_reason && (
               <p className="text-xs text-muted-foreground mt-2">
-                Reason: {profile.deletion_reason}
+                Reason: {profile.deletion_reason.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
               </p>
             )}
           </section>
@@ -143,12 +138,6 @@ export default function RecoverAccountPage() {
               {fetcher.state === "submitting" ? "Recovering..." : "Recover My Account"}
             </Button>
           </fetcher.Form>
-
-          <footer className="text-center">
-            <Link to="/dashboard" className="text-sm text-muted-foreground hover:text-foreground cursor-pointer">
-              Continue to Dashboard
-            </Link>
-          </footer>
         </div>
       </div>
     </main>
