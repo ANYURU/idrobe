@@ -27,7 +27,7 @@ export function SidebarThemeToggle() {
     <SidebarMenuItem>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <SidebarMenuButton className="hover:cursor-pointer">
+          <SidebarMenuButton className="hover:cursor-pointer" suppressHydrationWarning>
             {getThemeIcon()}
             <span>{getThemeLabel()} Mode</span>
             <ChevronUp className="ml-auto" />
