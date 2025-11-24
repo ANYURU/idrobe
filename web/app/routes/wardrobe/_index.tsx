@@ -1,7 +1,8 @@
 import { useSearchParams, useLoaderData, useFetcher } from "react-router";
-import { useState, useEffect, Suspense, use } from "react";
+import { useState, useEffect, useRef, Suspense, use } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/lib/use-toast";
 
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -161,10 +162,26 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function WardrobePage() {
   const loaderData = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const toast = useToast();
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebounce(searchInput, 500);
   const fetcher = useFetcher<typeof loader>();
+  const hasShownSuccessToastRef = useRef(false);
+
+  // Show success toast when items are added
+  useEffect(() => {
+    if (searchParams.get('success') === 'items-added' && !hasShownSuccessToastRef.current) {
+      const count = searchParams.get('count') || 'Items';
+      toast.success(`${count} ${count === '1' ? 'item' : 'items'} successfully added to wardrobe!`);
+      hasShownSuccessToastRef.current = true;
+      // Clean up URL
+      const params = new URLSearchParams(searchParams);
+      params.delete('success');
+      params.delete('count');
+      setSearchParams(params, { replace: true });
+    }
+  }, [searchParams, toast, setSearchParams]);
 
   // Use fetcher data if available, otherwise use initial loader data
   const itemsPromise = fetcher.data?.itemsPromise || loaderData.itemsPromise;

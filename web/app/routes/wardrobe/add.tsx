@@ -1,17 +1,10 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { useNavigate, useSubmit, useActionData, redirect } from "react-router";
+import { useState, useRef, useCallback } from "react";
+import { useNavigate, redirect } from "react-router";
 import type { Route } from "./+types/add";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Upload, Camera } from "lucide-react";
 import { useToast } from "@/lib/use-toast";
-import { UploadedItem, type Analysis } from "@/components/UploadedItem";
+import { WardrobeUploadedItem, type Analysis } from "@/components/WardrobeUploadedItem";
 import { createClient } from "@/lib/supabase.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -316,8 +309,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     console.log(`[WARDROBE-ADD] All items saved successfully`);
-    // For redirect actions, we can't show toast, but we could add a success param
-    return redirect("/wardrobe?success=items-added");
+    return redirect(`/wardrobe?success=items-added&count=${savedItems.length}`);
   } catch (error) {
     console.error("[WARDROBE-ADD] Fatal error:", error);
     console.error(
@@ -333,17 +325,13 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function AddItemPage({}: Route.ComponentProps) {
   const navigate = useNavigate();
-  const submit = useSubmit();
   const toast = useToast();
-  const actionData = useActionData() as
-    | { success?: boolean; error?: string }
-    | undefined;
   const [files, setFiles] = useState<File[]>([]);
-  const [saving, setSaving] = useState(false);
   const [analyzedItems, setAnalyzedItems] = useState<boolean[]>([]);
-  const itemRefs = useRef<({ getAnalysis: () => Analysis | null } | null)[]>(
-    []
-  );
+  const [isSaving, setIsSaving] = useState(false);
+  const itemRefs = useRef<({ getAnalysis: () => Analysis | null } | null)[]>([]);
+
+
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -391,6 +379,8 @@ export default function AddItemPage({}: Route.ComponentProps) {
   const analyzedCount = analyzedItems.filter(Boolean).length;
 
   const handleSave = () => {
+    if (isSaving) return;
+    
     console.log("[CLIENT] Starting save process");
 
     // Get analysis from each component via refs
@@ -420,7 +410,6 @@ export default function AddItemPage({}: Route.ComponentProps) {
     }
 
     console.log("[CLIENT] Starting save process");
-    setSaving(true);
 
     const formData = new FormData();
     analyzedItemsData.forEach(({ file }, index) => {
@@ -438,69 +427,69 @@ export default function AddItemPage({}: Route.ComponentProps) {
     formData.append("analyses", analysesJson);
 
     console.log("[CLIENT] Submitting form data");
-    submit(formData, {
-      method: "POST",
-      encType: "multipart/form-data",
-    });
+    setIsSaving(true);
+    
+    // Use fetch to submit and handle redirect manually
+    fetch('/wardrobe/add', {
+      method: 'POST',
+      body: formData,
+    })
+      .then(async (response) => {
+        if (response.redirected) {
+          // Follow the redirect
+          window.location.href = response.url;
+        } else if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || 'Failed to save items');
+        }
+      })
+      .catch((error) => {
+        console.error('[CLIENT] Save failed:', error);
+        setIsSaving(false);
+        toast.error(error.message, {
+          action: {
+            label: 'Retry',
+            onClick: () => window.location.reload()
+          }
+        });
+      });
   };
 
-  // Handle action response
-  useEffect(() => {
-    if (actionData) {
-      console.log("[CLIENT] Action response received:", actionData);
-    }
-
-    if (actionData?.error) {
-      console.error("[CLIENT] Save failed:", actionData.error);
-      toast.error(actionData.error, {
-        action: {
-          label: 'Retry',
-          onClick: () => window.location.reload()
-        }
-      });
-      setSaving(false);
-    }
-  }, [actionData, navigate, toast]);
-
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold">
+    <main className="min-h-screen bg-background p-4 sm:p-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <header className="space-y-2">
+          <h1 className="text-xl sm:text-2xl font-semibold">
             Add Items to Wardrobe
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Upload multiple clothing items and let AI analyze them instantly!
           </p>
-        </div>
+        </header>
 
+        <section className="bg-muted/30 rounded-lg p-4 sm:p-6 border border-border space-y-4">
+            <div>
+              <h2 className="font-semibold mb-1 flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                Upload photos
+              </h2>
+              <p className="text-sm text-muted-foreground mb-4">
+                Select multiple images for batch processing. Good lighting works best!
+              </p>
+            </div>
 
-
-        <Card className="bg-card/80 backdrop-blur-sm border-border shadow-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-card-foreground">
-              <Camera className="h-5 w-5" />
-              Upload photos
-            </CardTitle>
-            <CardDescription>
-              Select multiple images for batch processing. Good lighting works
-              best!
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-border/80 transition">
+            <div className="border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center hover:border-primary/50 transition">
               <input
                 type="file"
                 multiple
                 accept="image/*"
                 onChange={handleFileSelect}
-                disabled={saving}
                 className="hidden"
                 id="file-input"
               />
               <label htmlFor="file-input" className="cursor-pointer block">
                 <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="font-medium">Click to upload or drag and drop</p>
+                <p className="text-sm font-medium">Click to upload or drag and drop</p>
                 <p className="text-sm text-muted-foreground">
                   PNG, JPG, WebP up to 5MB each
                 </p>
@@ -510,7 +499,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
             {files.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="font-medium">{files.length} item(s) uploaded</p>
+                  <p className="text-sm font-medium">{files.length} item(s) uploaded</p>
                   {analyzedCount < files.length && (
                     <p className="text-sm text-muted-foreground">
                       {analyzedCount} of {files.length} analyzed
@@ -524,7 +513,7 @@ export default function AddItemPage({}: Route.ComponentProps) {
                 </div>
                 <div className="space-y-2">
                   {files.map((file, index) => (
-                    <UploadedItem
+                    <WardrobeUploadedItem
                       key={`${file.name}-${file.size}-${index}`}
                       index={index}
                       ref={(el) => {
@@ -542,24 +531,21 @@ export default function AddItemPage({}: Route.ComponentProps) {
             <div className="flex gap-3">
               <Button
                 onClick={handleSave}
-                disabled={saving || analyzedCount === 0}
-                className="flex-1"
+                disabled={analyzedCount === 0 || isSaving}
+                className="flex-1 cursor-pointer"
               >
-                {saving
-                  ? "Saving..."
-                  : `Save ${analyzedCount} items to wardrobe`}
+                {isSaving ? "Saving..." : `Save ${analyzedCount} items to wardrobe`}
               </Button>
-              <Button variant="outline" onClick={() => navigate("/wardrobe")}>
+              <Button variant="outline" onClick={() => navigate("/wardrobe")} disabled={isSaving} className="cursor-pointer">
                 Cancel
               </Button>
             </div>
-          </CardContent>
-        </Card>
+        </section>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <footer className="text-center text-sm text-muted-foreground">
           <p>AI will analyze each item automatically after upload</p>
-        </div>
+        </footer>
       </div>
-    </div>
+    </main>
   );
 }

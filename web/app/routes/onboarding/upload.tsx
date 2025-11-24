@@ -4,8 +4,9 @@ import type { LoaderFunctionArgs, ActionFunctionArgs } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, AlertCircle, Camera } from "lucide-react";
-import { UploadedItem, type Analysis } from "@/components/UploadedItem";
+import { OnboardingUploadedItem, type Analysis } from "@/components/OnboardingUploadedItem";
 import type { Tables } from "@/lib/database.types";
+import { useToast } from "@/lib/use-toast";
 
 type ClothingItem = Tables<'clothing_items'> & {
   category?: { name: string } | null;
@@ -295,15 +296,31 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function OnboardingUpload({ loaderData }: { loaderData: { items: ClothingItem[] } }) {
   const navigate = useNavigate();
   const submit = useSubmit();
+  const toast = useToast();
   const actionData = useActionData() as { success?: boolean; error?: string } | undefined;
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [analyzedItems, setAnalyzedItems] = useState<boolean[]>([]);
   const itemRefs = useRef<({ getAnalysis: () => Analysis | null } | null)[]>([]);
+  const hasShownSuccessToastRef = useRef(false);
   
   const existingItems = loaderData?.items || [];
   const hasExistingItems = existingItems.length > 0;
+
+  // Handle action response
+  useEffect(() => {
+    if (actionData?.success && !hasShownSuccessToastRef.current) {
+      const count = analyzedItems.filter(Boolean).length;
+      toast.success(`${count} ${count === 1 ? 'item' : 'items'} added to your wardrobe!`);
+      hasShownSuccessToastRef.current = true;
+      navigate("/onboarding/first-recommendation");
+    } else if (actionData?.error) {
+      setError(actionData.error);
+      toast.error(actionData.error);
+      setIsSaving(false);
+    }
+  }, [actionData, navigate, analyzedItems]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -346,6 +363,8 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
   const analyzedCount = analyzedItems.filter(Boolean).length;
 
   const handleContinue = () => {
+    if (isSaving) return;
+    
     console.log("[CLIENT] Starting continue process");
     
     // Get analysis from each component via refs
@@ -376,7 +395,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
     }
 
     console.log("[CLIENT] Starting save process");
-    setSaving(true);
+    setIsSaving(true);
 
     const formData = new FormData();
     analyzedItemsData.forEach(({ file }, index) => {
@@ -395,21 +414,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
     });
   };
 
-  // Handle action response
-  useEffect(() => {
-    if (actionData) {
-      console.log("[CLIENT] Action response received:", actionData);
-    }
-    
-    if (actionData?.success) {
-      console.log("[CLIENT] Save successful, navigating to next step");
-      navigate("/onboarding/first-recommendation");
-    } else if (actionData?.error) {
-      console.error("[CLIENT] Save failed:", actionData.error);
-      setError(actionData.error);
-      setSaving(false);
-    }
-  }, [actionData, navigate]);
+
 
   return (
     <main className="px-4 py-6 sm:p-6 space-y-4 sm:space-y-6">
@@ -453,7 +458,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
                 multiple
                 accept="image/*"
                 onChange={handleFileSelect}
-                disabled={saving}
+                disabled={isSaving}
                 className="hidden"
                 id="file-input"
               />
@@ -483,7 +488,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
                 </div>
                 <div className="space-y-2">
                   {files.map((file, index) => (
-                    <UploadedItem
+                    <OnboardingUploadedItem
                       key={`${file.name}-${file.size}-${index}`}
                       index={index}
                       ref={(el) => { itemRefs.current[index] = el; }}
@@ -499,10 +504,10 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
             <div className="flex gap-3">
               <Button
                 onClick={handleContinue}
-                disabled={saving || (analyzedCount === 0 && !hasExistingItems)}
+                disabled={isSaving || (analyzedCount === 0 && !hasExistingItems)}
                 className="flex-1 cursor-pointer"
               >
-                {saving
+                {isSaving
                   ? "Saving..."
                   : hasExistingItems && analyzedCount === 0
                   ? "Continue with existing items"
@@ -511,6 +516,7 @@ export default function OnboardingUpload({ loaderData }: { loaderData: { items: 
               <Button
                 variant="outline"
                 onClick={() => navigate("/onboarding/first-recommendation")}
+                disabled={isSaving}
                 className="cursor-pointer"
               >
                 Skip for now
