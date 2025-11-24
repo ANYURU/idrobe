@@ -53,6 +53,9 @@ type Pages = {
   "/recover-account": {
     params: {};
   };
+  "/changelog": {
+    params: {};
+  };
   "/dashboard": {
     params: {};
   };
@@ -149,7 +152,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-password" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/recover-account" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/*";
+    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-password" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/recover-account" | "/changelog" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/*";
   };
   "routes/guest._layout.tsx": {
     id: "routes/guest._layout";
@@ -218,6 +221,10 @@ type RouteFiles = {
   "routes/recover-account.tsx": {
     id: "routes/recover-account";
     page: "/recover-account";
+  };
+  "routes/changelog.tsx": {
+    id: "routes/changelog";
+    page: "/changelog";
   };
   "routes/_layout.tsx": {
     id: "routes/_layout";
@@ -344,6 +351,7 @@ type RouteModules = {
   "routes/onboarding/first-recommendation": typeof import("./app/routes/onboarding/first-recommendation.tsx");
   "routes/onboarding/complete": typeof import("./app/routes/onboarding/complete.tsx");
   "routes/recover-account": typeof import("./app/routes/recover-account.tsx");
+  "routes/changelog": typeof import("./app/routes/changelog.tsx");
   "routes/_layout": typeof import("./app/routes/_layout.tsx");
   "routes/dashboard/_index": typeof import("./app/routes/dashboard/_index.tsx");
   "routes/wardrobe/_index": typeof import("./app/routes/wardrobe/_index.tsx");

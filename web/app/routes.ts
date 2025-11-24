@@ -29,6 +29,9 @@ export default [
   // Account recovery (special case - authenticated but soft deleted)
   route("recover-account", "routes/recover-account.tsx"),
 
+  // Public routes
+  route("changelog", "routes/changelog.tsx"),
+
   // Protected layout (requires authentication)
   layout("routes/_layout.tsx", [
     route("dashboard", "routes/dashboard/_index.tsx"),
