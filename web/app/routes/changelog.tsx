@@ -1,6 +1,7 @@
 import { Suspense, use, lazy } from "react";
-import { useLoaderData } from "react-router";
+import { useLoaderData, Link } from "react-router";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 interface ChangelogEntry {
   slug: string;
@@ -38,18 +39,29 @@ export async function loader() {
 
 export default function ChangelogPage() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b border-border/50">
+    <main className="min-h-screen bg-background">
+      <header className="border-b border-border/50">
         <div className="max-w-5xl mx-auto">
-          <div className="p-6">
+          <div className="p-6 flex items-center justify-between">
             <h1 className="text-3xl font-semibold tracking-tight">Changelog</h1>
+            <nav className="flex items-center gap-4">
+              <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+                Home
+              </Link>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/auth/login">Sign In</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link to="/auth/signup">Sign Up</Link>
+              </Button>
+            </nav>
           </div>
         </div>
-      </div>
+      </header>
       <Suspense fallback={<ChangelogSkeleton />}>
         <ChangelogContent />
       </Suspense>
-    </div>
+    </main>
   );
 }
 
@@ -67,7 +79,7 @@ function ChangelogContent() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-6 lg:px-10 pt-10">
+    <section className="max-w-5xl mx-auto px-6 lg:px-10 pt-10">
       <div className="relative">
         {changelogs.map((changelog: ChangelogEntry) => {
           const Content = lazy(
@@ -75,10 +87,10 @@ function ChangelogContent() {
           );
 
           return (
-            <div key={changelog.slug} className="relative">
+            <article key={changelog.slug} className="relative">
               <div className="flex flex-col md:flex-row gap-y-6">
                 {/* Left side - Date & Version */}
-                <div className="md:w-48 shrink-0">
+                <aside className="md:w-48 shrink-0">
                   <div className="md:sticky md:top-8 pb-10">
                     <time className="text-sm font-medium text-muted-foreground block mb-3">
                       {formatDate(changelog.date)}
@@ -90,7 +102,7 @@ function ChangelogContent() {
                       </div>
                     )}
                   </div>
-                </div>
+                </aside>
 
                 {/* Right side - Content */}
                 <div className="flex-1 md:pl-8 relative pb-10">
@@ -101,7 +113,7 @@ function ChangelogContent() {
                   </div>
 
                   <div className="space-y-6">
-                    <div className="relative z-10 flex flex-col gap-2">
+                    <header className="relative z-10 flex flex-col gap-2">
                       <h2 className="text-2xl font-semibold tracking-tight">
                         {changelog.title}
                       </h2>
@@ -119,8 +131,8 @@ function ChangelogContent() {
                           ))}
                         </div>
                       )}
-                    </div>
-                    <div className="prose dark:prose-invert max-w-none prose-headings:scroll-mt-8 prose-headings:font-semibold prose-a:no-underline prose-headings:tracking-tight prose-p:tracking-tight">
+                    </header>
+                    <section className="prose dark:prose-invert max-w-none prose-headings:scroll-mt-8 prose-headings:font-semibold prose-a:no-underline prose-headings:tracking-tight prose-p:tracking-tight">
                       <Suspense
                         fallback={
                           <div className="text-sm text-muted-foreground">
@@ -130,15 +142,15 @@ function ChangelogContent() {
                       >
                         <Content />
                       </Suspense>
-                    </div>
+                    </section>
                   </div>
                 </div>
               </div>
-            </div>
+            </article>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
 
