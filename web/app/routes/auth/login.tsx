@@ -18,25 +18,32 @@ export async function loader({ request }: Route.LoaderArgs) {
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const { supabase, headers } = createClient(request);
+  try {
+    const { supabase, headers } = createClient(request);
 
-  const formData = await request.formData();
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
+    const formData = await request.formData();
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-  const { error: authError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (authError) {
+    if (authError) {
+      return {
+        success: false,
+        error: authError.message,
+      };
+    }
+
+    return replace("/dashboard?login=success", { headers });
+  } catch (error) {
     return {
       success: false,
-      error: authError.message,
+      error: "An unexpected error occurred. Please try again.",
     };
   }
-
-  throw replace("/dashboard?login=success", { headers });
 }
 
 export default function Login({}: Route.ComponentProps) {
@@ -46,9 +53,9 @@ export default function Login({}: Route.ComponentProps) {
   const hasShownToast = useRef(false);
 
   useEffect(() => {
-    const error = searchParams.get('error');
-    if (error === 'session_expired' && !hasShownToast.current) {
-      toast.error('Your session has expired. Please sign in again.');
+    const error = searchParams.get("error");
+    if (error === "session_expired" && !hasShownToast.current) {
+      toast.error("Your session has expired. Please sign in again.");
       hasShownToast.current = true;
     }
   }, [searchParams, toast]);
@@ -69,7 +76,9 @@ export default function Login({}: Route.ComponentProps) {
       <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
         <header className="mb-6">
           <h1 className="text-xl sm:text-2xl font-semibold">Welcome back</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Sign in to your iDrobe account</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Sign in to your iDrobe account
+          </p>
         </header>
         <div>
           <form onSubmit={formik.handleSubmit} className="space-y-4">
@@ -113,7 +122,10 @@ export default function Login({}: Route.ComponentProps) {
             </Link>
             <p className="text-muted-foreground">
               Don't have an account?{" "}
-              <Link to="/auth/signup" className="text-primary hover:underline cursor-pointer">
+              <Link
+                to="/auth/signup"
+                className="text-primary hover:underline cursor-pointer"
+              >
                 Sign up
               </Link>
             </p>
