@@ -1,45 +1,67 @@
-import { useFormik } from 'formik'
-import { Link, redirect } from 'react-router'
-import type { Route } from './+types/forgot-password'
-import { createClient } from '@/lib/supabase.server'
-import { forgotPasswordSchema } from '@/lib/schemas'
-import { toFormikValidationSchema } from 'zod-formik-adapter'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useActionWithToast } from '@/hooks/use-action-with-toast'
+import { useFormik } from "formik";
+import { Link, redirect } from "react-router";
+import type { Route } from "./+types/forgot-password";
+import { createClient } from "@/lib/supabase.server";
+import { forgotPasswordSchema } from "@/lib/schemas";
+import { toFormikValidationSchema } from "zod-formik-adapter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const { requireGuest } = await import('@/lib/protected-route');
+  const { requireGuest } = await import("@/lib/protected-route");
   await requireGuest(request);
   return null;
 }
 
 export async function action({ request }: Route.ActionArgs) {
-  const formData = await request.formData()
-  const email = formData.get('email') as string
+  const { supabase, headers } = createClient(request);
+  const formData = await request.formData();
+  const email = formData.get("email") as string;
 
-  const { supabase } = createClient(request)
-  const { error: resetError } = await supabase.auth.resetPasswordForEmail(email)
-  if (resetError) {
-    return { success: false, error: resetError.message }
+  try {
+    const url = new URL(request.url);
+    const baseUrl = `${url.protocol}//${url.host}`;
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+      email,
+      {
+        redirectTo: `${baseUrl}/auth/reset-password`,
+      }
+    );
+
+    if (resetError) {
+      return {
+        success: false,
+        error: resetError.message,
+      };
+    }
+
+    return redirect(
+      `/auth/reset-email-sent?email=${encodeURIComponent(email)}`,
+      { headers }
+    );
+  } catch (error) {
+    return {
+      success: false,
+      error: "An unexpected error occurred while sending reset email",
+    };
   }
-
-  return redirect(`/auth/reset-email-sent?email=${encodeURIComponent(email)}`)
 }
 
 export default function ForgotPassword({}: Route.ComponentProps) {
-  const { submit, isSubmitting } = useActionWithToast()
+  const { submit, isSubmitting } = useActionWithToast();
 
   const formik = useFormik({
     initialValues: {
-      email: '',
+      email: "",
     },
     validationSchema: toFormikValidationSchema(forgotPasswordSchema),
     onSubmit: (values) => {
-      submit(values)
+      submit(values);
     },
-  })
+  });
 
   return (
     <main className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-6 sm:p-6">
@@ -58,7 +80,7 @@ export default function ForgotPassword({}: Route.ComponentProps) {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                {...formik.getFieldProps('email')}
+                {...formik.getFieldProps("email")}
               />
               {formik.touched.email && formik.errors.email && (
                 <p className="text-sm text-red-500">{formik.errors.email}</p>
@@ -66,17 +88,20 @@ export default function ForgotPassword({}: Route.ComponentProps) {
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Sending...' : 'Send reset link'}
+              {isSubmitting ? "Sending..." : "Send reset link"}
             </Button>
           </form>
 
           <p className="mt-4 text-sm text-center text-muted-foreground">
-            <Link to="/auth/login" className="text-primary hover:underline cursor-pointer">
+            <Link
+              to="/auth/login"
+              className="text-primary hover:underline cursor-pointer"
+            >
               Back to login
             </Link>
           </p>
         </div>
       </div>
     </main>
-  )
+  );
 }
