@@ -124,7 +124,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   const { requireAuth } = await import("@/lib/protected-route");
-  const { user } = await requireAuth(request);
+  const { user, headers } = await requireAuth(request);
 
   // Check if user has completed onboarding
   const { createClient } = await import("@/lib/supabase.server");
@@ -138,11 +138,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // Redirect to onboarding if not completed
   if (!profile?.onboarding_completed) {
-    return redirect("/onboarding/welcome");
+    return redirect("/onboarding/welcome", { headers });
   }
 
   // Return individual promises for streaming
-  return loadDashboardData(user.id, request);
+  return { ...loadDashboardData(user.id, request), headers };
 }
 
 export async function action({ request }: Route.ActionArgs) {

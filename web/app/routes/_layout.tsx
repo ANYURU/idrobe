@@ -4,8 +4,8 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 
 export async function loader({ request }: { request: Request }) {
-  const { user } = await requireAuth(request)
-  return { user }
+  const { user, headers } = await requireAuth(request)
+  return { user, headers }
 }
 
 export default function ProtectedLayout() {

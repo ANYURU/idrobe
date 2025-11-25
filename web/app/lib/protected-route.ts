@@ -4,6 +4,9 @@ import { createClient } from "./supabase.server";
 /**
  * Protected route loader that ensures user is authenticated
  * Returns the authenticated user or redirects to login
+ *
+ * IMPORTANT: You must return the `headers` object from this function in your loader
+ * to ensure the session is properly refreshed and persisted.
  */
 export async function requireAuth(request: Request) {
   const { supabase, headers } = createClient(request);

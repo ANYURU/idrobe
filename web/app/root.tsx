@@ -4,14 +4,58 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRevalidator,
 } from 'react-router'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { ClientOnly } from '@/components/ClientOnly'
 import { Toaster } from 'sonner'
+import { createBrowserClient } from '@supabase/ssr'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase.server'
 
 import './index.css'
 
-export default function Root() {
+export async function loader({ request }: { request: Request }) {
+  const { supabase, headers } = createClient(request)
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  return {
+    user,
+    env: {
+      SUPABASE_URL: process.env.VITE_SUPABASE_URL!,
+      SUPABASE_ANON_KEY: process.env.VITE_SUPABASE_ANON_KEY!,
+    },
+    headers, // Propagate headers from createClient/getUser
+  }
+}
+
+export default function Root({ loaderData }: { loaderData: Awaited<ReturnType<typeof loader>> }) {
+  const { env, user } = loaderData
+  const revalidator = useRevalidator()
+
+  const [supabase] = useState(() =>
+    createBrowserClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
+  )
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      // Revalidate if the user ID changes (login/logout) or token refreshes
+      // This ensures the server is always in sync with the client's auth state
+      if (newSession?.user?.id !== user?.id || event === 'TOKEN_REFRESHED') {
+        revalidator.revalidate()
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [supabase, user, revalidator])
+
   return (
     <html lang="en">
       <head>
@@ -23,7 +67,7 @@ export default function Root() {
       </head>
       <body suppressHydrationWarning={true}>
         <ThemeProvider defaultTheme="warm" storageKey="idrobe-theme">
-          <Outlet />
+          <Outlet context={{ supabase, user }} />
         </ThemeProvider>
         <ClientOnly>
           <Toaster 

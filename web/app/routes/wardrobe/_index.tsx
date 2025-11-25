@@ -36,7 +36,7 @@ interface WardrobeFilters {
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
-  const { user } = await requireAuth(request);
+  const { user, headers } = await requireAuth(request);
   const { createClient } = await import("@/lib/supabase.server");
   const { supabase } = createClient(request);
 
@@ -156,6 +156,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       clothing_subcategories: Subcategory[];
     })[],
     filters,
+    headers,
   };
 }
 
