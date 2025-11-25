@@ -97,7 +97,7 @@ function ChangelogContent() {
                     </time>
 
                     {changelog.version && (
-                      <div className="inline-flex relative z-10 items-center justify-center w-10 h-10 text-foreground border border-border rounded-lg text-sm font-bold">
+                      <div className="inline-flex relative z-10 items-center justify-center w-fit px-2 h-10 text-foreground border border-border rounded-lg text-sm font-bold">
                         {changelog.version}
                       </div>
                     )}

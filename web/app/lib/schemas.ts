@@ -103,12 +103,10 @@ export const outfitCollectionSchema = z.object({
         : "Description must be text",
   }).optional(),
   clothing_item_ids: z.array(
-    z.string({
+    z.uuid({
       error: (issue) =>
-        issue.input === undefined
-          ? "Item ID is required"
-          : "Item ID must be text",
-    }).uuid("Invalid item ID"),
+        issue.input === undefined ? "Item ID is required" : "Invalid item ID",
+    }),
   ).min(1, "At least one item is required"),
 });
 
@@ -215,7 +213,12 @@ export const onboardingProfileSchema = z.object({
 });
 
 export const onboardingInteractionSchema = z.object({
-  recommendation_id: z.uuid(),
+  recommendation_id: z.uuid({
+    error: (issue) =>
+      issue.input === undefined
+        ? "Recommendation ID is required"
+        : "Invalid recommendation ID",
+  }),
   interaction_type: z.enum(["liked", "disliked"]),
 });
 
