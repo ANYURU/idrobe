@@ -12,6 +12,7 @@ export default [
     route("auth/signup", "routes/auth/signup.tsx"),
     route("auth/verify-email", "routes/auth/verify-email.tsx"),
     route("auth/forgot-password", "routes/auth/forgot-password.tsx"),
+    route("auth/reset-email-sent", "routes/auth/reset-email-sent.tsx"),
     route("auth/reset-password", "routes/auth/reset-password.tsx"),
     route("auth/confirm", "routes/auth/confirm.tsx"),
     route("auth/signout", "routes/auth/signout.ts"),

@@ -1,14 +1,13 @@
 import { useFormik } from 'formik'
-import { useSubmit } from 'react-router'
+import { redirect } from 'react-router'
 import type { Route } from './+types/reset-password'
 import { createClient } from '@/lib/supabase.server'
 import { resetPasswordSchema } from '@/lib/schemas'
+import { toFormikValidationSchema } from 'zod-formik-adapter'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle, CheckCircle } from 'lucide-react'
+import { useActionWithToast } from '@/hooks/use-action-with-toast'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import('@/lib/protected-route');
@@ -23,59 +22,36 @@ export async function action({ request }: Route.ActionArgs) {
   const { supabase } = createClient(request)
   const { error: updateError } = await supabase.auth.updateUser({ password })
   if (updateError) {
-    return { error: updateError.message }
+    return { success: false, error: updateError.message }
   }
 
-  return { success: true }
+  return redirect('/auth/login?reset=success')
 }
 
-export default function ResetPassword({ actionData }: Route.ComponentProps) {
-  const submit = useSubmit()
+export default function ResetPassword({}: Route.ComponentProps) {
+  const { submit, isSubmitting } = useActionWithToast()
 
   const formik = useFormik({
     initialValues: {
       password: '',
       confirmPassword: '',
     },
-    validationSchema: resetPasswordSchema,
+    validationSchema: toFormikValidationSchema(resetPasswordSchema),
     onSubmit: (values) => {
-      submit(values, { method: 'post' })
+      submit(values)
     },
   })
 
-  if (actionData?.success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
-              <h2 className="text-xl font-semibold">Password reset successful!</h2>
-              <p className="text-muted-foreground">
-                Your password has been reset. Redirecting to login...
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">Set new password</CardTitle>
-          <CardDescription>Enter your new password below</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {actionData?.error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{actionData.error}</AlertDescription>
-            </Alert>
-          )}
-          
+    <main className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-6 sm:p-6">
+      <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
+        <header className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-semibold">Set new password</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Enter your new password below
+          </p>
+        </header>
+        <div>
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="password">New Password</Label>
@@ -103,12 +79,12 @@ export default function ResetPassword({ actionData }: Route.ComponentProps) {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={formik.isSubmitting}>
-              {formik.isSubmitting ? 'Resetting...' : 'Reset password'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Resetting...' : 'Reset password'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </main>
   )
 }
