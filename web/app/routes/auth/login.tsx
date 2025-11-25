@@ -54,8 +54,13 @@ export default function Login({}: Route.ComponentProps) {
 
   useEffect(() => {
     const error = searchParams.get("error");
+    const reset = searchParams.get("reset");
+    
     if (error === "session_expired" && !hasShownToast.current) {
       toast.error("Your session has expired. Please sign in again.");
+      hasShownToast.current = true;
+    } else if (reset === "success" && !hasShownToast.current) {
+      toast.success("Password reset successful! You can now sign in.");
       hasShownToast.current = true;
     }
   }, [searchParams, toast]);

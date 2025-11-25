@@ -1,14 +1,13 @@
 import { useFormik } from 'formik'
-import { Link, useSubmit } from 'react-router'
+import { Link, redirect } from 'react-router'
 import type { Route } from './+types/forgot-password'
 import { createClient } from '@/lib/supabase.server'
 import { forgotPasswordSchema } from '@/lib/schemas'
+import { toFormikValidationSchema } from 'zod-formik-adapter'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { AlertCircle, CheckCircle } from 'lucide-react'
+import { useActionWithToast } from '@/hooks/use-action-with-toast'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import('@/lib/protected-route');
@@ -23,61 +22,35 @@ export async function action({ request }: Route.ActionArgs) {
   const { supabase } = createClient(request)
   const { error: resetError } = await supabase.auth.resetPasswordForEmail(email)
   if (resetError) {
-    return { error: resetError.message }
+    return { success: false, error: resetError.message }
   }
 
-  return { success: true }
+  return redirect(`/auth/reset-email-sent?email=${encodeURIComponent(email)}`)
 }
 
-export default function ForgotPassword({ actionData }: Route.ComponentProps) {
-  const submit = useSubmit()
+export default function ForgotPassword({}: Route.ComponentProps) {
+  const { submit, isSubmitting } = useActionWithToast()
 
   const formik = useFormik({
     initialValues: {
       email: '',
     },
-    validationSchema: forgotPasswordSchema,
+    validationSchema: toFormikValidationSchema(forgotPasswordSchema),
     onSubmit: (values) => {
-      submit(values, { method: 'post' })
+      submit(values)
     },
   })
 
-  if (actionData?.success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
-              <h2 className="text-xl font-semibold">Check your email</h2>
-              <p className="text-muted-foreground">
-                We've sent a password reset link to your email. Click the link to reset your password.
-              </p>
-              <Link to="/auth/login" className="text-blue-600 hover:underline block">
-                Back to login
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl">Reset password</CardTitle>
-          <CardDescription>Enter your email to receive a password reset link</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {actionData?.error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{actionData.error}</AlertDescription>
-            </Alert>
-          )}
-          
+    <main className="flex items-center justify-center min-h-[calc(100vh-80px)] px-4 py-6 sm:p-6">
+      <div className="w-full max-w-md bg-muted/30 rounded-lg p-6 border border-border">
+        <header className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-semibold">Reset password</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Enter your email to receive a password reset link
+          </p>
+        </header>
+        <div>
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -92,18 +65,18 @@ export default function ForgotPassword({ actionData }: Route.ComponentProps) {
               )}
             </div>
 
-            <Button type="submit" className="w-full" disabled={formik.isSubmitting}>
-              {formik.isSubmitting ? 'Sending...' : 'Send reset link'}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Sending...' : 'Send reset link'}
             </Button>
           </form>
 
           <p className="mt-4 text-sm text-center text-muted-foreground">
-            <Link to="/auth/login" className="text-blue-600 hover:underline">
+            <Link to="/auth/login" className="text-primary hover:underline cursor-pointer">
               Back to login
             </Link>
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </main>
   )
 }
