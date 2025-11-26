@@ -1,8 +1,14 @@
-import { Link, useSearchParams, useNavigate } from "react-router";
-import { Button } from "@/components/ui/button";
+import { useSearchParams, useNavigate } from "react-router";
 import type { Route } from "./+types/_index";
 import { useToast } from "@/lib/use-toast";
 import { useEffect, useRef } from "react";
+import { Hero } from "@/components/landing/Hero";
+import { ProblemSolution } from "@/components/landing/ProblemSolution";
+import { HowItWorks } from "@/components/landing/HowItWorks";
+import { Features } from "@/components/landing/Features";
+import { Pricing } from "@/components/landing/Pricing";
+import { TrustSignals } from "@/components/landing/TrustSignals";
+import { FinalCTA } from "@/components/landing/FinalCTA";
 
 export const meta = () => {
   const title = "Idrobe | AI Personal Stylist & Digital Closet";
@@ -54,27 +60,13 @@ export default function LandingPage() {
   
   return (
     <main className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center space-y-8">
-          <header>
-            <h1 className="text-4xl font-bold text-foreground sm:text-6xl">
-              Your Smart Wardrobe Assistant
-            </h1>
-            <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Organize your clothing, get AI-powered outfit recommendations, and
-              never wonder what to wear again.
-            </p>
-          </header>
-          <div className="flex justify-center gap-4">
-            <Button size="lg" className="cursor-pointer">
-              <Link to="/auth/signup">Get Started Free</Link>
-            </Button>
-            <Button variant="outline" size="lg" className="cursor-pointer">
-              <Link to="/auth/login">Sign In</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Hero />
+      <ProblemSolution />
+      <HowItWorks />
+      <Features />
+      <Pricing />
+      <TrustSignals />
+      <FinalCTA />
     </main>
   );
 }
