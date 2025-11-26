@@ -63,9 +63,45 @@ description: "First public release of iDrobe with wardrobe management, outfit re
 
 ### Authentication
 - Improved session handling
+- Fixed "Invalid Refresh Token" error with proper session hydration
+- Secure server-side user validation using `getUser()` instead of `getSession()`
+- Proper authentication header propagation across all protected routes
 - Email verification with resend functionality
 - Session expired notifications
 - Better error handling and toast messages
+
+## User Experience
+
+### UI Improvements
+- Fixed empty block rendering when wear history is absent
+- Conditional rendering for optional content sections
+- Cleaner component structure with proper null handling
+
+### Design System
+- Modern flat design across the entire app
+- Consistent typography and spacing
+- Enhanced dark mode support
+- Better mobile responsiveness
+
+### Navigation & Routing
+- Public changelog page with timeline UI
+- Landing page at root (/)
+- Dashboard at /dashboard
+- Improved breadcrumb navigation
+
+## SEO & Discoverability
+
+### Search Engine Optimization
+- Comprehensive meta tags with Open Graph support
+- Custom social sharing image (og-image.png)
+- Twitter Card integration for rich link previews
+- Optimized titles and descriptions for all public pages
+
+### Technical SEO
+- `robots.txt` for search engine guidance
+- `sitemap.xml` for improved indexing
+- Privacy-focused: Private routes excluded from search engines
+- Proper canonical URLs
 
 ## Technical Improvements
 
