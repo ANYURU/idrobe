@@ -4,6 +4,26 @@ import type { Route } from "./+types/_index";
 import { useToast } from "@/lib/use-toast";
 import { useEffect, useRef } from "react";
 
+export const meta = () => {
+  const title = "Idrobe | AI Personal Stylist & Digital Closet";
+  const description = "Turn your closet into a curated wardrobe. Idrobe uses AI to organize your clothes, plan daily outfits, and help you rediscover your personal style.";
+  const url = "https://idrobe-web.vercel.app/";
+  
+  return [
+    { title },
+    { name: "description", content: description },
+    
+    // Open Graph
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    { property: "og:url", content: url },
+    
+    // Twitter
+    { name: "twitter:title", content: title },
+    { name: "twitter:description", content: description },
+  ];
+};
+
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
   await requireGuest(request);

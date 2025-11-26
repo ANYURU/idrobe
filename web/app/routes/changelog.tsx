@@ -12,6 +12,16 @@ interface ChangelogEntry {
   version?: string;
 }
 
+export const meta = () => {
+  return [
+    { title: "Changelog - Idrobe" },
+    { name: "description", content: "See what's new in Idrobe. Latest updates, features, and improvements." },
+    { property: "og:title", content: "Changelog - Idrobe" },
+    { property: "og:description", content: "See what's new in Idrobe. Latest updates, features, and improvements." },
+    { property: "og:url", content: "https://idrobe-web.vercel.app/changelog" },
+  ];
+};
+
 export async function loader() {
   // Import all MDX files from changelog/content
   const modules = import.meta.glob("../changelog/content/*.mdx", {

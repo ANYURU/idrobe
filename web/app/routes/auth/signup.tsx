@@ -9,6 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
+export const meta = () => {
+  return [
+    { title: "Create Account - Idrobe" },
+    { name: "description", content: "Join Idrobe today to organize your wardrobe and get AI outfit recommendations." },
+    { property: "og:title", content: "Create Account - Idrobe" },
+    { property: "og:description", content: "Join Idrobe today to organize your wardrobe and get AI outfit recommendations." },
+  ];
+};
+
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
   await requireGuest(request);

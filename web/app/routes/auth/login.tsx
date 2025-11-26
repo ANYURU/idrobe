@@ -11,6 +11,15 @@ import { useActionWithToast } from "@/hooks/use-action-with-toast";
 import { useEffect, useRef } from "react";
 import { useToast } from "@/lib/use-toast";
 
+export const meta = () => {
+  return [
+    { title: "Sign In - Idrobe" },
+    { name: "description", content: "Sign in to your Idrobe account to access your smart wardrobe." },
+    { property: "og:title", content: "Sign In - Idrobe" },
+    { property: "og:description", content: "Sign in to your Idrobe account to access your smart wardrobe." },
+  ];
+};
+
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
   await requireGuest(request);

@@ -12,6 +12,13 @@ type EnrichedTrend = SeasonalTrend & {
   trending_category_names: string[]
 }
 
+export const meta = () => {
+  return [
+    { title: "Current Fashion Trends 2024 - Idrobe" },
+    { name: "description", content: "Discover the latest fashion trends, colors, and styles. Real-time trend analysis powered by AI." },
+  ];
+};
+
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import('@/lib/protected-route')
   await requireAuth(request)
