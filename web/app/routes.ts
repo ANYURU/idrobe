@@ -41,6 +41,10 @@ export default [
   // Public routes
   route("changelog", "routes/changelog.tsx"),
 
+  // SEO routes
+  route("robots.txt", "routes/[robots.txt].tsx"),
+  route("sitemap.xml", "routes/[sitemap.xml].tsx"),
+
   // Protected layout (requires authentication)
   layout("routes/_layout.tsx", [
     route("dashboard", "routes/dashboard/_index.tsx"),
