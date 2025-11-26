@@ -8,19 +8,24 @@ export const meta = () => {
   const title = "Idrobe | AI Personal Stylist & Digital Closet";
   const description = "Turn your closet into a curated wardrobe. Idrobe uses AI to organize your clothes, plan daily outfits, and help you rediscover your personal style.";
   const url = "https://idrobe-web.vercel.app/";
+  const image = "https://idrobe-web.vercel.app/og-image.png";
   
   return [
     { title },
     { name: "description", content: description },
     
     // Open Graph
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: url },
     { property: "og:title", content: title },
     { property: "og:description", content: description },
-    { property: "og:url", content: url },
+    { property: "og:image", content: image },
     
     // Twitter
+    { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
+    { name: "twitter:image", content: image },
   ];
 };
 

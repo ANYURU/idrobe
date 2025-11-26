@@ -16,9 +16,11 @@ export const meta = () => {
   return [
     { title: "Changelog - Idrobe" },
     { name: "description", content: "See what's new in Idrobe. Latest updates, features, and improvements." },
+    { property: "og:type", content: "website" },
+    { property: "og:url", content: "https://idrobe-web.vercel.app/changelog" },
     { property: "og:title", content: "Changelog - Idrobe" },
     { property: "og:description", content: "See what's new in Idrobe. Latest updates, features, and improvements." },
-    { property: "og:url", content: "https://idrobe-web.vercel.app/changelog" },
+    { property: "og:image", content: "https://idrobe-web.vercel.app/og-image.png" },
   ];
 };
 

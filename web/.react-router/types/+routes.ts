@@ -59,6 +59,12 @@ type Pages = {
   "/changelog": {
     params: {};
   };
+  "/robots.txt": {
+    params: {};
+  };
+  "/sitemap.xml": {
+    params: {};
+  };
   "/dashboard": {
     params: {};
   };
@@ -155,7 +161,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-email-sent" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/auth/reset-password" | "/recover-account" | "/changelog" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/*";
+    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-email-sent" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/auth/reset-password" | "/recover-account" | "/changelog" | "/robots.txt" | "/sitemap.xml" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/*";
   };
   "routes/guest._layout.tsx": {
     id: "routes/guest._layout";
@@ -232,6 +238,14 @@ type RouteFiles = {
   "routes/changelog.tsx": {
     id: "routes/changelog";
     page: "/changelog";
+  };
+  "routes/[robots.txt].tsx": {
+    id: "routes/[robots.txt]";
+    page: "/robots.txt";
+  };
+  "routes/[sitemap.xml].tsx": {
+    id: "routes/[sitemap.xml]";
+    page: "/sitemap.xml";
   };
   "routes/_layout.tsx": {
     id: "routes/_layout";
@@ -360,6 +374,8 @@ type RouteModules = {
   "routes/auth/reset-password": typeof import("./app/routes/auth/reset-password.tsx");
   "routes/recover-account": typeof import("./app/routes/recover-account.tsx");
   "routes/changelog": typeof import("./app/routes/changelog.tsx");
+  "routes/[robots.txt]": typeof import("./app/routes/[robots.txt].tsx");
+  "routes/[sitemap.xml]": typeof import("./app/routes/[sitemap.xml].tsx");
   "routes/_layout": typeof import("./app/routes/_layout.tsx");
   "routes/dashboard/_index": typeof import("./app/routes/dashboard/_index.tsx");
   "routes/wardrobe/_index": typeof import("./app/routes/wardrobe/_index.tsx");
