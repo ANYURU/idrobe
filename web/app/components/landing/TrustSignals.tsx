@@ -17,7 +17,7 @@ export function TrustSignals() {
   ];
 
   return (
-    <section className="py-12 px-4 sm:px-6 lg:px-8 bg-muted/30">
+    <section className="py-8 sm:py-10 lg:py-12 px-6 sm:px-8 lg:px-12 bg-muted/30">
       <div className="max-w-5xl mx-auto">
         <div className="grid md:grid-cols-3 gap-6">
           {signals.map((signal, index) => (

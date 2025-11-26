@@ -83,13 +83,13 @@ function PricingContent({ plansPromise }: PricingProps) {
     });
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
+    <section className="py-12 sm:py-16 lg:py-20 px-6 sm:px-8 lg:px-12">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
             Choose Your Plan
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto mb-4">
             Start free, upgrade anytime. All plans include core AI features.
           </p>
           <p className="text-sm text-primary font-medium">
@@ -103,9 +103,9 @@ function PricingContent({ plansPromise }: PricingProps) {
               key={index}
               className={`relative bg-card border-2 rounded-xl p-8 flex flex-col ${
                 plan.popular
-                  ? "border-primary shadow-xl scale-105"
+                  ? "border-primary"
                   : "border-border hover:border-primary/50"
-              } transition-all cursor-pointer`}
+              } transition-all cursor-default`}
             >
               {/* Popular badge */}
               {plan.popular && (

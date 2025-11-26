@@ -23,16 +23,16 @@ export function HowItWorks() {
   ];
 
   return (
-    <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
+    <section id="how-it-works" className="py-12 sm:py-16 lg:py-20 px-6 sm:px-8 lg:px-12">
+      <div className="max-w-5xl mx-auto">
+        <header className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
             How It Works
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
             From chaos to curated in three simple steps
           </p>
-        </div>
+        </header>
 
         <div className="grid md:grid-cols-3 gap-8 relative">
           {/* Connection line (desktop only) */}
@@ -41,9 +41,9 @@ export function HowItWorks() {
           {steps.map((step, index) => (
             <div key={index} className="relative">
               {/* Step card */}
-              <div className="bg-card border border-border rounded-xl p-8 hover:shadow-xl transition-all hover:-translate-y-1">
+              <div className="bg-card border border-border rounded-xl p-8 hover:border-primary/50 transition-all cursor-default">
                 {/* Number badge */}
-                <div className="absolute -top-4 -left-4 h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold shadow-lg">
+                <div className="absolute -top-4 -left-4 h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold">
                   {step.number}
                 </div>
 

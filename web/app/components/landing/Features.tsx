@@ -35,13 +35,13 @@ export function Features() {
   ];
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
-      <div className="max-w-7xl mx-auto">
-        <header className="text-center mb-16">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
+    <section className="py-12 sm:py-16 lg:py-20 px-6 sm:px-8 lg:px-12 bg-muted/30">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
             Everything You Need
           </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
             Powerful features that make getting dressed effortless and sustainable
           </p>
         </header>
@@ -50,7 +50,7 @@ export function Features() {
           {features.map((feature, index) => (
             <article
               key={index}
-              className="group relative bg-card border border-border rounded-xl p-6 hover:shadow-xl hover:border-primary/50 transition-all hover:-translate-y-1 cursor-pointer"
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-default"
             >
               {/* Icon */}
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:scale-110 transition-all">
