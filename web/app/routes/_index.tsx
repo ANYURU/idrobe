@@ -1,5 +1,5 @@
 import { useSearchParams, useNavigate } from "react-router";
-import type { Route } from "./+types/_index";
+import type { Route} from "./+types/_index";
 import { useToast } from "@/lib/use-toast";
 import { useEffect, useRef } from "react";
 import { Hero } from "@/components/landing/Hero";
@@ -9,6 +9,7 @@ import { Features } from "@/components/landing/Features";
 import { Pricing } from "@/components/landing/Pricing";
 import { TrustSignals } from "@/components/landing/TrustSignals";
 import { FinalCTA } from "@/components/landing/FinalCTA";
+import { createClient } from "@/lib/supabase.server";
 
 export const meta = () => {
   const title = "Idrobe | AI Personal Stylist & Digital Closet";
@@ -38,10 +39,26 @@ export const meta = () => {
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireGuest } = await import("@/lib/protected-route");
   await requireGuest(request);
-  return null;
+
+  // Fetch pricing plans with limits
+  const { supabase } = createClient(request);
+  
+  const plansPromise = (async () => {
+    const { data: plans } = await supabase
+      .from("subscription_plans")
+      .select(`
+        *,
+        limits:plan_limits(*)
+      `)
+      .order("display_order", { ascending: true });
+
+    return plans || [];
+  })();
+
+  return { plansPromise };
 }
 
-export default function LandingPage() {
+export default function LandingPage({ loaderData }: Route.ComponentProps) {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const toast = useToast();
@@ -59,12 +76,12 @@ export default function LandingPage() {
   }, [searchParams, navigate, toast]);
   
   return (
-    <main className="min-h-screen bg-background">
+    <main className="min-h-screen bg-background scroll-smooth">
       <Hero />
       <ProblemSolution />
       <HowItWorks />
       <Features />
-      <Pricing />
+      <Pricing plansPromise={loaderData.plansPromise} />
       <TrustSignals />
       <FinalCTA />
     </main>

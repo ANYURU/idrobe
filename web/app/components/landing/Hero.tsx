@@ -1,20 +1,12 @@
 import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Leaf, ArrowRight } from "lucide-react";
+import { Leaf, ArrowRight } from "lucide-react";
 
 export function Hero() {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/10" />
-      
-      {/* Decorative elements */}
-      <div className="absolute top-20 left-10 opacity-20">
-        <Sparkles className="h-16 w-16 text-primary animate-pulse" />
-      </div>
-      <div className="absolute bottom-20 right-10 opacity-20">
-        <Leaf className="h-20 w-20 text-primary animate-pulse" style={{ animationDelay: "1s" }} />
-      </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Badge */}
@@ -37,13 +29,13 @@ export function Hero() {
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
-          <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 group" asChild>
+          <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 group cursor-pointer" asChild>
             <Link to="/auth/signup">
               Start Free—No Credit Card
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
-          <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6" asChild>
+          <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 cursor-pointer" asChild>
             <a href="#how-it-works">
               See How It Works
             </a>
