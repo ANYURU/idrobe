@@ -103,9 +103,9 @@ function PricingContent({ plansPromise }: PricingProps) {
               key={index}
               className={`relative bg-card border-2 rounded-xl p-8 flex flex-col ${
                 plan.popular
-                  ? "border-primary"
-                  : "border-border hover:border-primary/50"
-              } transition-all cursor-default`}
+                  ? "border-primary cursor-default"
+                  : "border-border hover:border-primary/50 cursor-pointer"
+              } transition-all`}
             >
               {/* Popular badge */}
               {plan.popular && (

@@ -50,7 +50,7 @@ export function Features() {
           {features.map((feature, index) => (
             <article
               key={index}
-              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-default"
+              className="group relative bg-card border border-border rounded-xl p-6 hover:border-primary/50 transition-all cursor-pointer"
             >
               {/* Icon */}
               <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:scale-110 transition-all">
