@@ -41,7 +41,7 @@ export function HowItWorks() {
           {steps.map((step, index) => (
             <div key={index} className="relative">
               {/* Step card */}
-              <div className="bg-card border border-border rounded-xl p-8 hover:border-primary/50 transition-all cursor-pointer">
+              <div className="bg-card border border-border rounded-xl p-8 hover:border-primary/50 transition-all cursor-pointer h-full flex flex-col">
                 {/* Number badge */}
                 <div className="absolute -top-4 -left-4 h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold">
                   {step.number}
@@ -55,12 +55,14 @@ export function HowItWorks() {
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-semibold text-foreground mb-3 text-center">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground text-center">
-                  {step.description}
-                </p>
+                <div className="flex-1 flex flex-col">
+                  <h3 className="text-xl font-semibold text-foreground mb-3 text-center">
+                    {step.title}
+                  </h3>
+                  <p className="text-muted-foreground text-center">
+                    {step.description}
+                  </p>
+                </div>
               </div>
 
               {/* Arrow (mobile only) */}
