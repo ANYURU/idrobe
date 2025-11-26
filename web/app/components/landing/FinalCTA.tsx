@@ -13,7 +13,7 @@ export function FinalCTA() {
           Join thousands making smarter, more sustainable fashion choices
         </p>
 
-        <Button size="lg" className="text-lg px-8 py-6 group" asChild>
+        <Button size="lg" className="text-lg px-8 py-6 group cursor-pointer" asChild>
           <Link to="/auth/signup">
             Create Free Account
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
