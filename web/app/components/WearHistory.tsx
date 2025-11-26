@@ -22,7 +22,7 @@ export function WearHistory({ wearHistoryPromise, itemId }: WearHistoryProps) {
 
   return (
     <>
-      <div>
+      <div className="bg-muted/30 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">Wear History</h2>
           <p className="text-sm text-muted-foreground">

@@ -536,16 +536,14 @@ function ItemDetailContent({
           </div>
 
           {/* Wear History */}
-          <div className="bg-muted/30 rounded-lg p-6">
-            <Suspense
-              fallback={<div className="h-32 bg-muted animate-pulse rounded" />}
-            >
-              <WearHistory
-                wearHistoryPromise={wearHistoryPromise}
-                itemId={item.id}
-              />
-            </Suspense>
-          </div>
+          <Suspense
+            fallback={<div className="h-32 bg-muted/30 animate-pulse rounded-lg" />}
+          >
+            <WearHistory
+              wearHistoryPromise={wearHistoryPromise}
+              itemId={item.id}
+            />
+          </Suspense>
 
           {/* Outfits featuring this item */}
           {outfits.length > 0 && (
@@ -724,16 +722,14 @@ function ItemDetailContent({
         </div>
 
         {/* Wear History */}
-        <div className="bg-muted/30 rounded-lg p-6">
-          <Suspense
-            fallback={<div className="h-32 bg-muted animate-pulse rounded" />}
-          >
-            <WearHistory
-              wearHistoryPromise={wearHistoryPromise}
-              itemId={item.id}
-            />
-          </Suspense>
-        </div>
+        <Suspense
+          fallback={<div className="h-32 bg-muted/30 animate-pulse rounded-lg" />}
+        >
+          <WearHistory
+            wearHistoryPromise={wearHistoryPromise}
+            itemId={item.id}
+          />
+        </Suspense>
 
         {/* Outfits featuring this item */}
         {outfits.length > 0 && (
