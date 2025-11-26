@@ -103,7 +103,7 @@ function PricingContent({ plansPromise }: PricingProps) {
               key={index}
               className={`relative bg-card border-2 rounded-xl p-8 flex flex-col ${
                 plan.popular
-                  ? "border-primary cursor-default"
+                  ? "border-primary bg-primary/5 cursor-default z-10"
                   : "border-border hover:border-primary/50 cursor-pointer"
               } transition-all`}
             >
