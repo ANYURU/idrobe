@@ -22,27 +22,25 @@ export const meta = () => {
   const image = "https://idrobe-web.vercel.app/og-image.png";
 
   return [
+    { charSet: "utf-8" },
+    { name: "viewport", content: "width=device-width, initial-scale=1" },
     { title },
     { name: "description", content: description },
-    { name: "viewport", content: "width=device-width, initial-scale=1" },
-    { charSet: "utf-8" },
-
-    // Open Graph / Facebook
+    
+    // Open Graph
     { property: "og:type", content: "website" },
     { property: "og:url", content: url },
     { property: "og:title", content: title },
     { property: "og:description", content: description },
     { property: "og:image", content: image },
     { property: "og:site_name", content: "Idrobe" },
-
+    
     // Twitter
     { name: "twitter:card", content: "summary_large_image" },
     { name: "twitter:url", content: url },
     { name: "twitter:title", content: title },
     { name: "twitter:description", content: description },
     { name: "twitter:image", content: image },
-    // Optional: Add Creator handle if you have one
-    // { name: "twitter:creator", content: "@idrobeapp" },
   ];
 };
 
