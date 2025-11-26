@@ -52,7 +52,7 @@ export function ProblemSolution() {
           {problems.map((problem, index) => (
             <div
               key={index}
-              className="bg-card border border-border rounded-lg p-4 sm:p-5 flex lg:flex-col items-start lg:items-center gap-4 lg:gap-3 lg:text-center hover:border-destructive/50 transition-colors cursor-pointer"
+              className="bg-card border border-border rounded-lg p-4 sm:p-5 flex lg:flex-col items-start lg:items-center gap-4 lg:gap-3 lg:text-center hover:border-primary/50 transition-colors cursor-pointer"
             >
               <span className="text-3xl sm:text-4xl flex-shrink-0">{problem.emoji}</span>
               <div className="flex-1 min-w-0">
