@@ -31,7 +31,7 @@ export function Hero() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
           <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 group cursor-pointer" asChild>
             <Link to="/auth/signup">
-              Start Free—No Credit Card
+              Start Free&mdash;No Credit Card
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>

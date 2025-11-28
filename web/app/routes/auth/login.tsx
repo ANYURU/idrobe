@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useActionWithToast } from "@/hooks/use-action-with-toast";
 import { useEffect, useRef } from "react";
 import { useToast } from "@/lib/use-toast";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export const meta = () => {
   return [
@@ -111,9 +112,8 @@ export default function Login({}: Route.ComponentProps) {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="••••••••"
                 {...formik.getFieldProps("password")}
               />
