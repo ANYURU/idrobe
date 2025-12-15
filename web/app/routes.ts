@@ -82,6 +82,7 @@ export default [
   route("api/upload-photo", "routes/api/upload-photo.ts"),
   route("api/remove-avatar", "routes/api/remove-avatar.ts"),
   route("api/remove-tryon", "routes/api/remove-tryon.ts"),
+  route("api/validate-tryon-image", "routes/api/validate-tryon-image.ts"),
   route(
     "api/recommendations/interact",
     "routes/api/recommendations/interact.ts",
@@ -91,6 +92,7 @@ export default [
   route("api/items/:itemId/worn", "routes/api/items/$itemId/worn.ts"),
   route("api/items/:itemId/archive", "routes/api/items/$itemId/archive.ts"),
   route("api/items/wear-history", "routes/api/items/wear-history.ts"),
+  route("api/enhance-outfit", "routes/api/enhance-outfit.ts"),
 
   // Catch-all route for unmatched requests
   route("*", "routes/$.tsx"),

@@ -127,6 +127,9 @@ type Pages = {
   "/api/remove-tryon": {
     params: {};
   };
+  "/api/validate-tryon-image": {
+    params: {};
+  };
   "/api/recommendations/interact": {
     params: {};
   };
@@ -151,6 +154,9 @@ type Pages = {
   "/api/items/wear-history": {
     params: {};
   };
+  "/api/enhance-outfit": {
+    params: {};
+  };
   "/*": {
     params: {
       "*": string;
@@ -161,7 +167,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-email-sent" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/auth/reset-password" | "/recover-account" | "/changelog" | "/robots.txt" | "/sitemap.xml" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/*";
+    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-email-sent" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/auth/reset-password" | "/recover-account" | "/changelog" | "/robots.txt" | "/sitemap.xml" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/validate-tryon-image" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/api/enhance-outfit" | "/*";
   };
   "routes/guest._layout.tsx": {
     id: "routes/guest._layout";
@@ -323,6 +329,10 @@ type RouteFiles = {
     id: "routes/api/remove-tryon";
     page: "/api/remove-tryon";
   };
+  "routes/api/validate-tryon-image.ts": {
+    id: "routes/api/validate-tryon-image";
+    page: "/api/validate-tryon-image";
+  };
   "routes/api/recommendations/interact.ts": {
     id: "routes/api/recommendations/interact";
     page: "/api/recommendations/interact";
@@ -346,6 +356,10 @@ type RouteFiles = {
   "routes/api/items/wear-history.ts": {
     id: "routes/api/items/wear-history";
     page: "/api/items/wear-history";
+  };
+  "routes/api/enhance-outfit.ts": {
+    id: "routes/api/enhance-outfit";
+    page: "/api/enhance-outfit";
   };
   "routes/$.tsx": {
     id: "routes/$";
@@ -395,11 +409,13 @@ type RouteModules = {
   "routes/api/upload-photo": typeof import("./app/routes/api/upload-photo.ts");
   "routes/api/remove-avatar": typeof import("./app/routes/api/remove-avatar.ts");
   "routes/api/remove-tryon": typeof import("./app/routes/api/remove-tryon.ts");
+  "routes/api/validate-tryon-image": typeof import("./app/routes/api/validate-tryon-image.ts");
   "routes/api/recommendations/interact": typeof import("./app/routes/api/recommendations/interact.ts");
   "routes/api/sync-trends": typeof import("./app/routes/api/sync-trends.ts");
   "routes/api/items/$itemId/favorite": typeof import("./app/routes/api/items/$itemId/favorite.ts");
   "routes/api/items/$itemId/worn": typeof import("./app/routes/api/items/$itemId/worn.ts");
   "routes/api/items/$itemId/archive": typeof import("./app/routes/api/items/$itemId/archive.ts");
   "routes/api/items/wear-history": typeof import("./app/routes/api/items/wear-history.ts");
+  "routes/api/enhance-outfit": typeof import("./app/routes/api/enhance-outfit.ts");
   "routes/$": typeof import("./app/routes/$.tsx");
 };

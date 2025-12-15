@@ -11,7 +11,7 @@ import {
   TrendingDown,
   CheckCircle,
 } from "lucide-react";
-import { Link, redirect, useSearchParams, useNavigate } from "react-router";
+import { Link, redirect, useSearchParams, useNavigate, useFetcher } from "react-router";
 import { loadDashboardData } from "@/lib/loaders";
 import { ClothingThumbnail } from "@/components/ClothingThumbnail";
 import { OutfitRecommendation } from "@/components/OutfitRecommendation";
@@ -30,6 +30,13 @@ type OutfitRecommendation = Tables<"outfit_recommendations"> & {
     image_url: string;
     primary_color: string;
   }>;
+  items?: Array<{
+    id: string;
+    name: string;
+    image_url: string;
+    primary_color: string;
+  }>;
+  description?: string;
 };
 type OutfitCollection = Tables<"outfit_collections"> & {
   clothing_items?: Array<{
@@ -58,6 +65,7 @@ type DailyOutfitData = {
   recommendations: OutfitRecommendation[];
   hasWeatherMatch: boolean;
   error?: string;
+  source?: string;
 };
 
 type UserInteraction = {
@@ -424,6 +432,7 @@ function RecentItemsCard({ p }: { p: Promise<ClothingItem[]> }) {
           <Link 
             key={item.id} 
             to={`/wardrobe/${item.id}`}
+            state={{ from: "/" }}
             className="flex items-center space-x-4 p-2 rounded-lg hover:bg-background/50 transition-colors group"
           >
             <ClothingThumbnail
@@ -458,62 +467,105 @@ function WeatherOutfitCard({ p }: { p: Promise<DailyOutfitData> }) {
   const dailyOutfitData = use(p);
   const recommendation = dailyOutfitData?.recommendations?.[0];
   const hasError = dailyOutfitData?.error;
+  
+  // Upgrade logic
+  const fetcher = useFetcher();
+  const hasTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    // Only trigger if rule-based and hasn't triggered yet
+    if (
+      dailyOutfitData?.source === 'rule_based' && 
+      recommendation && 
+      !hasTriggeredRef.current &&
+      fetcher.state === 'idle' &&
+      !fetcher.data
+    ) {
+      hasTriggeredRef.current = true;
+      
+      fetcher.submit(
+        { 
+          outfitId: recommendation.id,
+          items: JSON.stringify(recommendation.items || []),
+          weather: JSON.stringify(dailyOutfitData.weather || {})
+        },
+        { method: "POST", action: "/api/enhance-outfit" }
+      );
+    }
+  }, [dailyOutfitData, recommendation, fetcher]);
+
+  // Use enhanced reason if available
+  const displayReason = fetcher.data?.success 
+    ? fetcher.data.reason 
+    : (recommendation?.description || recommendation?.recommendation_reason);
+
+  const displayRecommendation = recommendation ? {
+    ...recommendation,
+    description: displayReason
+  } : null;
 
   return (
-    <div className="bg-muted/30 rounded-lg p-6">
+    <div className="bg-muted/30 rounded-lg p-6 relative overflow-hidden">
+      {fetcher.state !== 'idle' && (
+        <div className="absolute top-0 right-0 p-2">
+           <Sparkles className="h-4 w-4 text-primary animate-pulse" />
+        </div>
+      )}
+      
       <h2 className="text-lg font-semibold mb-1">Today's Outfit</h2>
       <p className="text-sm text-muted-foreground mb-4">
         {dailyOutfitData?.weather
-          ? `Perfect for ${dailyOutfitData.weather.description}, ${dailyOutfitData.weather.temperature}°C`
-          : "AI-curated for your day"}
+            ? `Perfect for ${dailyOutfitData.weather.description}, ${dailyOutfitData.weather.temperature}°C`
+            : "AI-curated for your day"}
       </p>
       <div>
-        {recommendation ? (
+        {displayRecommendation ? (
           <OutfitRecommendation
-            recommendation={mapRecommendationToComponent(recommendation)}
+            recommendation={mapRecommendationToComponent(displayRecommendation)}
             showInteractions={false}
           />
         ) : (
           <div className="text-center py-8 space-y-4">
-            {hasError ? (
-              <>
-                <div className="text-muted-foreground">
-                  <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                </div>
-                <div>
-                  <p className="font-medium mb-1">
-                    Let's create your perfect look!
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Having trouble generating today's outfit. Try adding more
-                    items or create one manually.
-                  </p>
-                </div>
-                <div className="flex gap-2 justify-center">
-                  <Button size="sm">
-                    <Link to="/outfits">Generate Outfit</Link>
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Link to="/wardrobe/add">Add Items</Link>
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="text-muted-foreground">
-                  <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                </div>
-                <div>
-                  <p className="font-medium mb-1">Ready to get styled?</p>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Let our AI create the perfect outfit for your day
-                  </p>
-                </div>
-                <Button>
-                  <Link to="/outfits">Create Today's Look</Link>
-                </Button>
-              </>
-            )}
+             {/* ... Error/Empty state content ... */}
+             {hasError ? (
+               <>
+                 <div className="text-muted-foreground">
+                   <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                 </div>
+                 <div>
+                   <p className="font-medium mb-1">
+                     Let's create your perfect look!
+                   </p>
+                   <p className="text-sm text-muted-foreground mb-4">
+                     Having trouble generating today's outfit. Try adding more
+                     items or create one manually.
+                   </p>
+                 </div>
+                 <div className="flex gap-2 justify-center">
+                   <Button size="sm">
+                     <Link to="/outfits">Generate Outfit</Link>
+                   </Button>
+                   <Button variant="outline" size="sm">
+                     <Link to="/wardrobe/add">Add Items</Link>
+                   </Button>
+                 </div>
+               </>
+             ) : (
+               <>
+                 <div className="text-muted-foreground">
+                   <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                 </div>
+                 <div>
+                   <p className="font-medium mb-1">Ready to get styled?</p>
+                   <p className="text-sm text-muted-foreground mb-4">
+                     Let our AI create the perfect outfit for your day
+                   </p>
+                 </div>
+                 <Button>
+                   <Link to="/outfits">Create Today's Look</Link>
+                 </Button>
+               </>
+             )}
           </div>
         )}
       </div>
