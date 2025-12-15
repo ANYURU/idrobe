@@ -62,8 +62,8 @@ export function Pagination({
   };
 
   return (
-    <div className={`flex items-center justify-between ${className}`}>
-      <p className="text-sm text-slate-600">
+    <div className={`flex flex-col-reverse items-center justify-between gap-4 sm:flex-row sm:gap-0 ${className}`}>
+      <p className="text-sm text-slate-600 text-center sm:text-left">
         Showing {startItem} to {endItem} of {totalItems} items
       </p>
 
@@ -73,12 +73,19 @@ export function Pagination({
           size="sm"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
+          className="h-8 w-8 sm:w-auto px-0 sm:px-3"
         >
-          <ChevronLeft className="w-4 h-4" />
-          Previous
+          <ChevronLeft className="w-4 h-4 sm:mr-2" />
+          <span className="hidden sm:inline">Previous</span>
         </Button>
 
-        <div className="flex items-center gap-1">
+        {/* Mobile Page Indicator */}
+        <div className="text-sm font-medium sm:hidden">
+          Page {currentPage} of {totalPages}
+        </div>
+
+        {/* Desktop Page Numbers */}
+        <div className="hidden items-center gap-1 sm:flex">
           {getPageNumbers().map((page, index) => (
             <div key={index}>
               {page === "..." ? (
@@ -90,7 +97,7 @@ export function Pagination({
                   variant={currentPage === page ? "default" : "outline"}
                   size="sm"
                   onClick={() => onPageChange(page as number)}
-                  className="min-w-10"
+                  className="min-w-[2.5rem]"
                 >
                   {page}
                 </Button>
@@ -104,9 +111,10 @@ export function Pagination({
           size="sm"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
+          className="h-8 w-8 sm:w-auto px-0 sm:px-3"
         >
-          Next
-          <ChevronRight className="w-4 h-4" />
+          <span className="hidden sm:inline">Next</span>
+          <ChevronRight className="w-4 h-4 sm:ml-2" />
         </Button>
       </div>
     </div>

@@ -35,7 +35,7 @@ const navMain = [
   },
   {
     title: "Profile",
-    url: "/profile",
+    url: "/profile?tab=basic",
     icon: User,
   },
   {

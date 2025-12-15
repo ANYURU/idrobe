@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User as UserIcon, Ruler, Sparkles, Scan } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
+import { useSearchParams } from 'react-router'
 import { ProfilePictureUpload } from '@/components/shared/ProfilePictureUpload'
 import { TryonPictureUpload } from '@/components/shared/TryonPictureUpload'
 import { toast } from 'sonner'
@@ -131,7 +132,19 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
 
   const [sustainabilityValue, setSustainabilityValue] = useState([profile?.sustainability_score || 50])
   const [profileImageUrl, setProfileImageUrl] = useState(profile?.profile_image_url || '')
-  const [activeTab, setActiveTab] = useState('basic')
+  
+  // URL-based tab persistence
+  const [searchParams, setSearchParams] = useSearchParams()
+  const validTabs = ['basic', 'body', 'style', 'tryon']
+  const tabFromUrl = searchParams.get('tab')
+  const activeTab = validTabs.includes(tabFromUrl || '') ? tabFromUrl! : 'basic'
+  
+  const setActiveTab = useCallback((tab: string) => {
+    setSearchParams(prev => {
+      prev.set('tab', tab)
+      return prev
+    }, { replace: true })
+  }, [setSearchParams])
 
 
 

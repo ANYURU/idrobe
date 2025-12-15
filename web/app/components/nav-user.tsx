@@ -70,7 +70,7 @@ export function NavUser({ user }: { user: any }) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link to="/profile" className="cursor-pointer">
+              <Link to="/profile?tab=basic" className="cursor-pointer">
                 <User />
                 Profile
               </Link>
