@@ -1,4 +1,4 @@
-import { Link, useSubmit, redirect, useNavigate } from "react-router";
+import { Link, useSubmit, redirect, useLocation } from "react-router";
 import type { Route } from "./+types/collections.$collectionId";
 import { Suspense, use, useState } from "react";
 import { createClient } from "@/lib/supabase.server";
@@ -14,9 +14,8 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { OutfitPreview } from "@/components/OutfitPreview";
-import { ClothingImage, getImageUrl } from "@/components/ClothingImage";
-import { ArrowLeft, Edit, Trash2, Heart, AlertCircle } from "lucide-react";
+import { ClothingImageCard } from "@/components/ClothingImageCard";
+import { ArrowLeft, Edit, Trash2, Heart, AlertCircle, ExternalLink } from "lucide-react";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
@@ -93,8 +92,9 @@ export default function CollectionDetailPage({
   actionData,
 }: Route.ComponentProps) {
   const submit = useSubmit();
-  const navigate = useNavigate();
+  const location = useLocation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const backTo = location.state?.from || "/outfits?tab=collections";
 
   const handleDelete = () => {
     const formData = new FormData();
@@ -110,46 +110,44 @@ export default function CollectionDetailPage({
   };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        {/* Mobile: Back button only */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="-ml-2 md:hidden mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        {/* Desktop: Breadcrumb only */}
-        <Breadcrumb className="hidden md:block">
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/outfits?tab=collections">Collections</Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <Suspense fallback={<BreadcrumbPage>Loading...</BreadcrumbPage>}>
-                <CollectionBreadcrumbName
-                  collectionPromise={loaderData.collectionPromise}
-                />
-              </Suspense>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
+    <main className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          <Button type="button" variant="ghost" size="sm" asChild>
+            <Link to={backTo} className="flex items-center">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Link>
+          </Button>
+          <Breadcrumb className="hidden md:block">
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/">Home</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/outfits?tab=collections">Collections</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <Suspense fallback={<BreadcrumbPage>Loading...</BreadcrumbPage>}>
+                  <CollectionBreadcrumbName
+                    collectionPromise={loaderData.collectionPromise}
+                  />
+                </Suspense>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      </header>
 
       {actionData?.error && (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive" className="max-w-6xl mx-auto mt-4 mx-4">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>{actionData.error}</AlertDescription>
         </Alert>
@@ -164,10 +162,10 @@ export default function CollectionDetailPage({
       </Suspense>
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title">
           <Card className="w-full max-w-md mx-4">
             <CardHeader>
-              <CardTitle>Delete Collection</CardTitle>
+              <CardTitle id="delete-dialog-title">Delete Collection</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
@@ -194,7 +192,7 @@ export default function CollectionDetailPage({
           </Card>
         </div>
       )}
-    </div>
+    </main>
   );
 }
 
@@ -210,152 +208,144 @@ function CollectionDetail({
   const collection = use(collectionPromise);
 
   return (
-    <>
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold">{collection.name}</h1>
-            {collection.is_favorite && (
-              <Badge variant="secondary" className="bg-red-100 text-red-800">
-                <Heart className="mr-1 h-3 w-3 fill-current" />
-                Favorite
-              </Badge>
-            )}
-          </div>
-          {collection.description && (
-            <p className="text-muted-foreground">{collection.description}</p>
-          )}
-          <div className="flex gap-4 text-sm text-muted-foreground mt-2">
-            <span>{collection.clothing_item_ids?.length || 0} items</span>
-            {collection.times_worn > 0 && (
-              <span>Worn {collection.times_worn} times</span>
-            )}
-            <span>
-              Created {new Date(collection.created_at).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
-
-        <div className="flex gap-2">
+    <div className="max-w-6xl mx-auto p-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-2">
+        <h1 className="text-2xl font-bold">{collection.name}</h1>
+        <nav className="flex gap-2" aria-label="Collection actions">
           <Button
             variant={collection.is_favorite ? "default" : "outline"}
             size="sm"
             onClick={() => onToggleFavorite(collection.is_favorite)}
+            aria-label={collection.is_favorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Heart
               className={`h-4 w-4 ${collection.is_favorite ? "fill-current" : ""}`}
             />
           </Button>
           <Link to={`/outfits/collections/${collection.id}/edit`}>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" aria-label="Edit collection">
               <Edit className="h-4 w-4" />
             </Button>
           </Link>
-          <Button variant="destructive" size="sm" onClick={onDelete}>
+          <Button variant="destructive" size="sm" onClick={onDelete} aria-label="Delete collection">
             <Trash2 className="h-4 w-4" />
           </Button>
-        </div>
+        </nav>
       </div>
+      
+      {collection.description && (
+        <p className="text-sm text-muted-foreground mb-6">
+          {collection.description}
+        </p>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Outfit Preview</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <OutfitPreview
-              items={collection.clothing_items}
-              maxItems={6}
-              size="lg"
-            />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Items ({collection.clothing_items.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {collection.clothing_items.map((item: any) => (
-                <div key={item.id} className="space-y-2">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-slate-100">
-                    {item.image_url ? (
-                      <ClothingImage
-                        imageUrlPromise={getImageUrl(item.image_url)}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        No image
-                      </div>
-                    )}
+      <div className="space-y-6">
+        {/* Items Section */}
+        <section aria-labelledby="items-heading">
+          <h2 id="items-heading" className="text-lg font-semibold mb-4">Items in this collection</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {collection.clothing_items.map((item: any) => (
+              <Link
+                key={item.id}
+                to={`/wardrobe/${item.id}`}
+                state={{ from: `/outfits/collections/${collection.id}` }}
+              >
+                <article className="bg-muted/30 rounded-lg overflow-hidden cursor-pointer group hover:bg-muted/50 transition-colors">
+                  <figure className="relative">
+                    <ClothingImageCard
+                      filePath={item.image_url}
+                      alt={item.name}
+                      className="w-full h-40 object-contain bg-background"
+                      fallbackClassName="w-full h-40"
+                    />
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </figure>
+                  <div className="p-3">
+                    <p className="font-medium text-sm truncate">
+                      {item.name}
+                    </p>
+                    <Badge variant="secondary" className="text-xs mt-2">
+                      {item.primary_color}
+                    </Badge>
                   </div>
-                  <p className="text-sm font-medium truncate">{item.name}</p>
-                  <Badge variant="outline" className="text-xs">
-                    {item.primary_color}
-                  </Badge>
-                </div>
-              ))}
+                </article>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* Stats Section */}
+        <section className="bg-muted/30 rounded-lg p-6" aria-labelledby="stats-heading">
+          <h2 id="stats-heading" className="text-lg font-semibold mb-4">Collection Stats</h2>
+          <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <dt className="text-sm text-muted-foreground">Items</dt>
+              <dd className="text-2xl font-bold">{collection.clothing_item_ids?.length || 0}</dd>
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <dt className="text-sm text-muted-foreground">Times Worn</dt>
+              <dd className="text-2xl font-bold">{collection.times_worn || 0}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">Created</dt>
+              <dd className="text-lg font-semibold">
+                {new Date(collection.created_at).toLocaleDateString()}
+              </dd>
+            </div>
+          </dl>
+        </section>
       </div>
-    </>
+    </div>
   );
 }
 
 function CollectionDetailSkeleton() {
   return (
-    <>
-      <div className="flex items-start justify-between mb-6">
-        <div className="space-y-2">
-          <div className="h-8 bg-slate-200 rounded w-64 animate-pulse" />
-          <div className="h-4 bg-slate-200 rounded w-96 animate-pulse" />
-          <div className="h-4 bg-slate-200 rounded w-48 animate-pulse" />
-        </div>
+    <div className="max-w-6xl mx-auto p-6">
+      {/* Header skeleton */}
+      <div className="flex items-start justify-between mb-2">
+        <div className="h-8 bg-muted rounded w-48 animate-pulse" />
         <div className="flex gap-2">
-          <div className="h-8 w-20 bg-slate-200 rounded animate-pulse" />
-          <div className="h-8 w-16 bg-slate-200 rounded animate-pulse" />
-          <div className="h-8 w-20 bg-slate-200 rounded animate-pulse" />
+          <div className="h-8 w-8 bg-muted rounded animate-pulse" />
+          <div className="h-8 w-8 bg-muted rounded animate-pulse" />
+          <div className="h-8 w-8 bg-muted rounded animate-pulse" />
         </div>
       </div>
+      <div className="h-4 bg-muted rounded w-96 animate-pulse mb-6" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <div className="h-6 bg-slate-200 rounded w-32 animate-pulse" />
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              {[...Array(4)].map((_, i) => (
-                <div
-                  key={i}
-                  className="w-16 h-16 bg-slate-200 rounded animate-pulse"
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <div className="h-6 bg-slate-200 rounded w-24 animate-pulse" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="space-y-2">
-                  <div className="aspect-square bg-slate-200 rounded animate-pulse" />
-                  <div className="h-4 bg-slate-200 rounded animate-pulse" />
-                  <div className="h-4 bg-slate-200 rounded w-16 animate-pulse" />
+      <div className="space-y-6">
+        {/* Items section skeleton */}
+        <section>
+          <div className="h-6 bg-muted rounded w-48 animate-pulse mb-4" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <article key={i} className="bg-muted/30 rounded-lg overflow-hidden">
+                <div className="h-40 bg-muted animate-pulse" />
+                <div className="p-3 space-y-2">
+                  <div className="h-4 bg-muted rounded animate-pulse" />
+                  <div className="h-5 bg-muted rounded w-16 animate-pulse" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* Stats section skeleton */}
+        <section className="bg-muted/30 rounded-lg p-6">
+          <div className="h-6 bg-muted rounded w-36 animate-pulse mb-4" />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => (
+              <div key={i}>
+                <div className="h-4 bg-muted rounded w-16 animate-pulse mb-2" />
+                <div className="h-8 bg-muted rounded w-12 animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
-    </>
+    </div>
   );
 }
