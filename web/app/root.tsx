@@ -86,11 +86,35 @@ export default function Root({ loaderData }: { loaderData: Awaited<ReturnType<ty
   }, [supabase, user, revalidator])
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
         <Meta />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <Links />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var storageKey = 'idrobe-theme';
+                  var defaultTheme = 'warm';
+                  var theme = localStorage.getItem(storageKey) || defaultTheme;
+                  var root = document.documentElement;
+                  
+                  root.classList.remove('light', 'warm', 'dark');
+                  root.removeAttribute('data-theme');
+                  
+                  root.classList.add(theme);
+                  root.setAttribute('data-theme', theme);
+                  
+                  if (theme === 'dark') {
+                    root.classList.add('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body suppressHydrationWarning={true}>
         <ThemeProvider defaultTheme="warm" storageKey="idrobe-theme">

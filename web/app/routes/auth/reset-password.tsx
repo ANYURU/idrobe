@@ -5,11 +5,11 @@ import { createClient } from '@/lib/supabase.server'
 import { resetPasswordSchema } from '@/lib/schemas'
 import { toFormikValidationSchema } from 'zod-formik-adapter'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useActionWithToast } from '@/hooks/use-action-with-toast'
 import { Logo } from '@/components/Logo'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { PasswordInput } from '@/components/ui/password-input'
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url)
@@ -106,9 +106,8 @@ export default function ResetPassword({}: Route.ComponentProps) {
             <form onSubmit={formik.handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="••••••••"
                   {...formik.getFieldProps('password')}
                 />
@@ -119,9 +118,8 @@ export default function ResetPassword({}: Route.ComponentProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   placeholder="••••••••"
                   {...formik.getFieldProps('confirmPassword')}
                 />

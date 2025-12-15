@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useActionWithToast } from "@/hooks/use-action-with-toast";
+import { PasswordInput } from "@/components/ui/password-input";
 
 export const meta = () => {
   return [
@@ -98,9 +99,8 @@ export default function Signup({}: Route.ComponentProps) {
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 placeholder="••••••••"
                 {...formik.getFieldProps("password")}
               />
@@ -111,9 +111,8 @@ export default function Signup({}: Route.ComponentProps) {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 placeholder="••••••••"
                 {...formik.getFieldProps("confirmPassword")}
               />
