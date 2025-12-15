@@ -26,7 +26,7 @@ const navigation = [
   { name: "Wardrobe", href: "/wardrobe", icon: Shirt },
   { name: "Outfits", href: "/outfits", icon: Palette },
   { name: "Trends", href: "/trends", icon: TrendingUp },
-  { name: "Profile", href: "/profile", icon: User },
+  { name: "Profile", href: "/profile?tab=basic", icon: User },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

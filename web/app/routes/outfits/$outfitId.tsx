@@ -536,7 +536,11 @@ function OutfitDetailContent({
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {similarOutfits.map((similar: any) => (
-                  <Link key={similar.id} to={`/outfits/${similar.id}`}>
+                  <Link 
+                    key={similar.id} 
+                    to={`/outfits/${similar.id}`}
+                    state={{ from: `/outfits/${outfit.id}` }}
+                  >
                     <article className="bg-background rounded-lg p-3 hover:bg-muted/50 transition-colors">
                       <p className="font-medium text-sm truncate">
                         {similar.name || `${similar.occasion} outfit`}
@@ -660,7 +664,11 @@ function OutfitDetailContent({
             <h2 className="text-lg font-semibold mb-4">You might also like</h2>
             <div className="space-y-4">
               {similarOutfits.map((similar: any) => (
-                <Link key={similar.id} to={`/outfits/${similar.id}`}>
+                <Link 
+                  key={similar.id} 
+                  to={`/outfits/${similar.id}`}
+                  state={{ from: `/outfits/${outfit.id}` }}
+                >
                   <article className="bg-background rounded-lg p-3 hover:bg-muted/50 transition-colors">
                     <p className="font-medium text-sm truncate">
                       {similar.name || `${similar.occasion} outfit`}

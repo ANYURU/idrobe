@@ -187,7 +187,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
-          className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
+          className="w-full p-0 bg-transparent border-none shadow-none pointer-events-none data-[state=open]:!animate-none data-[state=closed]:!duration-300 data-[state=closed]:!fade-out [&>button]:pointer-events-auto [&>button]:z-50 [&>button]:animate-in [&>button]:slide-in-from-top-10 [&>button]:duration-500 [&>button]:ease-[cubic-bezier(0.32,0.72,0,1)]"
           style={
             {
               "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
@@ -199,7 +199,13 @@ function Sidebar({
             <SheetTitle>Sidebar</SheetTitle>
             <SheetDescription>Displays the mobile sidebar.</SheetDescription>
           </SheetHeader>
-          <div className="flex h-full w-full flex-col">{children}</div>
+          {/* Full width header bar background */}
+          <div className="absolute top-0 left-0 w-full h-14 bg-sidebar pointer-events-auto z-10 border-b border-sidebar-border/20 animate-in slide-in-from-top-full duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]" />
+          
+          {/* Sidebar content constrained width */}
+          <div className="pointer-events-auto relative flex h-full w-(--sidebar-width) flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border/20 z-20 animate-in slide-in-from-left-full duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]">
+            {children}
+          </div>
         </SheetContent>
       </Sheet>
     );
@@ -509,7 +515,7 @@ function SidebarMenuButton({
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
   const Comp = asChild ? Slot : "button";
-  const { isMobile, state } = useSidebar();
+  const { isMobile, state, setOpenMobile } = useSidebar();
 
   const button = (
     <Comp
@@ -518,6 +524,12 @@ function SidebarMenuButton({
       data-size={size}
       data-active={isActive}
       className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+      onClick={(e) => {
+        if (isMobile) {
+          setOpenMobile(false);
+        }
+        props.onClick?.(e);
+      }}
       {...props}
     />
   );

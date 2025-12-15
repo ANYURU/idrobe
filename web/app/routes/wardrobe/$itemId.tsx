@@ -553,7 +553,11 @@ function ItemDetailContent({
               </h2>
               <div className="space-y-2">
                 {outfits.map((outfit: any) => (
-                  <Link key={outfit.id} to={`/outfits/${outfit.id}`}>
+                  <Link 
+                    key={outfit.id} 
+                    to={`/outfits/${outfit.id}`}
+                    state={{ from: `/wardrobe/${item.id}` }}
+                  >
                     <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
                         <p className="font-medium">{outfit.name}</p>
@@ -575,7 +579,11 @@ function ItemDetailContent({
               <h2 className="text-lg font-semibold mb-4">Pairs Well With</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {relatedItems.map((related: any) => (
-                  <Link key={related.id} to={`/wardrobe/${related.id}`}>
+                  <Link 
+                    key={related.id} 
+                    to={`/wardrobe/${related.id}`}
+                    state={{ from: `/wardrobe/${item.id}` }}
+                  >
                     <div className="group cursor-pointer">
                       <div className="aspect-square rounded-lg overflow-hidden bg-muted/30 mb-2">
                         <Suspense
@@ -737,7 +745,11 @@ function ItemDetailContent({
             <h2 className="text-lg font-semibold mb-4">Featured in Outfits</h2>
             <div className="space-y-2">
               {outfits.map((outfit: any) => (
-                <Link key={outfit.id} to={`/outfits/${outfit.id}`}>
+                <Link 
+                  key={outfit.id} 
+                  to={`/outfits/${outfit.id}`}
+                  state={{ from: `/wardrobe/${item.id}` }}
+                >
                   <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                     <div>
                       <p className="font-medium">{outfit.name}</p>
@@ -759,7 +771,11 @@ function ItemDetailContent({
             <h2 className="text-lg font-semibold mb-4">Pairs Well With</h2>
             <div className="grid grid-cols-2 gap-4">
               {relatedItems.map((related: any) => (
-                <Link key={related.id} to={`/wardrobe/${related.id}`}>
+                <Link 
+                  key={related.id} 
+                  to={`/wardrobe/${related.id}`}
+                  state={{ from: `/wardrobe/${item.id}` }}
+                >
                   <div className="group cursor-pointer">
                     <div className="aspect-square rounded-lg overflow-hidden bg-muted/30 mb-2">
                       <Suspense
