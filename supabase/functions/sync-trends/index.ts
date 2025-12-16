@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.80.0'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.80.0'
 import { corsHeaders } from '../_shared/cors.ts'
 
 interface TrendData {
@@ -10,7 +10,9 @@ interface TrendData {
   trending_styles: string[]
   trending_category_ids: string[]
   trend_description: string
+  source: string
   external_source: string
+  confidence_score: number
   trend_score: number
   keywords: string[]
   popularity_score: number
@@ -20,85 +22,11 @@ interface TrendData {
   sync_metadata: Record<string, string | number | boolean>
 }
 
-interface KeywordRow {
-  keyword: string
-}
-
-// Dynamic keyword fetching from database
-async function getFashionKeywords(supabase: SupabaseClient): Promise<string[]> {
-  const { data: keywords } = await supabase
-    .from('trend_keywords')
-    .select('keyword')
-    .eq('category', 'fashion')
-    .order('search_volume', { ascending: false })
-    .limit(20)
-
-  const dbKeywords = keywords?.map((k: KeywordRow) => k.keyword) || []
-  
-  // Fallback keywords if database is empty
-  const fallbackKeywords = [
-    'fashion', 'style', 'outfit', 'clothing', 'trend', 'wear',
-    'dress', 'shirt', 'pants', 'shoes', 'accessories'
-  ]
-  
-  // Seed database with initial keywords if empty
-  if (dbKeywords.length === 0) {
-    await seedInitialKeywords(supabase)
-    return fallbackKeywords
-  }
-  
-  return dbKeywords
-}
-
-// Fuzzy matching for fashion-related content
-function isFashionRelated(query: string, keywords: string[]): boolean {
-  const lowerQuery = query.toLowerCase()
-  
-  // Direct keyword matches
-  if (keywords.some(keyword => lowerQuery.includes(keyword.toLowerCase()))) {
-    return true
-  }
-  
-  // Fashion-related terms (always relevant)
-  const coreTerms = ['fashion', 'style', 'outfit', 'clothing', 'wear', 'trend']
-  if (coreTerms.some(term => lowerQuery.includes(term))) {
-    return true
-  }
-  
-  // Clothing categories
-  const clothingTerms = [
-    'dress', 'shirt', 'pants', 'jeans', 'skirt', 'jacket', 'coat',
-    'shoes', 'boots', 'sneakers', 'bag', 'accessories', 'jewelry'
-  ]
-  if (clothingTerms.some(term => lowerQuery.includes(term))) {
-    return true
-  }
-  
-  return false
-}
-
-interface GoogleTrendItem {
-  title?: {
-    query?: string
-  }
-}
-
-interface GoogleTrendsResponse {
-  default?: {
-    trendingSearchesDays?: Array<{
-      trendingSearches?: GoogleTrendItem[]
-    }>
-  }
-}
-
-
-
-// Fetch Google Trends data using unofficial API
-async function fetchGoogleTrends(): Promise<TrendData[]> {
+// Generate trends using Gemini AI
+async function fetchTrendsWithGemini(): Promise<TrendData[]> {
   const currentYear = new Date().getFullYear()
   const currentMonth = new Date().getMonth()
   
-  // Determine current season
   let season = 'spring'
   let seasonDates = { from: `${currentYear}-03-01`, until: `${currentYear}-05-31` }
   
@@ -116,150 +44,107 @@ async function fetchGoogleTrends(): Promise<TrendData[]> {
     seasonDates = { from: `${currentYear}-09-01`, until: `${currentYear}-11-30` }
   }
 
+  const prompt = `You are a fashion trend analyst. Generate current fashion trends for ${season} ${currentYear}.
+
+Provide comprehensive trend analysis including:
+- Trending colors (5-8 specific color names)
+- Trending patterns (3-5 patterns)
+- Trending styles (4-6 style aesthetics)
+- Trending categories (3-5 clothing categories like "outerwear", "dresses", "boots")
+- Fashion keywords (8-10 trending terms)
+- Brief trend description
+
+Consider:
+- Current season: ${season}
+- Year: ${currentYear}
+- Global fashion weeks
+- Social media trends
+- Sustainable fashion movement
+- Street style influences
+
+Return ONLY valid JSON:
+{
+  "trending_colors": ["color1", "color2", ...],
+  "trending_patterns": ["pattern1", "pattern2", ...],
+  "trending_styles": ["style1", "style2", ...],
+  "trending_categories": ["category1", "category2", ...],
+  "keywords": ["keyword1", "keyword2", ...],
+  "trend_description": "Brief overview of ${season} ${currentYear} fashion trends",
+  "trend_score": 0.85,
+  "popularity_score": 85
+}`
+
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
-    
-    // Get current fashion keywords from database
-    const fashionKeywords = await getFashionKeywords(supabase)
-    
-    // Use Google Trends unofficial API (pytrends equivalent for web)
-    const trendsUrl = 'https://trends.google.com/trends/api/dailytrends'
-    const params = new URLSearchParams({
-      hl: 'en-US',
-      tz: '-480',
-      geo: 'US',
-      ns: '15'
-    })
+    console.log('Checking GEMINI_API_KEY...')
+    const geminiKey = Deno.env.get('GEMINI_API_KEY')
+    if (!geminiKey) {
+      console.error('GEMINI_API_KEY not found in environment')
+      throw new Error('GEMINI_API_KEY not configured')
+    }
+    console.log('GEMINI_API_KEY found, length:', geminiKey.length)
 
-    const response = await fetch(`${trendsUrl}?${params}`)
-    const rawData = await response.text()
-    
-    // Parse Google Trends response (remove )]}' prefix)
-    const jsonData = JSON.parse(rawData.substring(5)) as GoogleTrendsResponse
-    const trendingSearches = jsonData.default?.trendingSearchesDays?.[0]?.trendingSearches || []
-    
-    // Filter fashion-related trends using dynamic keywords
-    const fashionTrends = trendingSearches.filter((trend: GoogleTrendItem) => {
-      const query = trend.title?.query || ''
-      return isFashionRelated(query, fashionKeywords)
-    })
-    
-    // Store new trending keywords in database
-    await updateTrendKeywords(supabase, fashionTrends)
-
-    // Extract trending keywords
-    const trendingKeywords = fashionTrends
-      .map((trend: GoogleTrendItem) => trend.title?.query)
-      .filter((query: string | undefined): query is string => Boolean(query))
-      .slice(0, 10)
-    
-    // Analyze trends to extract colors, patterns, styles
-    const trendingColors = extractTrendingColors(fashionTrends)
-    const trendingPatterns = extractTrendingPatterns(fashionTrends)
-    const trendingStyles = extractTrendingStyles(fashionTrends)
-    
-    const trendData: TrendData = {
-      season_name: season,
-      year: currentYear,
-      trending_colors: trendingColors,
-      trending_patterns: trendingPatterns,
-      trending_styles: trendingStyles,
-      trending_category_ids: [],
-      trend_description: `${season.charAt(0).toUpperCase() + season.slice(1)} ${currentYear} trends based on Google search data`,
-      external_source: 'google_trends',
-      trend_score: Math.min(fashionTrends.length / 10, 1), // Score based on trend volume
-      keywords: trendingKeywords,
-      popularity_score: Math.min(fashionTrends.length * 5, 100),
-      valid_from: seasonDates.from,
-      valid_until: seasonDates.until,
-      region: 'US',
-      sync_metadata: { 
-        source: 'google_trends_api', 
-        trends_found: fashionTrends.length,
-        sync_time: new Date().toISOString()
+    console.log('Calling Gemini API...')
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
       }
+    )
+
+    console.log('Gemini API response status:', response.status)
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Gemini API error response:', errorText)
+      throw new Error(`Gemini API error: ${response.status} - ${errorText}`)
     }
 
-    return [trendData]
+    const result = await response.json()
+    console.log('Gemini API result received')
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text
     
+    if (!text) {
+      console.error('Empty text from Gemini, full result:', JSON.stringify(result))
+      throw new Error('Empty response from Gemini')
+    }
+
+    console.log('Gemini response text length:', text.length)
+    const cleanText = text.replace(/```json\n?|```/g, '').trim()
+    console.log('Parsing JSON...')
+    const trendData = JSON.parse(cleanText)
+    console.log('Trend data parsed successfully:', Object.keys(trendData))
+
+    return [{
+      season_name: season,
+      year: currentYear,
+      trending_colors: trendData.trending_colors || [],
+      trending_patterns: trendData.trending_patterns || [],
+      trending_styles: trendData.trending_styles || [],
+      trending_category_ids: [],
+      trend_description: trendData.trend_description || `${season} ${currentYear} fashion trends`,
+      source: 'ai-analysis',
+      external_source: 'gemini_ai',
+      confidence_score: trendData.trend_score || 0.8,
+      trend_score: trendData.trend_score || 0.8,
+      keywords: trendData.keywords || [],
+      popularity_score: trendData.popularity_score || 80,
+      valid_from: seasonDates.from,
+      valid_until: seasonDates.until,
+      region: 'global',
+      sync_metadata: { 
+        source: 'gemini_ai',
+        model: 'gemini-2.5-flash',
+        sync_time: new Date().toISOString()
+      }
+    }]
   } catch (error) {
-    console.error('Google Trends API error:', error)
-    // Fallback to seasonal defaults if API fails
+    console.error('Gemini AI error:', error)
+    console.error('Error details:', error instanceof Error ? error.message : String(error))
+    console.log('Falling back to seasonal defaults')
     return getFallbackTrends(season, currentYear, seasonDates)
-  }
-}
-
-function extractTrendingColors(trends: GoogleTrendItem[]): string[] {
-  const colors = ['burgundy', 'sage', 'navy', 'beige', 'coral', 'lavender', 'mustard', 'rust']
-  return colors.filter(color => 
-    trends.some(trend => 
-      trend.title?.query?.toLowerCase().includes(color)
-    )
-  ).slice(0, 5)
-}
-
-function extractTrendingPatterns(trends: GoogleTrendItem[]): string[] {
-  const patterns = ['plaid', 'floral', 'leopard', 'polka dot', 'stripe', 'gingham']
-  return patterns.filter(pattern => 
-    trends.some(trend => 
-      trend.title?.query?.toLowerCase().includes(pattern)
-    )
-  ).slice(0, 4)
-}
-
-function extractTrendingStyles(trends: GoogleTrendItem[]): string[] {
-  const styles = ['minimalist', 'boho', 'preppy', 'vintage', 'athleisure', 'cottagecore']
-  return styles.filter(style => 
-    trends.some(trend => 
-      trend.title?.query?.toLowerCase().includes(style)
-    )
-  ).slice(0, 4)
-}
-
-// Seed initial fashion keywords
-async function seedInitialKeywords(supabase: SupabaseClient): Promise<void> {
-  const initialKeywords = [
-    'fashion', 'style', 'outfit', 'clothing', 'trend', 'streetwear',
-    'vintage', 'sustainable fashion', 'fast fashion', 'designer',
-    'athleisure', 'minimalist', 'boho', 'preppy', 'grunge',
-    'cottagecore', 'dark academia', 'y2k fashion', 'retro'
-  ]
-
-  for (const keyword of initialKeywords) {
-    await supabase
-      .from('trend_keywords')
-      .upsert({
-        keyword,
-        category: 'fashion',
-        last_updated: new Date().toISOString(),
-        search_volume: 100
-      }, {
-        onConflict: 'keyword'
-      })
-  }
-}
-
-// Update trend keywords in database
-async function updateTrendKeywords(supabase: SupabaseClient, trends: GoogleTrendItem[]): Promise<void> {
-  const newKeywords = trends
-    .map(trend => trend.title?.query)
-    .filter((query): query is string => Boolean(query))
-    .slice(0, 10)
-
-  for (const keyword of newKeywords) {
-    await supabase
-      .from('trend_keywords')
-      .upsert({
-        keyword: keyword.toLowerCase(),
-        category: 'fashion',
-        last_updated: new Date().toISOString(),
-        trend_direction: 'up'
-      }, {
-        onConflict: 'keyword'
-      })
   }
 }
 
@@ -268,22 +153,26 @@ function getFallbackTrends(season: string, year: number, dates: { from: string, 
     winter: {
       colors: ['burgundy', 'forest-green', 'navy', 'camel'],
       patterns: ['plaid', 'houndstooth', 'cable-knit'],
-      styles: ['layered', 'cozy', 'sophisticated']
+      styles: ['layered', 'cozy', 'sophisticated'],
+      categories: ['outerwear', 'boots', 'sweaters']
     },
     spring: {
       colors: ['pastel-pink', 'mint-green', 'lavender', 'coral'],
       patterns: ['floral', 'gingham', 'polka-dot'],
-      styles: ['romantic', 'fresh', 'feminine']
+      styles: ['romantic', 'fresh', 'feminine'],
+      categories: ['dresses', 'skirts', 'light-jackets']
     },
     summer: {
       colors: ['coral', 'turquoise', 'sunshine-yellow', 'white'],
       patterns: ['tropical', 'tie-dye', 'geometric'],
-      styles: ['bohemian', 'resort', 'casual']
+      styles: ['bohemian', 'resort', 'casual'],
+      categories: ['shorts', 'sandals', 'tank-tops']
     },
     fall: {
       colors: ['rust', 'olive-green', 'mustard', 'burgundy'],
       patterns: ['plaid', 'leopard', 'houndstooth'],
-      styles: ['preppy', 'academia', 'vintage']
+      styles: ['preppy', 'academia', 'vintage'],
+      categories: ['blazers', 'ankle-boots', 'cardigans']
     }
   }
 
@@ -297,7 +186,9 @@ function getFallbackTrends(season: string, year: number, dates: { from: string, 
     trending_styles: defaults?.styles || [],
     trending_category_ids: [],
     trend_description: `${season.charAt(0).toUpperCase() + season.slice(1)} ${year} trends (fallback data)`,
+    source: 'ai-analysis',
     external_source: 'fallback',
+    confidence_score: 0.6,
     trend_score: 0.6,
     keywords: [`${season} fashion`],
     popularity_score: 60,
@@ -314,10 +205,23 @@ serve(async (req: Request) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    console.log('Starting sync-trends function...')
+    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    const geminiKey = Deno.env.get('GEMINI_API_KEY')
+    
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Supabase credentials missing')
+    }
+    
+    if (!geminiKey) {
+      throw new Error('GEMINI_API_KEY missing')
+    }
+    
+    console.log('Environment variables validated')
+    
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Mark sync job as running
     const { data: _syncJob } = await supabase
@@ -330,23 +234,54 @@ serve(async (req: Request) => {
       .select()
       .single()
 
-    // Fetch trend data from Google Trends
-    const trends = await fetchGoogleTrends()
+    // Fetch trend data from Gemini AI
+    console.log('Fetching trends from Gemini AI...')
+    const trends = await fetchTrendsWithGemini()
+    console.log('Trends fetched:', trends.length)
     let updatedCount = 0
 
     // Upsert trends to database
+    console.log('Upserting trends to database...')
     for (const trend of trends) {
-      const { error } = await supabase
+      console.log('Upserting trend:', trend.season_name, trend.year)
+      
+      // Extract categories before upserting
+      const trendingCategories = (trend as any).trending_categories || []
+      const trendWithoutCategories = { ...trend }
+      delete (trendWithoutCategories as any).trending_categories
+      
+      const { data: upsertedTrend, error } = await supabase
         .from('seasonal_trends')
         .upsert({
-          ...trend,
+          ...trendWithoutCategories,
           last_synced_at: new Date().toISOString()
         }, {
-          onConflict: 'season_name,year,region'
+          onConflict: 'season_name,year,region',
+          ignoreDuplicates: false
         })
+        .select('id')
+        .single()
 
-      if (!error) {
+      if (error) {
+        console.error('Upsert error:', error)
+      } else {
         updatedCount++
+        console.log('Trend upserted successfully, ID:', upsertedTrend.id)
+        
+        // Add trending categories using RPC function
+        if (trendingCategories.length > 0) {
+          console.log('Adding trending categories:', trendingCategories)
+          const { error: categoryError } = await supabase.rpc('add_trending_categories_to_trend', {
+            trend_id: upsertedTrend.id,
+            category_names: trendingCategories
+          })
+          
+          if (categoryError) {
+            console.error('Category linking error:', categoryError)
+          } else {
+            console.log('Categories linked successfully')
+          }
+        }
       }
     }
 
