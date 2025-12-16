@@ -161,7 +161,7 @@ export default function ItemDetailPage({ loaderData }: Route.ComponentProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-0">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <Button type="button" variant="ghost" size="sm">
             <Link to={backTo} className="flex items-center">
