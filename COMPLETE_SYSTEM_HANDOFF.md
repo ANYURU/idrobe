@@ -73,14 +73,14 @@ npm run dev
 #### Root .env file
 ```bash
 # AI Services
-GEMINI_API_KEY=
-OPENWEATHER_API_KEY=
+GEMINI_API_KEY=your-gemini-api-key
+OPENWEATHER_API_KEY=your-open-weather-api-key
 
 # Supabase Configuration
-VITE_SUPABASE_URL=https://htcoujknjrlvksrnzvzg.supabase.co
-VITE_SUPABASE_ANON_KEY=
-SUPABASE_URL=https://htcoujknjrlvksrnzvzg.supabase.co
-SUPABASE_ANON_KEY=
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+SUPABASE_URL=your-supabase-url
+SUPABASE_ANON_KEY=your-supabase-anon-key
 
 # Development Settings
 USE_MOCK_RECOMMENDATIONS=true
