@@ -180,6 +180,7 @@ SITE_URL=http://localhost:5173
 
 ### Complete Handoff Guide
 - **[PROJECT_HANDOFF.md](./PROJECT_HANDOFF.md)** - Complete system handoff documentation (START HERE)
+- **[HANDOFF_CHECKLIST.md](./HANDOFF_CHECKLIST.md)** - Complete handoff activities checklist
 
 ### Additional References
 - **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)** - Detailed database documentation
