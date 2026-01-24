@@ -1,4 +1,4 @@
-import { Link, useSearchParams, useFetcher } from "react-router";
+import { Link, useSearchParams, useFetcher, useLoaderData } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,7 +33,14 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useUsageLimits } from "@/hooks/use-usage-limits";
+import { PlanComparisonDialog } from "@/components/PlanComparisonDialog";
 import { Suspense, use, useState, useEffect } from "react";
+import type { Tables } from "@/lib/database.types";
+
+type Plan = Tables<"subscription_plans">;
+type PlanLimit = Tables<"plan_limits">;
+type Subscription = { plan_id: string } | null;
 import type { Route } from "./+types/_index";
 
 interface OutfitFilters {
@@ -154,6 +161,27 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   const { loadOutfitCollections } = await import("@/lib/loaders");
 
+  // Get plans and limits for upgrade modal
+  const plansPromise = supabase
+    .from("subscription_plans")
+    .select("*")
+    .eq("is_active", true)
+    .order("price")
+    .then(({ data }) => data || []);
+
+  const planLimitsPromise = supabase
+    .from("plan_limits")
+    .select("*")
+    .then(({ data }) => data || []);
+
+  const subscriptionPromise = supabase
+    .from("subscriptions")
+    .select("plan_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single()
+    .then(({ data }) => data);
+
   const recommendationsPromise: Promise<RecommendationsData> = Promise.resolve(
     recQuery.then(async ({ data: recs, error, count }) => {
       if (error) throw new Error("Failed to load recommendations");
@@ -186,6 +214,9 @@ export async function loader({ request }: Route.LoaderArgs) {
     occasions,
     moods,
     filters,
+    plansPromise,
+    planLimitsPromise,
+    subscriptionPromise,
     headers,
   };
 }
@@ -193,11 +224,24 @@ export async function loader({ request }: Route.LoaderArgs) {
 export async function action({ request }: Route.ActionArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
   const { user } = await requireAuth(request);
+  const { createClient } = await import("@/lib/supabase.server");
+  const { supabase } = createClient(request);
 
   const formData = await request.formData();
   const actionType = formData.get("action");
 
   if (actionType === "generate_recommendations") {
+    // Check usage limit first
+    const { checkUsageLimit } = await import("@/lib/usage-limits");
+    const usageCheck = await checkUsageLimit(supabase, user.id, "recs");
+    
+    if (!usageCheck.allowed) {
+      return {
+        success: false,
+        error: "You've reached your recommendation limit for this period. Please upgrade to continue.",
+        limitExceeded: true,
+      };
+    }
     const { generateOutfitRecommendations } = await import(
       "@/lib/outfit-recommendations"
     );
@@ -278,16 +322,23 @@ export default function OutfitsPage({ loaderData }: Route.ComponentProps) {
 
       <section aria-label="Outfit management">
         <Suspense fallback={<OutfitsSkeleton />}>
-          <OutfitsContent
-            recommendationsPromise={loaderData.recommendationsPromise}
-            collectionsPromise={loaderData.collectionsPromise}
-            occasions={loaderData.occasions}
-            moods={loaderData.moods}
-            filters={loaderData.filters}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            generateFetcher={sharedGenerateFetcher}
-          />
+          <>
+            <OutfitsContent
+              recommendationsPromise={loaderData.recommendationsPromise}
+              collectionsPromise={loaderData.collectionsPromise}
+              occasions={loaderData.occasions}
+              moods={loaderData.moods}
+              filters={loaderData.filters}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              generateFetcher={sharedGenerateFetcher}
+            />
+            <UpgradeModalWrapper 
+              loaderData={loaderData}
+              showUpgradeModal={false}
+              setShowUpgradeModal={() => {}}
+            />
+          </>
         </Suspense>
       </section>
     </main>
@@ -298,6 +349,8 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
   const [open, setOpen] = useState(false);
   const [context, setContext] = useState("");
   const [showMore, setShowMore] = useState(false);
+  const { showUpgradeModal, setShowUpgradeModal } = useUsageLimits();
+  const loaderData = useLoaderData<typeof loader>();
 
   const quickSuggestions = [
     "I have a job interview tomorrow",
@@ -336,6 +389,13 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
     formData.append("surprise", "true");
     generateFetcher.submit(formData, { method: "POST" });
   };
+
+  // Show upgrade modal if server returns limit exceeded
+  useEffect(() => {
+    if (generateFetcher.data?.limitExceeded) {
+      setShowUpgradeModal(true);
+    }
+  }, [generateFetcher.data?.limitExceeded, setShowUpgradeModal]);
 
   const handleClose = () => {
     setOpen(false);
@@ -464,8 +524,37 @@ function GenerateOutfitDialog({ generateFetcher }: { generateFetcher: any }) {
             )}
           </div>
         </div>
+
+        {/* Upgrade Modal */}
+        <Suspense fallback={null}>
+          <UpgradeModalContent 
+            showUpgradeModal={showUpgradeModal}
+            setShowUpgradeModal={setShowUpgradeModal}
+            promises={loaderData}
+          />
+        </Suspense>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function UpgradeModalContent({ showUpgradeModal, setShowUpgradeModal, promises }: {
+  showUpgradeModal: boolean;
+  setShowUpgradeModal: (show: boolean) => void;
+  promises: any;
+}) {
+  const plans = use(promises.plansPromise) as Plan[];
+  const planLimits = use(promises.planLimitsPromise) as PlanLimit[];
+  const subscription = use(promises.subscriptionPromise) as Subscription;
+
+  return (
+    <PlanComparisonDialog
+      open={showUpgradeModal}
+      onOpenChange={setShowUpgradeModal}
+      plans={plans}
+      planLimits={planLimits}
+      currentPlanId={subscription?.plan_id}
+    />
   );
 }
 
@@ -496,6 +585,7 @@ function OutfitsContent({
   const [newlyGeneratedIds, setNewlyGeneratedIds] = useState<string[]>([]);
   const debouncedSearch = useDebounce(searchInput, 500);
   const fetcher = useFetcher<typeof loader>();
+  const { setShowUpgradeModal } = useUsageLimits();
 
   useEffect(() => {
     setSearchInput(filters.search || "");
@@ -544,6 +634,7 @@ function OutfitsContent({
   };
 
   const handleGenerateRecommendations = () => {
+    // Usage check will happen server-side in the action
     const formData = new FormData();
     formData.append("action", "generate_recommendations");
     formData.append(
@@ -553,6 +644,13 @@ function OutfitsContent({
     formData.append("refresh", "true");
     generateFetcher.submit(formData, { method: "POST" });
   };
+
+  // Show upgrade modal if server returns limit exceeded
+  useEffect(() => {
+    if (generateFetcher.data?.limitExceeded) {
+      setShowUpgradeModal(true);
+    }
+  }, [generateFetcher.data?.limitExceeded, setShowUpgradeModal]);
 
   const hasActiveFilters =
     Boolean(filters.search) ||
@@ -609,6 +707,22 @@ function OutfitsContent({
         </Suspense>
       </TabsContent>
     </Tabs>
+  );
+}
+
+function UpgradeModalWrapper({ loaderData, showUpgradeModal, setShowUpgradeModal }: {
+  loaderData: any;
+  showUpgradeModal: boolean;
+  setShowUpgradeModal: (show: boolean) => void;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <UpgradeModalContent 
+        showUpgradeModal={showUpgradeModal}
+        setShowUpgradeModal={setShowUpgradeModal}
+        promises={loaderData}
+      />
+    </Suspense>
   );
 }
 

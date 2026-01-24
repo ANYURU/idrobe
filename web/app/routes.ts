@@ -93,6 +93,8 @@ export default [
   route("api/items/:itemId/archive", "routes/api/items/$itemId/archive.ts"),
   route("api/items/wear-history", "routes/api/items/wear-history.ts"),
   route("api/enhance-outfit", "routes/api/enhance-outfit.ts"),
+  route("api/create-checkout", "routes/api/create-checkout.ts"),
+  route("api/check-usage", "routes/api/check-usage.ts"),
 
   // Catch-all route for unmatched requests
   route("*", "routes/$.tsx"),

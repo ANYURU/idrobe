@@ -157,6 +157,12 @@ type Pages = {
   "/api/enhance-outfit": {
     params: {};
   };
+  "/api/create-checkout": {
+    params: {};
+  };
+  "/api/check-usage": {
+    params: {};
+  };
   "/*": {
     params: {
       "*": string;
@@ -167,7 +173,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-email-sent" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/auth/reset-password" | "/recover-account" | "/changelog" | "/robots.txt" | "/sitemap.xml" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/validate-tryon-image" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/api/enhance-outfit" | "/*";
+    page: "/" | "/auth/login" | "/auth/signup" | "/auth/verify-email" | "/auth/forgot-password" | "/auth/reset-email-sent" | "/auth/confirm" | "/auth/signout" | "/onboarding/welcome" | "/onboarding/profile" | "/onboarding/upload" | "/onboarding/first-recommendation" | "/onboarding/complete" | "/auth/reset-password" | "/recover-account" | "/changelog" | "/robots.txt" | "/sitemap.xml" | "/dashboard" | "/wardrobe" | "/wardrobe/add" | "/wardrobe/analyze" | "/wardrobe/:itemId" | "/outfits" | "/outfits/create" | "/outfits/collections/:collectionId" | "/outfits/collections/:collectionId/edit" | "/outfits/:outfitId" | "/wardrobe/analytics" | "/trends" | "/profile" | "/settings" | "/api/image-url" | "/api/upload-photo" | "/api/remove-avatar" | "/api/remove-tryon" | "/api/validate-tryon-image" | "/api/recommendations/interact" | "/api/sync-trends" | "/api/items/:itemId/favorite" | "/api/items/:itemId/worn" | "/api/items/:itemId/archive" | "/api/items/wear-history" | "/api/enhance-outfit" | "/api/create-checkout" | "/api/check-usage" | "/*";
   };
   "routes/guest._layout.tsx": {
     id: "routes/guest._layout";
@@ -361,6 +367,14 @@ type RouteFiles = {
     id: "routes/api/enhance-outfit";
     page: "/api/enhance-outfit";
   };
+  "routes/api/create-checkout.ts": {
+    id: "routes/api/create-checkout";
+    page: "/api/create-checkout";
+  };
+  "routes/api/check-usage.ts": {
+    id: "routes/api/check-usage";
+    page: "/api/check-usage";
+  };
   "routes/$.tsx": {
     id: "routes/$";
     page: "/*";
@@ -417,5 +431,7 @@ type RouteModules = {
   "routes/api/items/$itemId/archive": typeof import("./app/routes/api/items/$itemId/archive.ts");
   "routes/api/items/wear-history": typeof import("./app/routes/api/items/wear-history.ts");
   "routes/api/enhance-outfit": typeof import("./app/routes/api/enhance-outfit.ts");
+  "routes/api/create-checkout": typeof import("./app/routes/api/create-checkout.ts");
+  "routes/api/check-usage": typeof import("./app/routes/api/check-usage.ts");
   "routes/$": typeof import("./app/routes/$.tsx");
 };

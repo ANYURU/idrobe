@@ -3,6 +3,8 @@
 /node_modules/
 .vscode/
 *.log
+SUBSCRIPTION_TESTING_PLAN.md
+supabase-start.log
 
 
 # Ignore schema files

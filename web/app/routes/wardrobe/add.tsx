@@ -1,16 +1,51 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect, Suspense, use } from "react";
 import { useNavigate, redirect } from "react-router";
 import type { Route } from "./+types/add";
 import { Button } from "@/components/ui/button";
-import { Upload, Camera } from "lucide-react";
+import { Upload, Camera, AlertCircle } from "lucide-react";
 import { useToast } from "@/lib/use-toast";
 import { WardrobeUploadedItem, type Analysis } from "@/components/WardrobeUploadedItem";
 import { createClient } from "@/lib/supabase.server";
+import { useUsageLimits } from "@/hooks/use-usage-limits";
+import { PlanComparisonDialog } from "@/components/PlanComparisonDialog";
+import type { Tables } from "@/lib/database.types";
+
+type Plan = Tables<"subscription_plans">;
+type PlanLimit = Tables<"plan_limits">;
+type Subscription = { plan_id: string } | null;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { requireAuth } = await import("@/lib/protected-route");
-  await requireAuth(request);
-  return {};
+  const { user } = await requireAuth(request);
+  const { createClient } = await import("@/lib/supabase.server");
+  const { supabase } = createClient(request);
+
+  // Get plans and limits for upgrade modal
+  const plansPromise = supabase
+    .from("subscription_plans")
+    .select("*")
+    .eq("is_active", true)
+    .order("price")
+    .then(({ data }) => data || []);
+
+  const planLimitsPromise = supabase
+    .from("plan_limits")
+    .select("*")
+    .then(({ data }) => data || []);
+
+  const subscriptionPromise = supabase
+    .from("subscriptions")
+    .select("plan_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single()
+    .then(({ data }) => data);
+
+  return {
+    plansPromise,
+    planLimitsPromise,
+    subscriptionPromise,
+  };
 }
 
 export async function action({ request }: Route.ActionArgs) {
@@ -323,18 +358,101 @@ export async function action({ request }: Route.ActionArgs) {
   }
 }
 
-export default function AddItemPage({}: Route.ComponentProps) {
+export default function AddItemPage({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const toast = useToast();
   const [files, setFiles] = useState<File[]>([]);
   const [analyzedItems, setAnalyzedItems] = useState<boolean[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const itemRefs = useRef<({ getAnalysis: () => Analysis | null } | null)[]>([]);
+  const { showUpgradeModal, setShowUpgradeModal, checkUsageLimit, usageData } = useUsageLimits();
+
+  // Check usage limit when component mounts
+  useEffect(() => {
+    checkUsageLimit("uploads");
+  }, []);
+
+  return (
+    <main className="min-h-screen bg-background p-4 sm:p-6">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <Suspense fallback={<div>Loading...</div>}>
+          <AddItemContent 
+            files={files}
+            setFiles={setFiles}
+            analyzedItems={analyzedItems}
+            setAnalyzedItems={setAnalyzedItems}
+            isSaving={isSaving}
+            setIsSaving={setIsSaving}
+            itemRefs={itemRefs}
+            navigate={navigate}
+            toast={toast}
+            usageData={usageData}
+            showUpgradeModal={showUpgradeModal}
+            setShowUpgradeModal={setShowUpgradeModal}
+            promises={loaderData}
+          />
+        </Suspense>
+      </div>
+    </main>
+  );
+}
+
+function AddItemContent({
+  files,
+  setFiles,
+  analyzedItems,
+  setAnalyzedItems,
+  isSaving,
+  setIsSaving,
+  itemRefs,
+  navigate,
+  toast,
+  usageData,
+  showUpgradeModal,
+  setShowUpgradeModal,
+  promises,
+}: {
+  files: File[];
+  setFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  analyzedItems: boolean[];
+  setAnalyzedItems: React.Dispatch<React.SetStateAction<boolean[]>>;
+  isSaving: boolean;
+  setIsSaving: React.Dispatch<React.SetStateAction<boolean>>;
+  itemRefs: React.MutableRefObject<({ getAnalysis: () => Analysis | null } | null)[]>;
+  navigate: any;
+  toast: any;
+  usageData: any;
+  showUpgradeModal: boolean;
+  setShowUpgradeModal: (show: boolean) => void;
+  promises: any;
+}) {
+  const plans = use(promises.plansPromise) as Plan[];
+  const planLimits = use(promises.planLimitsPromise) as PlanLimit[];
+  const subscription = use(promises.subscriptionPromise) as Subscription;
 
 
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Check if user has reached upload limit
+    if (usageData?.limitExceeded) {
+      setShowUpgradeModal(true);
+      return;
+    }
+
     const selectedFiles = Array.from(e.target.files || []);
+    const currentCount = files.length;
+    const newCount = currentCount + selectedFiles.length;
+    
+    // Check if adding these files would exceed the limit
+    if (usageData && newCount > (usageData.limit - usageData.current)) {
+      const remaining = usageData.limit - usageData.current;
+      if (remaining <= 0) {
+        setShowUpgradeModal(true);
+        return;
+      }
+      toast.error(`You can only upload ${remaining} more items this month`);
+      return;
+    }
 
     const validFiles = selectedFiles.filter((file) => {
       if (!file.type.startsWith("image/")) {
@@ -456,96 +574,138 @@ export default function AddItemPage({}: Route.ComponentProps) {
   };
 
   return (
-    <main className="min-h-screen bg-background p-4 sm:p-6">
-      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-xl sm:text-2xl font-semibold">
-            Add Items to Wardrobe
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Upload multiple clothing items and let AI analyze them instantly!
-          </p>
-        </header>
+    <>
+      <header className="space-y-2">
+        <h1 className="text-xl sm:text-2xl font-semibold">
+          Add Items to Wardrobe
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Upload multiple clothing items and let AI analyze them instantly!
+        </p>
+      </header>
 
-        <section className="bg-muted/30 rounded-lg p-4 sm:p-6 border border-border space-y-4">
-            <div>
-              <h2 className="font-semibold mb-1 flex items-center gap-2">
-                <Camera className="h-5 w-5" />
-                Upload photos
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Select multiple images for batch processing. Good lighting works best!
+      {/* Usage limit warning */}
+      {usageData && (
+        <div className={`rounded-lg p-4 border ${
+          usageData.limitExceeded 
+            ? "bg-destructive/10 border-destructive/20 text-destructive" 
+            : usageData.current / usageData.limit > 0.8
+              ? "bg-yellow-50 border-yellow-200 text-yellow-800"
+              : "bg-muted/30 border-border"
+        }`}>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="h-4 w-4" />
+            <span className="font-medium">
+              {usageData.limitExceeded 
+                ? "Upload limit reached" 
+                : `${usageData.current}/${usageData.limit} uploads used this month`
+              }
+            </span>
+          </div>
+          {usageData.limitExceeded ? (
+            <p className="text-sm mb-3">
+              You've reached your monthly upload limit. Upgrade to continue adding items.
+            </p>
+          ) : (
+            <p className="text-sm">
+              {usageData.limit - usageData.current} uploads remaining
+            </p>
+          )}
+          {usageData.limitExceeded && (
+            <Button size="sm" onClick={() => setShowUpgradeModal(true)}>
+              Upgrade Plan
+            </Button>
+          )}
+        </div>
+      )}
+
+      <section className="bg-muted/30 rounded-lg p-4 sm:p-6 border border-border space-y-4">
+          <div>
+            <h2 className="font-semibold mb-1 flex items-center gap-2">
+              <Camera className="h-5 w-5" />
+              Upload photos
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Select multiple images for batch processing. Good lighting works best!
+            </p>
+          </div>
+
+          <div className="border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center hover:border-primary/50 transition">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFileSelect}
+              className="hidden"
+              id="file-input"
+            />
+            <label htmlFor="file-input" className="cursor-pointer block">
+              <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm font-medium">Click to upload or drag and drop</p>
+              <p className="text-sm text-muted-foreground">
+                PNG, JPG, WebP up to 5MB each
               </p>
-            </div>
+            </label>
+          </div>
 
-            <div className="border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center hover:border-primary/50 transition">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="file-input"
-              />
-              <label htmlFor="file-input" className="cursor-pointer block">
-                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-sm font-medium">Click to upload or drag and drop</p>
-                <p className="text-sm text-muted-foreground">
-                  PNG, JPG, WebP up to 5MB each
-                </p>
-              </label>
-            </div>
-
-            {files.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium">{files.length} item(s) uploaded</p>
-                  {analyzedCount < files.length && (
-                    <p className="text-sm text-muted-foreground">
-                      {analyzedCount} of {files.length} analyzed
-                    </p>
-                  )}
-                  {analyzedCount === files.length && files.length > 0 && (
-                    <p className="text-sm text-primary font-medium">
-                      All items analyzed ✓
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  {files.map((file, index) => (
-                    <WardrobeUploadedItem
-                      key={`${file.name}-${file.size}-${index}`}
-                      index={index}
-                      ref={(el) => {
-                        itemRefs.current[index] = el;
-                      }}
-                      file={file}
-                      onRemove={() => removeItem(index)}
-                      onAnalysisChange={handleAnalysisChange}
-                    />
-                  ))}
-                </div>
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-medium">{files.length} item(s) uploaded</p>
+                {analyzedCount < files.length && (
+                  <p className="text-sm text-muted-foreground">
+                    {analyzedCount} of {files.length} analyzed
+                  </p>
+                )}
+                {analyzedCount === files.length && files.length > 0 && (
+                  <p className="text-sm text-primary font-medium">
+                    All items analyzed ✓
+                  </p>
+                )}
               </div>
-            )}
-
-            <div className="flex gap-3">
-              <Button
-                onClick={handleSave}
-                disabled={analyzedCount === 0 || isSaving}
-                className="flex-1 cursor-pointer"
-              >
-                {isSaving ? "Saving..." : `Save ${analyzedCount} items to wardrobe`}
-              </Button>
-              <Button variant="outline" onClick={() => navigate("/wardrobe")} disabled={isSaving} className="cursor-pointer">
-                Cancel
-              </Button>
+              <div className="space-y-2">
+                {files.map((file, index) => (
+                  <WardrobeUploadedItem
+                    key={`${file.name}-${file.size}-${index}`}
+                    index={index}
+                    ref={(el) => {
+                      itemRefs.current[index] = el;
+                    }}
+                    file={file}
+                    onRemove={() => removeItem(index)}
+                    onAnalysisChange={handleAnalysisChange}
+                  />
+                ))}
+              </div>
             </div>
-        </section>
+          )}
 
-        <footer className="text-center text-sm text-muted-foreground">
-          <p>AI will analyze each item automatically after upload</p>
-        </footer>
-      </div>
-    </main>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleSave}
+              disabled={analyzedCount === 0 || isSaving}
+              className="flex-1 cursor-pointer"
+            >
+              {isSaving ? "Saving..." : `Save ${analyzedCount} items to wardrobe`}
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/wardrobe")} disabled={isSaving} className="cursor-pointer">
+              Cancel
+            </Button>
+          </div>
+      </section>
+
+      <footer className="text-center text-sm text-muted-foreground">
+        <p>AI will analyze each item automatically after upload</p>
+      </footer>
+
+      {/* Upgrade Modal */}
+      <PlanComparisonDialog
+        open={showUpgradeModal}
+        onOpenChange={setShowUpgradeModal}
+        plans={plans}
+        planLimits={planLimits}
+        currentPlanId={subscription?.plan_id}
+      />
+    </>
   );
 }

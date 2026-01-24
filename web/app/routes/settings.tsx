@@ -1,4 +1,4 @@
-import { useLoaderData, useFetcher } from "react-router";
+import { useLoaderData, useFetcher, useSearchParams } from "react-router";
 import { useToast } from "@/lib/use-toast";
 import type { Route } from "./+types/settings";
 import { Switch } from "@/components/ui/switch";
@@ -44,6 +44,7 @@ import {
 import { useState, Suspense, use, useEffect, useRef } from "react";
 import { replace } from "react-router";
 import type { Tables } from "@/lib/database.types";
+import { PlanComparisonDialog } from "@/components/PlanComparisonDialog";
 
 type UserProfile = Tables<"user_profiles">;
 type Subscription = Tables<"subscriptions"> & {
@@ -59,6 +60,7 @@ type CurrencyData = {
   symbol: string;
 };
 type PlanLimit = Tables<"plan_limits">;
+type SubscriptionPlan = Tables<"subscription_plans">;
 
 type SettingsData = {
   user: any;
@@ -67,6 +69,7 @@ type SettingsData = {
   usagePromise: Promise<UsageData[]>;
   currenciesPromise: Promise<CurrencyData[]>;
   planLimitsPromise: Promise<PlanLimit[]>;
+  plansPromise: Promise<SubscriptionPlan[]>;
 };
 
 export async function loader({
@@ -133,6 +136,14 @@ export async function loader({
       supabase
         .from("plan_limits")
         .select("*")
+        .then(({ data }) => data || [])
+    ),
+    plansPromise: Promise.resolve(
+      supabase
+        .from("subscription_plans")
+        .select("*")
+        .eq("is_active", true)
+        .order("price")
         .then(({ data }) => data || [])
     ),
   };
@@ -302,8 +313,21 @@ export async function action({ request }: Route.ActionArgs) {
 
 export default function SettingsPage() {
   const { user, ...promises } = useLoaderData<typeof loader>();
-  const [activeTab, setActiveTab] = useState("account");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "account");
   const fetcher = useFetcher();
+
+  // Sync activeTab with URL changes
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab") || "account";
+    setActiveTab(tabFromUrl);
+  }, [searchParams]);
+
+  // Sync tab changes with URL
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   return (
     <div className="px-4 py-6 sm:p-6 max-w-2xl mx-auto">
@@ -333,7 +357,9 @@ export default function SettingsPage() {
         user={user}
         promises={promises}
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={handleTabChange}
+        searchParams={searchParams}
+        setSearchParams={setSearchParams}
       />
     </div>
   );
@@ -344,11 +370,15 @@ function SettingsContent({
   promises,
   activeTab,
   setActiveTab,
+  searchParams,
+  setSearchParams,
 }: {
   user: any;
   promises: Omit<SettingsData, "user">;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  searchParams: URLSearchParams;
+  setSearchParams: (params: Record<string, string>) => void;
 }) {
   const fetcher = useFetcher();
 
@@ -370,6 +400,9 @@ function SettingsContent({
             subscriptionPromise={promises.subscriptionPromise}
             usagePromise={promises.usagePromise}
             planLimitsPromise={promises.planLimitsPromise}
+            plansPromise={promises.plansPromise}
+            searchParams={searchParams}
+            setSearchParams={setSearchParams}
           />
         </Suspense>
       </TabsContent>
@@ -702,14 +735,37 @@ function SubscriptionTab({
   subscriptionPromise,
   usagePromise,
   planLimitsPromise,
+  plansPromise,
+  searchParams,
+  setSearchParams,
 }: {
   subscriptionPromise: Promise<Subscription | null>;
   usagePromise: Promise<UsageData[]>;
   planLimitsPromise: Promise<PlanLimit[]>;
+  plansPromise: Promise<SubscriptionPlan[]>;
+  searchParams: URLSearchParams;
+  setSearchParams: (params: Record<string, string>) => void;
 }) {
   const subscription = use(subscriptionPromise);
   const usage = use(usagePromise);
   const planLimits = use(planLimitsPromise);
+  const plans = use(plansPromise);
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
+
+  // Auto-open upgrade modal if upgrade parameter is present
+  useEffect(() => {
+    if (searchParams.get('upgrade') === 'true') {
+      setShowPlanDialog(true);
+    }
+  }, [searchParams]);
+
+  // Clear upgrade parameter when modal closes
+  const handleModalClose = (open: boolean) => {
+    setShowPlanDialog(open);
+    if (!open && searchParams.get('upgrade') === 'true') {
+      setSearchParams({ tab: 'subscription' });
+    }
+  };
 
   const getUsageCount = (type: string) => {
     return usage.find((u) => u.usage_type === type)?.usage_count || 0;
@@ -819,15 +875,23 @@ function SubscriptionTab({
           </p>
         </header>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm">
+          <Button size="sm" onClick={() => setShowPlanDialog(true)}>
             <CreditCard className="h-4 w-4 mr-2" />
-            Manage Subscription
+            {subscription ? "Change Plan" : "Upgrade Plan"}
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" disabled>
             View Payment History
           </Button>
         </div>
       </section>
+
+      <PlanComparisonDialog
+        open={showPlanDialog}
+        onOpenChange={handleModalClose}
+        plans={plans}
+        planLimits={planLimits}
+        currentPlanId={subscription?.subscription_plans?.id}
+      />
     </div>
   );
 }
