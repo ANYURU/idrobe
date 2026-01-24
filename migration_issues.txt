@@ -1,0 +1,35 @@
+CRITICAL ISSUES FOUND IN COMBINED MIGRATIONS:
+
+1. DUPLICATE EXTENSIONS:
+   - uuid-ossp created twice (line 50 and 315)
+   - vector extension created twice (line 317 and 2724)
+
+2. ENUM TYPE CONFLICTS:
+   - clothing_category and clothing_subcategory enums created (line 323, 345)
+   - Same enums dropped later (line 2046-2047)
+   - This will cause errors if run sequentially
+
+3. COLUMN ADDITIONS:
+   - clothing_items.currency added multiple times
+   - user_profiles currency fields added multiple times
+   - Need to consolidate with IF NOT EXISTS
+
+4. MATERIALIZED VIEW:
+   - user_wardrobe_analytics dropped and recreated multiple times
+   - Should only be created once at the end
+
+5. FUNCTION REDEFINITIONS:
+   - Many functions redefined multiple times with same signature
+   - Last definition will win but creates noise
+
+6. TRIGGER CONFLICTS:
+   - prevent_duplicate_categories trigger references levenshtein
+   - But fuzzystrmatch extension added much later (line 3807)
+
+RECOMMENDED FIXES:
+- Remove duplicate extension creations
+- Keep enum drops but remove initial enum creates
+- Consolidate column additions with IF NOT EXISTS
+- Create materialized view only once at end
+- Keep only final function definitions
+- Move fuzzystrmatch extension earlier
