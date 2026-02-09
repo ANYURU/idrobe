@@ -4,8 +4,14 @@ import type { Database } from "./database.types";
 export async function checkUsageLimit(
   supabase: SupabaseClient<Database>,
   userId: string,
-  usageType: "uploads" | "recs" | "tryons"
+  usageType: "uploads" | "recs" | "tryons",
+  isOnboarding = false
 ): Promise<{ allowed: boolean; current: number; limit: number }> {
+  // Skip limit check for onboarding
+  if (isOnboarding) {
+    return { allowed: true, current: 0, limit: 999999 };
+  }
+
   // Get current subscription
   const { data: subscription } = await supabase
     .from("subscriptions")
