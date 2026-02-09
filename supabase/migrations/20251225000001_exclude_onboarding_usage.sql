@@ -4,7 +4,10 @@
 -- recommendations from counting toward subscription limits
 -- ============================================================================
 
--- Update function to accept onboarding parameter
+-- Drop existing function to avoid signature conflicts
+DROP FUNCTION IF EXISTS increment_usage_tracking(UUID, TEXT, TIMESTAMPTZ, TIMESTAMPTZ);
+
+-- Recreate function with onboarding parameter
 CREATE OR REPLACE FUNCTION increment_usage_tracking(
   p_user_id UUID,
   p_usage_type TEXT,
